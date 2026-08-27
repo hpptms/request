@@ -105,7 +105,7 @@ function ViewerPage() {
     if (finishedRequestId) {
       loadedVideoIdRef.current = null;
       currentRequestIdRef.current = null;
-      api.doneRequest(finishedRequestId).catch(() => {}).finally(refresh);
+      api.finishRequest(finishedRequestId).catch(() => {}).finally(refresh);
       return;
     }
 
