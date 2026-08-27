@@ -34,6 +34,16 @@ export interface AdminVideoRequest extends VideoRequest {
   requesterIP: string;
 }
 
+export type FallbackRegion = "world" | "japan";
+
+export interface FallbackTrack {
+  videoId: string;
+  title: string;
+  channelTitle: string;
+  thumbnailUrl: string;
+  region: FallbackRegion;
+}
+
 export interface BannedIP {
   ip: string;
   bannedAt: string;
