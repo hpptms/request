@@ -16,9 +16,9 @@ import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import { api } from "../api";
 import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
-import { pickRandomFallbackVideoId } from "../lib/fallbackPlaylist";
+import { FALLBACK_VIDEO_IDS, pickRandomFallbackVideoId } from "../lib/fallbackPlaylist";
 import { loadYouTubeIframeApi } from "../lib/loadYouTubeIframeApi";
-import type { VideoRequest } from "../types";
+import type { FallbackTrack, VideoRequest } from "../types";
 
 const POLL_INTERVAL_MS = 3000;
 const PLAYER_ELEMENT_ID = "yt-viewer-player";
@@ -37,12 +37,21 @@ function ViewerPage() {
   const [started, setStarted] = useState(false);
   const [playerReady, setPlayerReady] = useState(false);
   const [isFallbackPlaying, setIsFallbackPlaying] = useState(false);
+  const [fallbackNowPlayingId, setFallbackNowPlayingId] = useState<string | null>(null);
+  // World/Japan Top 100 tracks from the backend; empty until resolved (or
+  // permanently, with no YouTube API key configured), in which case the
+  // static FALLBACK_VIDEO_IDS list below is used instead.
+  const [fallbackTracks, setFallbackTracks] = useState<FallbackTrack[]>([]);
 
   const playerRef = useRef<YT.Player | null>(null);
   const loadedVideoIdRef = useRef<string | null>(null);
   const currentRequestIdRef = useRef<string | null>(null);
   const endedHandledRef = useRef(false);
   const claimedIdsRef = useRef<Set<string>>(new Set());
+  // Mirrors fallbackTracks for the player event handlers below, which are
+  // wired up once (see the `started`-only effect) and would otherwise close
+  // over a stale empty list.
+  const fallbackPoolRef = useRef<string[]>(FALLBACK_VIDEO_IDS);
 
   const refresh = useCallback(async () => {
     try {
@@ -55,6 +64,19 @@ function ViewerPage() {
 
   useEffect(() => {
     api.getConfig().then((config) => setCancelVoteThreshold(config.cancelVoteThreshold)).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    api
+      .getFallbackPlaylist()
+      .then((tracks) => {
+        if (tracks.length === 0) return;
+        setFallbackTracks(tracks);
+        fallbackPoolRef.current = tracks.map((t) => t.videoId);
+      })
+      .catch(() => {
+        // Keep the static FALLBACK_VIDEO_IDS pool already in fallbackPoolRef.
+      });
   }, []);
 
   useEffect(() => {
@@ -109,9 +131,10 @@ function ViewerPage() {
       return;
     }
 
-    const nextVideoId = pickRandomFallbackVideoId(loadedVideoIdRef.current);
+    const nextVideoId = pickRandomFallbackVideoId(fallbackPoolRef.current, loadedVideoIdRef.current);
     loadedVideoIdRef.current = nextVideoId;
     endedHandledRef.current = false;
+    setFallbackNowPlayingId(nextVideoId);
     playerRef.current?.loadVideoById(nextVideoId);
   };
 
@@ -158,13 +181,16 @@ function ViewerPage() {
 
     if (loadedVideoIdRef.current === null) {
       setIsFallbackPlaying(true);
-      const videoId = pickRandomFallbackVideoId(null);
+      const videoId = pickRandomFallbackVideoId(fallbackPoolRef.current, null);
       loadedVideoIdRef.current = videoId;
       currentRequestIdRef.current = null;
       endedHandledRef.current = false;
+      setFallbackNowPlayingId(videoId);
       playerRef.current.loadVideoById(videoId);
     }
   }, [started, playerReady, target]);
+
+  const fallbackNowPlaying = fallbackTracks.find((t) => t.videoId === fallbackNowPlayingId) ?? null;
 
   const handleVoteCancel = async (id: string) => {
     await api.voteCancel(id);
@@ -211,9 +237,21 @@ function ViewerPage() {
               <Box id={PLAYER_ELEMENT_ID} sx={{ width: "100%", height: "100%" }} />
               {isFallbackPlaying && (
                 <Chip
-                  label="リクエスト待ち・自動再生中"
+                  label={
+                    fallbackNowPlaying
+                      ? `リクエスト待ち・${fallbackNowPlaying.region === "japan" ? "日本" : "世界"}Top100自動再生中: ${fallbackNowPlaying.title}`
+                      : "リクエスト待ち・自動再生中"
+                  }
                   size="small"
-                  sx={{ position: "absolute", top: 16, left: 16, bgcolor: "rgba(0,0,0,0.6)", color: "white" }}
+                  sx={{
+                    position: "absolute",
+                    top: 16,
+                    left: 16,
+                    maxWidth: "calc(100% - 32px)",
+                    bgcolor: "rgba(0,0,0,0.6)",
+                    color: "white",
+                    "& .MuiChip-label": { overflow: "hidden", textOverflow: "ellipsis" },
+                  }}
                 />
               )}
             </>

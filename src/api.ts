@@ -3,6 +3,7 @@ import type {
   AppConfig,
   BannedIP,
   CancelVoteResult,
+  FallbackTrack,
   SearchResult,
   VideoRequest,
 } from "./types";
@@ -56,6 +57,12 @@ export const api = {
 
   search: (query: string) =>
     request<SearchResult[]>(`/search?q=${encodeURIComponent(query)}`),
+
+  // World/Japan Top 100 tracks played by the viewer screen when its queue is
+  // empty. May be an empty list if the backend hasn't resolved any yet (or
+  // has no YouTube API key configured) — callers should fall back to
+  // fallbackPlaylist.ts's static list in that case.
+  getFallbackPlaylist: () => request<FallbackTrack[]>("/fallback-playlist"),
 
   adminLogin: (username: string, password: string) =>
     request<{ ok: boolean }>("/admin/login", {
