@@ -13,11 +13,12 @@ import type { VideoRequest } from "../types";
 interface Props {
   nowPlaying: VideoRequest | null;
   cancelVoteThreshold: number;
+  isAdmin: boolean;
   onMarkDone: (id: string) => void;
   onVoteCancel: (id: string) => Promise<void>;
 }
 
-export function NowPlaying({ nowPlaying, cancelVoteThreshold, onMarkDone, onVoteCancel }: Props) {
+export function NowPlaying({ nowPlaying, cancelVoteThreshold, isAdmin, onMarkDone, onVoteCancel }: Props) {
   const [voting, setVoting] = useState(false);
 
   if (!nowPlaying) {
@@ -79,14 +80,16 @@ export function NowPlaying({ nowPlaying, cancelVoteThreshold, onMarkDone, onVote
             >
               {voted ? "投票済み" : "スキップに投票"} ({nowPlaying.cancelVotes}/{cancelVoteThreshold})
             </Button>
-            <Button
-              variant="outlined"
-              startIcon={<CheckCircleIcon />}
-              onClick={() => onMarkDone(nowPlaying.id)}
-              sx={{ width: { xs: "100%", sm: "auto" } }}
-            >
-              完了にする
-            </Button>
+            {isAdmin && (
+              <Button
+                variant="outlined"
+                startIcon={<CheckCircleIcon />}
+                onClick={() => onMarkDone(nowPlaying.id)}
+                sx={{ width: { xs: "100%", sm: "auto" } }}
+              >
+                完了にする
+              </Button>
+            )}
           </Stack>
         </Stack>
       </Box>

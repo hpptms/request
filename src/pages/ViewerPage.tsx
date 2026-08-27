@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import Avatar from "@mui/material/Avatar";
 import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
@@ -28,6 +29,9 @@ const DEFAULT_CANCEL_VOTE_THRESHOLD = 10;
 // whatever the queue says is current, auto-advances when a video ends, and
 // fills silence with a random fallback video when nothing is queued.
 function ViewerPage() {
+  const [searchParams] = useSearchParams();
+  // ?solo=1 : OBSキャプチャ用に動画だけをフルサイズで表示し、キューと入力欄を隠す。
+  const solo = searchParams.get("solo") === "1";
   const [requests, setRequests] = useState<VideoRequest[]>([]);
   const [cancelVoteThreshold, setCancelVoteThreshold] = useState(DEFAULT_CANCEL_VOTE_THRESHOLD);
   const [started, setStarted] = useState(false);
@@ -176,7 +180,7 @@ function ViewerPage() {
   return (
     <Box sx={{ position: "fixed", inset: 0, bgcolor: "black", display: "flex", flexDirection: "column" }}>
       <Box sx={{ flex: 1, minHeight: 0, display: "flex" }}>
-        <Box sx={{ flex: "4 1 0%", position: "relative", bgcolor: "black" }}>
+        <Box sx={{ flex: solo ? "1 1 0%" : "4 1 0%", position: "relative", bgcolor: "black" }}>
           {!started ? (
             <Stack
               spacing={3}
@@ -216,40 +220,42 @@ function ViewerPage() {
           )}
         </Box>
 
-        <Box
-          sx={{
-            flex: "1 1 0%",
-            minWidth: 0,
-            display: "flex",
-            flexDirection: "column",
-            bgcolor: "#141414",
-            borderLeft: "1px solid rgba(255,255,255,0.12)",
-          }}
-        >
-          <Typography variant="subtitle2" sx={{ color: "grey.400", px: 1.5, py: 1, flexShrink: 0 }}>
-            キュー {pendingList.length > 0 && `(${pendingList.length})`}
-          </Typography>
-          <Divider sx={{ borderColor: "rgba(255,255,255,0.12)" }} />
-          <Box sx={{ flex: 1, overflowY: "auto" }}>
-            {pendingList.length === 0 ? (
-              <Typography variant="body2" sx={{ color: "grey.600", p: 2, textAlign: "center" }}>
-                リクエストはありません
-              </Typography>
-            ) : (
-              pendingList.map((r) => (
-                <QueueRow
-                  key={r.id}
-                  request={r}
-                  threshold={cancelVoteThreshold}
-                  onVoteCancel={handleVoteCancel}
-                />
-              ))
-            )}
+        {!solo && (
+          <Box
+            sx={{
+              flex: "1 1 0%",
+              minWidth: 0,
+              display: "flex",
+              flexDirection: "column",
+              bgcolor: "#141414",
+              borderLeft: "1px solid rgba(255,255,255,0.12)",
+            }}
+          >
+            <Typography variant="subtitle2" sx={{ color: "grey.400", px: 1.5, py: 1, flexShrink: 0 }}>
+              キュー {pendingList.length > 0 && `(${pendingList.length})`}
+            </Typography>
+            <Divider sx={{ borderColor: "rgba(255,255,255,0.12)" }} />
+            <Box sx={{ flex: 1, overflowY: "auto" }}>
+              {pendingList.length === 0 ? (
+                <Typography variant="body2" sx={{ color: "grey.600", p: 2, textAlign: "center" }}>
+                  リクエストはありません
+                </Typography>
+              ) : (
+                pendingList.map((r) => (
+                  <QueueRow
+                    key={r.id}
+                    request={r}
+                    threshold={cancelVoteThreshold}
+                    onVoteCancel={handleVoteCancel}
+                  />
+                ))
+              )}
+            </Box>
           </Box>
-        </Box>
+        )}
       </Box>
 
-      <RequestBar onSubmit={handleCreateRequest} />
+      {!solo && <RequestBar onSubmit={handleCreateRequest} />}
     </Box>
   );
 }

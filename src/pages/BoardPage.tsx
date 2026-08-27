@@ -24,6 +24,7 @@ function BoardPage() {
   const [requests, setRequests] = useState<VideoRequest[]>([]);
   const [cancelVoteThreshold, setCancelVoteThreshold] = useState(DEFAULT_CANCEL_VOTE_THRESHOLD);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
@@ -36,6 +37,7 @@ function BoardPage() {
 
   useEffect(() => {
     api.getConfig().then((config) => setCancelVoteThreshold(config.cancelVoteThreshold)).catch(() => {});
+    api.adminSession().then((session) => setIsAdmin(session.authenticated)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -135,6 +137,7 @@ function BoardPage() {
           <NowPlaying
             nowPlaying={nowPlaying}
             cancelVoteThreshold={cancelVoteThreshold}
+            isAdmin={isAdmin}
             onMarkDone={handleDone}
             onVoteCancel={handleVoteCancel}
           />
