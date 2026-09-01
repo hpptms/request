@@ -23,7 +23,7 @@ import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LogoutIcon from "@mui/icons-material/Logout";
 import ShieldIcon from "@mui/icons-material/Shield";
 import { api } from "../api";
-import type { AdminVideoRequest, BannedIP } from "../types";
+import type { AdminVideoRequest, BannedIP, PlaylistTrack } from "../types";
 
 function AdminPage() {
   const [checkingSession, setCheckingSession] = useState(true);
@@ -116,6 +116,107 @@ function LoginForm({ onLoggedIn }: { onLoggedIn: () => void }) {
   );
 }
 
+// The queue's filler content: a plain, ordered list of YouTube URLs the
+// viewer screen plays whenever no one has requested anything. Real requests
+// always interrupt it, and it resumes from where it was paused once the
+// queue empties again (see ViewerPage.tsx).
+function PlaylistManagement() {
+  const [text, setText] = useState("");
+  const [tracks, setTracks] = useState<PlaylistTrack[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<{ line: number; url: string; message: string }[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [savedMessage, setSavedMessage] = useState(false);
+
+  useEffect(() => {
+    api
+      .getPlaylist()
+      .then((data) => {
+        setTracks(data);
+        setText(data.map((t) => t.url).join("\n"));
+      })
+      .catch((err) => setErrorMessage(err instanceof Error ? err.message : "取得に失敗しました"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setErrorMessage(null);
+    setSavedMessage(false);
+    try {
+      const urls = text.split("\n");
+      const result = await api.adminSetPlaylist(urls);
+      setTracks(result.tracks);
+      setErrors(result.errors);
+      setSavedMessage(true);
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "保存に失敗しました");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
+      <Typography variant="h6" gutterBottom>
+        プレイリスト
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        リクエストが無いときに順番に再生される動画です。1行に1つYouTubeのURLを入力してください。リクエストが入ると中断され、無くなると続きから再開されます。
+      </Typography>
+      {errorMessage && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {errorMessage}
+        </Alert>
+      )}
+      {savedMessage && errors.length === 0 && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          保存しました（{tracks.length}件）
+        </Alert>
+      )}
+      {errors.length > 0 && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          <Stack spacing={0.5}>
+            {errors.map((e) => (
+              <Typography key={e.line} variant="body2">
+                {e.line}行目「{e.url}」: {e.message}
+              </Typography>
+            ))}
+          </Stack>
+        </Alert>
+      )}
+      <TextField
+        multiline
+        minRows={4}
+        maxRows={12}
+        fullWidth
+        placeholder={"https://www.youtube.com/watch?v=...\nhttps://youtu.be/..."}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        disabled={loading}
+        sx={{ mb: 2, "& textarea": { fontFamily: "monospace", fontSize: "0.85rem" } }}
+      />
+      <Button variant="contained" onClick={handleSave} disabled={loading || saving}>
+        保存
+      </Button>
+
+      {tracks.length > 0 && (
+        <List disablePadding sx={{ mt: 2 }}>
+          {tracks.map((t, i) => (
+            <ListItem key={`${t.videoId}-${i}`} divider={i < tracks.length - 1} disableGutters>
+              <ListItemAvatar>
+                <Avatar variant="rounded" src={t.thumbnailUrl} sx={{ width: 48, height: 36, mr: 1 }} />
+              </ListItemAvatar>
+              <ListItemText primary={t.title} secondary={t.channelTitle} slotProps={{ primary: { noWrap: true } }} />
+            </ListItem>
+          ))}
+        </List>
+      )}
+    </Paper>
+  );
+}
+
 function BanManagement({ onLoggedOut }: { onLoggedOut: () => void }) {
   const [requests, setRequests] = useState<AdminVideoRequest[]>([]);
   const [bans, setBans] = useState<BannedIP[]>([]);
@@ -204,6 +305,8 @@ function BanManagement({ onLoggedOut }: { onLoggedOut: () => void }) {
       <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1.5, sm: 3 } }}>
         <Stack spacing={3}>
           {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+
+          <PlaylistManagement />
 
           <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
             <Typography variant="h6" gutterBottom>

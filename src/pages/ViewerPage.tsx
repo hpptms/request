@@ -18,7 +18,7 @@ import { api } from "../api";
 import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
 import { FALLBACK_VIDEO_IDS, pickRandomFallbackVideoId } from "../lib/fallbackPlaylist";
 import { loadYouTubeIframeApi } from "../lib/loadYouTubeIframeApi";
-import type { FallbackTrack, VideoRequest } from "../types";
+import type { FallbackTrack, PlaylistTrack, VideoRequest } from "../types";
 
 const POLL_INTERVAL_MS = 3000;
 const PLAYER_ELEMENT_ID = "yt-viewer-player";
@@ -27,7 +27,8 @@ const DEFAULT_CANCEL_VOTE_THRESHOLD = 10;
 // The OBS capture screen: video on the left (4), a live queue with cancel
 // voting on the right (1), and a request bar along the bottom. It plays
 // whatever the queue says is current, auto-advances when a video ends, and
-// fills silence with a random fallback video when nothing is queued.
+// fills silence with the admin's playlist (or, failing that, a random
+// fallback video) when nothing is queued.
 function ViewerPage() {
   const [searchParams] = useSearchParams();
   // ?solo=1 : OBSキャプチャ用に動画だけをフルサイズで表示し、キューと入力欄を隠す。
@@ -42,6 +43,10 @@ function ViewerPage() {
   // permanently, with no YouTube API key configured), in which case the
   // static FALLBACK_VIDEO_IDS list below is used instead.
   const [fallbackTracks, setFallbackTracks] = useState<FallbackTrack[]>([]);
+  // Admin-curated playlist (see AdminPage's PlaylistManagement): a plain,
+  // ordered list of videos that takes priority over the World/Japan Top 100
+  // fallback above whenever it's non-empty.
+  const [playlistTracks, setPlaylistTracks] = useState<PlaylistTrack[]>([]);
 
   const playerRef = useRef<YT.Player | null>(null);
   const loadedVideoIdRef = useRef<string | null>(null);
@@ -52,6 +57,19 @@ function ViewerPage() {
   // wired up once (see the `started`-only effect) and would otherwise close
   // over a stale empty list.
   const fallbackPoolRef = useRef<string[]>(FALLBACK_VIDEO_IDS);
+  // Mirrors playlistTracks, for the same reason as fallbackPoolRef.
+  const playlistPoolRef = useRef<PlaylistTrack[]>([]);
+  // Which playlist track is "up next": preserved across interruptions so a
+  // request pausing the playlist and finishing doesn't restart it from the
+  // top. Cleared back to 0 only when a track finishes naturally.
+  const playlistIndexRef = useRef(0);
+  // How many seconds into the current playlist track playback was paused at
+  // when a request interrupted it; used to resume from that point rather
+  // than replaying the track from the start.
+  const playlistPositionRef = useRef(0);
+  // True while the currently loaded filler video is a playlistTracks entry
+  // (sequential, resumable) rather than a random fallback pick.
+  const isPlaylistActiveRef = useRef(false);
 
   const refresh = useCallback(async () => {
     try {
@@ -77,6 +95,26 @@ function ViewerPage() {
       .catch(() => {
         // Keep the static FALLBACK_VIDEO_IDS pool already in fallbackPoolRef.
       });
+  }, []);
+
+  // Poll the admin-curated playlist periodically so edits made mid-stream
+  // take effect without reloading the viewer screen. If the list shrinks,
+  // playlistIndexRef is clamped where it's used below.
+  useEffect(() => {
+    const fetchPlaylist = () => {
+      api
+        .getPlaylist()
+        .then((tracks) => {
+          setPlaylistTracks(tracks);
+          playlistPoolRef.current = tracks;
+        })
+        .catch(() => {
+          // Keep whatever playlist was last successfully fetched.
+        });
+    };
+    fetchPlaylist();
+    const interval = setInterval(fetchPlaylist, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -116,9 +154,41 @@ function ViewerPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [started]);
 
+  // Starts (or resumes) filler playback when nothing is requested: the
+  // admin-curated playlist takes priority when non-empty, resuming at
+  // playlistPositionRef; otherwise a random World/Japan Top 100 (or static)
+  // fallback video plays instead.
+  const playFiller = () => {
+    const pool = playlistPoolRef.current;
+    if (pool.length > 0) {
+      const idx = Math.min(playlistIndexRef.current, pool.length - 1);
+      playlistIndexRef.current = idx;
+      const track = pool[idx];
+      isPlaylistActiveRef.current = true;
+      setIsFallbackPlaying(true);
+      loadedVideoIdRef.current = track.videoId;
+      currentRequestIdRef.current = null;
+      endedHandledRef.current = false;
+      setFallbackNowPlayingId(track.videoId);
+      playerRef.current?.loadVideoById({ videoId: track.videoId, startSeconds: playlistPositionRef.current });
+      return;
+    }
+
+    isPlaylistActiveRef.current = false;
+    setIsFallbackPlaying(true);
+    const videoId = pickRandomFallbackVideoId(fallbackPoolRef.current, null);
+    loadedVideoIdRef.current = videoId;
+    currentRequestIdRef.current = null;
+    endedHandledRef.current = false;
+    setFallbackNowPlayingId(videoId);
+    playerRef.current?.loadVideoById(videoId);
+  };
+
   // A real request finishing plays the next queued one (handled by the
-  // effects below); a fallback video finishing just picks another random one
-  // so the screen never goes idle while nothing is requested.
+  // effects below). A playlist track finishing advances to the next one in
+  // order (looping back to the start); a random fallback video finishing
+  // just picks another random one — either way the screen never goes idle
+  // while nothing is requested.
   const handleEnded = () => {
     if (endedHandledRef.current) return;
     endedHandledRef.current = true;
@@ -129,6 +199,21 @@ function ViewerPage() {
       currentRequestIdRef.current = null;
       api.finishRequest(finishedRequestId).catch(() => {}).finally(refresh);
       return;
+    }
+
+    if (isPlaylistActiveRef.current) {
+      const pool = playlistPoolRef.current;
+      if (pool.length > 0) {
+        playlistIndexRef.current = (playlistIndexRef.current + 1) % pool.length;
+        playlistPositionRef.current = 0;
+        const track = pool[playlistIndexRef.current];
+        loadedVideoIdRef.current = track.videoId;
+        endedHandledRef.current = false;
+        setFallbackNowPlayingId(track.videoId);
+        playerRef.current?.loadVideoById(track.videoId);
+        return;
+      }
+      isPlaylistActiveRef.current = false;
     }
 
     const nextVideoId = pickRandomFallbackVideoId(fallbackPoolRef.current, loadedVideoIdRef.current);
@@ -163,13 +248,21 @@ function ViewerPage() {
     api.playRequest(nextPending.id).catch(() => {}).finally(refresh);
   }, [started, playing, nextPending, refresh]);
 
-  // Load whatever should be showing: a real request takes priority; with
-  // nothing queued, start (and only start — looping is handled by
-  // handleEnded) a random fallback video.
+  // Load whatever should be showing: a real request takes priority and
+  // interrupts filler playback (remembering the playlist's position so it
+  // can resume later); with nothing queued, start (and only start — looping
+  // and advancing is handled by handleEnded) filler playback via playFiller.
   useEffect(() => {
     if (!started || !playerReady || !playerRef.current) return;
 
     if (target) {
+      if (isPlaylistActiveRef.current && currentRequestIdRef.current === null) {
+        const elapsed = playerRef.current.getCurrentTime();
+        if (typeof elapsed === "number" && Number.isFinite(elapsed)) {
+          playlistPositionRef.current = elapsed;
+        }
+        isPlaylistActiveRef.current = false;
+      }
       setIsFallbackPlaying(false);
       if (loadedVideoIdRef.current === target.videoId && currentRequestIdRef.current === target.id) return;
       loadedVideoIdRef.current = target.videoId;
@@ -180,16 +273,12 @@ function ViewerPage() {
     }
 
     if (loadedVideoIdRef.current === null) {
-      setIsFallbackPlaying(true);
-      const videoId = pickRandomFallbackVideoId(fallbackPoolRef.current, null);
-      loadedVideoIdRef.current = videoId;
-      currentRequestIdRef.current = null;
-      endedHandledRef.current = false;
-      setFallbackNowPlayingId(videoId);
-      playerRef.current.loadVideoById(videoId);
+      playFiller();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [started, playerReady, target]);
 
+  const playlistNowPlaying = playlistTracks.find((t) => t.videoId === fallbackNowPlayingId) ?? null;
   const fallbackNowPlaying = fallbackTracks.find((t) => t.videoId === fallbackNowPlayingId) ?? null;
 
   const handleVoteCancel = async (id: string) => {
@@ -238,9 +327,11 @@ function ViewerPage() {
               {isFallbackPlaying && (
                 <Chip
                   label={
-                    fallbackNowPlaying
-                      ? `リクエスト待ち・${fallbackNowPlaying.region === "japan" ? "日本" : "世界"}Top100自動再生中: ${fallbackNowPlaying.title}`
-                      : "リクエスト待ち・自動再生中"
+                    playlistNowPlaying
+                      ? `リクエスト待ち・プレイリスト再生中: ${playlistNowPlaying.title}`
+                      : fallbackNowPlaying
+                        ? `リクエスト待ち・${fallbackNowPlaying.region === "japan" ? "日本" : "世界"}Top100自動再生中: ${fallbackNowPlaying.title}`
+                        : "リクエスト待ち・自動再生中"
                   }
                   size="small"
                   sx={{
