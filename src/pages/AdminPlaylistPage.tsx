@@ -51,9 +51,11 @@ function AdminPlaylistPage() {
   // entries only), so the two never show different playlists.
   const savePlaylist = async (urls: string[]) => {
     const result = await api.adminSetPlaylist(urls);
-    setTracks(result.tracks);
-    setText(result.tracks.map((t) => t.url).join("\n"));
-    setErrors(result.errors);
+    setTracks(result.tracks ?? []);
+    setText((result.tracks ?? []).map((t) => t.url).join("\n"));
+    // Defensive: a clean save with zero errors should come back as `[]`,
+    // but don't crash the page (blank-screen) on `.length` if it's ever null.
+    setErrors(result.errors ?? []);
     return result;
   };
 
