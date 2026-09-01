@@ -46,8 +46,8 @@ function BoardPage() {
     return () => clearInterval(interval);
   }, [refresh]);
 
-  const handleCreate = async (url: string, requesterName: string) => {
-    await api.createRequest(url, requesterName);
+  const handleCreate = async (url: string) => {
+    await api.createRequest(url, "");
     await refresh();
   };
 

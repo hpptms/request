@@ -9,12 +9,11 @@ import Typography from "@mui/material/Typography";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 
 interface Props {
-  onSubmit: (url: string, requesterName: string) => Promise<void>;
+  onSubmit: (url: string) => Promise<void>;
 }
 
 export function RequestForm({ onSubmit }: Props) {
   const [url, setUrl] = useState("");
-  const [requesterName, setRequesterName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,7 +24,7 @@ export function RequestForm({ onSubmit }: Props) {
     setSubmitting(true);
     setError(null);
     try {
-      await onSubmit(url.trim(), requesterName.trim());
+      await onSubmit(url.trim());
       setUrl("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "リクエストの追加に失敗しました");
@@ -53,13 +52,6 @@ export function RequestForm({ onSubmit }: Props) {
             fullWidth
             required
             size="small"
-          />
-          <TextField
-            label="お名前 (任意)"
-            value={requesterName}
-            onChange={(e) => setRequesterName(e.target.value)}
-            size="small"
-            sx={{ minWidth: { sm: 160 } }}
           />
           <Button
             type="submit"
