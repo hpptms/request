@@ -3,6 +3,7 @@ import Alert from "@mui/material/Alert";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemAvatar from "@mui/material/ListItemAvatar";
@@ -10,7 +11,10 @@ import ListItemText from "@mui/material/ListItemText";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import DeleteIcon from "@mui/icons-material/Delete";
+import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import { api } from "../api";
 import type { PlaylistResolveError, PlaylistTrack } from "../types";
 
@@ -26,6 +30,10 @@ function AdminPlaylistPage() {
   const [errors, setErrors] = useState<PlaylistResolveError[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState(false);
+  // videoId of the row whose delete button was just clicked, so only that
+  // row shows a disabled/busy state while the request is in flight.
+  const [deletingVideoId, setDeletingVideoId] = useState<string | null>(null);
+  const [clearing, setClearing] = useState(false);
 
   useEffect(() => {
     api
@@ -38,20 +46,58 @@ function AdminPlaylistPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Saves the given list of URLs as the new playlist and syncs both `tracks`
+  // and the textarea to whatever actually got saved (successfully resolved
+  // entries only), so the two never show different playlists.
+  const savePlaylist = async (urls: string[]) => {
+    const result = await api.adminSetPlaylist(urls);
+    setTracks(result.tracks);
+    setText(result.tracks.map((t) => t.url).join("\n"));
+    setErrors(result.errors);
+    return result;
+  };
+
   const handleSave = async () => {
     setSaving(true);
     setErrorMessage(null);
     setSavedMessage(false);
     try {
-      const urls = text.split("\n");
-      const result = await api.adminSetPlaylist(urls);
-      setTracks(result.tracks);
-      setErrors(result.errors);
+      await savePlaylist(text.split("\n"));
       setSavedMessage(true);
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "保存に失敗しました");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteTrack = async (index: number) => {
+    const track = tracks[index];
+    setDeletingVideoId(track.videoId);
+    setErrorMessage(null);
+    setSavedMessage(false);
+    try {
+      const remainingUrls = tracks.filter((_, i) => i !== index).map((t) => t.url);
+      await savePlaylist(remainingUrls);
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "削除に失敗しました");
+    } finally {
+      setDeletingVideoId(null);
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (tracks.length === 0) return;
+    if (!window.confirm(`プレイリストの${tracks.length}件をすべて削除します。よろしいですか？`)) return;
+    setClearing(true);
+    setErrorMessage(null);
+    setSavedMessage(false);
+    try {
+      await savePlaylist([]);
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "削除に失敗しました");
+    } finally {
+      setClearing(false);
     }
   };
 
@@ -103,9 +149,22 @@ function AdminPlaylistPage() {
       </Paper>
 
       <Box>
-        <Typography variant="h6" sx={{ mb: 1.5 }}>
-          読み込み済みのプレイリスト {tracks.length > 0 && `(${tracks.length})`}
-        </Typography>
+        <Stack direction="row" sx={{ alignItems: "center", mb: 1.5 }}>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+            読み込み済みのプレイリスト {tracks.length > 0 && `(${tracks.length})`}
+          </Typography>
+          {tracks.length > 0 && (
+            <Button
+              size="small"
+              color="error"
+              startIcon={<DeleteSweepIcon />}
+              onClick={handleClearAll}
+              disabled={clearing || deletingVideoId !== null}
+            >
+              すべて削除
+            </Button>
+          )}
+        </Stack>
         {tracks.length === 0 ? (
           <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 }, textAlign: "center" }}>
             <Typography color="text.secondary">プレイリストは空です</Typography>
@@ -114,11 +173,29 @@ function AdminPlaylistPage() {
           <Paper elevation={2}>
             <List disablePadding>
               {tracks.map((t, i) => (
-                <ListItem key={`${t.videoId}-${i}`} divider={i < tracks.length - 1}>
+                <ListItem
+                  key={`${t.videoId}-${i}`}
+                  divider={i < tracks.length - 1}
+                  secondaryAction={
+                    <Tooltip title="このプレイリストから削除">
+                      <span>
+                        <IconButton
+                          edge="end"
+                          color="error"
+                          onClick={() => handleDeleteTrack(i)}
+                          disabled={deletingVideoId !== null || clearing}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                  }
+                >
                   <ListItemAvatar>
                     <Avatar variant="rounded" src={t.thumbnailUrl} sx={{ width: 48, height: 36, mr: 1 }} />
                   </ListItemAvatar>
                   <ListItemText
+                    sx={{ pr: 6 }}
                     primary={t.title}
                     secondary={t.channelTitle}
                     slotProps={{ primary: { noWrap: true } }}
