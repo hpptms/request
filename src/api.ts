@@ -4,6 +4,8 @@ import type {
   BannedIP,
   CancelVoteResult,
   FallbackTrack,
+  PlaylistTrack,
+  PlaylistUpdateResult,
   SearchResult,
   VideoRequest,
 } from "./types";
@@ -63,6 +65,16 @@ export const api = {
   // has no YouTube API key configured) — callers should fall back to
   // fallbackPlaylist.ts's static list in that case.
   getFallbackPlaylist: () => request<FallbackTrack[]>("/fallback-playlist"),
+
+  // Admin-curated playlist played, in order, whenever the request queue is
+  // empty. Takes priority over getFallbackPlaylist above when non-empty.
+  getPlaylist: () => request<PlaylistTrack[]>("/playlist"),
+
+  adminSetPlaylist: (urls: string[]) =>
+    request<PlaylistUpdateResult>("/admin/playlist", {
+      method: "PUT",
+      body: JSON.stringify({ urls }),
+    }),
 
   adminLogin: (username: string, password: string) =>
     request<{ ok: boolean }>("/admin/login", {
