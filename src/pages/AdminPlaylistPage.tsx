@@ -62,7 +62,8 @@ function AdminPlaylistPage() {
           プレイリストを読み込む
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          リクエストが無いときに順番に再生される動画です。1行に1つYouTubeのURLを貼り付けて保存してください。リクエストが入ると中断され、無くなると続きから再開されます。
+          リクエストが無いときに順番に再生される動画です。1行に1つ、動画ページのYouTube URL（例:
+          youtube.com/watch?v=…、youtu.be/…）を貼り付けて保存してください。検索結果ページのURL（youtube.com/results?search_query=…）は解決できません。リクエストが入ると中断され、無くなると続きから再開されます。
         </Typography>
         {errorMessage && (
           <Alert severity="error" sx={{ mb: 2 }}>
