@@ -328,7 +328,7 @@ function ViewerPage() {
                 <Chip
                   label={
                     playlistNowPlaying
-                      ? "プレイリストを再生中です。リクエストで中断されます"
+                      ? `リクエスト待ち・プレイリスト再生中: ${playlistNowPlaying.title}`
                       : fallbackNowPlaying
                         ? `リクエスト待ち・${fallbackNowPlaying.region === "japan" ? "日本" : "世界"}Top100自動再生中: ${fallbackNowPlaying.title}`
                         : "リクエスト待ち・自動再生中"
