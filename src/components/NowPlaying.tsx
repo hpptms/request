@@ -46,12 +46,22 @@ export function NowPlaying({ nowPlaying, cancelVoteThreshold, isAdmin, onMarkDon
       <Box sx={{ position: "relative", pt: "56.25%", bgcolor: "black" }}>
         <Box
           component="iframe"
-          src={`https://www.youtube.com/embed/${nowPlaying.videoId}?autoplay=1`}
+          src={`https://www.youtube.com/embed/${nowPlaying.videoId}?autoplay=1${
+            isAdmin ? "" : "&controls=0&disablekb=1&fs=0&rel=0&modestbranding=1"
+          }`}
           title={nowPlaying.title}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
+          allowFullScreen={isAdmin}
+          tabIndex={isAdmin ? undefined : -1}
           sx={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }}
         />
+        {/* controls=0だけではクリックでの再生/一時停止操作が残るため、透明オーバーレイで吸収する */}
+        {!isAdmin && (
+          <Box
+            sx={{ position: "absolute", inset: 0, zIndex: 1, cursor: "default" }}
+            onContextMenu={(e) => e.preventDefault()}
+          />
+        )}
       </Box>
       <Box sx={{ p: 2 }}>
         <Stack
@@ -78,7 +88,7 @@ export function NowPlaying({ nowPlaying, cancelVoteThreshold, isAdmin, onMarkDon
               disabled={voting || voted}
               sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
             >
-              {voted ? "投票済み" : "スキップに投票"} ({nowPlaying.cancelVotes}/{cancelVoteThreshold})
+              {voted ? "投票済み" : "1:30に短縮へ投票"} ({nowPlaying.cancelVotes}/{cancelVoteThreshold})
             </Button>
             {isAdmin && (
               <Button

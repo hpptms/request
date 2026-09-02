@@ -22,7 +22,6 @@ export interface AppConfig {
 export interface CancelVoteResult {
   voteCount: number;
   threshold: number;
-  cancelled: boolean;
 }
 
 export interface LikeResult {
