@@ -4,6 +4,7 @@ import type {
   BannedIP,
   CancelVoteResult,
   FallbackTrack,
+  PlaylistImportResult,
   PlaylistTrack,
   PlaylistUpdateResult,
   SearchResult,
@@ -74,6 +75,15 @@ export const api = {
     request<PlaylistUpdateResult>("/admin/playlist", {
       method: "PUT",
       body: JSON.stringify({ urls }),
+    }),
+
+  // Expands a YouTube playlist URL into its member videos' watch URLs.
+  // Doesn't save anything by itself — the caller appends the result into
+  // the playlist textarea for review, then saves via adminSetPlaylist.
+  adminImportYouTubePlaylist: (url: string) =>
+    request<PlaylistImportResult>("/admin/playlist/import", {
+      method: "POST",
+      body: JSON.stringify({ url }),
     }),
 
   adminLogin: (username: string, password: string) =>

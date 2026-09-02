@@ -30,6 +30,9 @@ function AdminPlaylistPage() {
   const [errors, setErrors] = useState<PlaylistResolveError[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState(false);
+  const [importUrl, setImportUrl] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [importErrorMessage, setImportErrorMessage] = useState<string | null>(null);
   // videoId of the row whose delete button was just clicked, so only that
   // row shows a disabled/busy state while the request is in flight.
   const [deletingVideoId, setDeletingVideoId] = useState<string | null>(null);
@@ -73,6 +76,24 @@ function AdminPlaylistPage() {
     }
   };
 
+  // Expands a YouTube playlist URL into its member videos' watch URLs and
+  // appends them to the textarea (not saved yet) so the admin can review
+  // and prune the list before pressing 保存, same as pasting URLs by hand.
+  const handleImport = async () => {
+    if (!importUrl.trim()) return;
+    setImporting(true);
+    setImportErrorMessage(null);
+    try {
+      const result = await api.adminImportYouTubePlaylist(importUrl.trim());
+      setText((prev) => (prev.trim() ? `${prev}\n${result.urls.join("\n")}` : result.urls.join("\n")));
+      setImportUrl("");
+    } catch (err) {
+      setImportErrorMessage(err instanceof Error ? err.message : "読み込みに失敗しました");
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const handleDeleteTrack = async (index: number) => {
     const track = tracks[index];
     setDeletingVideoId(track.videoId);
@@ -105,6 +126,38 @@ function AdminPlaylistPage() {
 
   return (
     <Stack spacing={3}>
+      <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
+        <Typography variant="h6" gutterBottom>
+          YouTubeプレイリストから読み込む
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          YouTubeのプレイリストのURL（例: youtube.com/playlist?list=…）を貼り付けると、含まれる動画のURLを一括で下の欄に追加します。まだ保存はされません。追加された内容を確認してから保存してください。
+        </Typography>
+        {importErrorMessage && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {importErrorMessage}
+          </Alert>
+        )}
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="https://www.youtube.com/playlist?list=..."
+            value={importUrl}
+            onChange={(e) => setImportUrl(e.target.value)}
+            disabled={importing}
+          />
+          <Button
+            variant="outlined"
+            onClick={handleImport}
+            disabled={importing || !importUrl.trim()}
+            sx={{ flexShrink: 0 }}
+          >
+            読み込む
+          </Button>
+        </Stack>
+      </Paper>
+
       <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
         <Typography variant="h6" gutterBottom>
           プレイリストを読み込む
