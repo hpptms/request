@@ -26,10 +26,6 @@ const POLL_INTERVAL_MS = 3000;
 const PLAYER_ELEMENT_ID = "yt-viewer-player";
 const DEFAULT_CANCEL_VOTE_THRESHOLD = 10;
 const DEFAULT_LIKE_PRIORITY_THRESHOLD = 2;
-// A request that's accumulated this many cancel votes (but hasn't yet hit
-// the full CancelVoteThreshold that removes it outright) is still played,
-// but capped at SHORTENED_PLAYBACK_SECONDS instead of running to the end.
-const CANCEL_VOTE_SHORTEN_THRESHOLD = 5;
 const SHORTENED_PLAYBACK_SECONDS = 90; // 1:30
 
 // The OBS capture screen: video on the left (4), a live queue with cancel
@@ -244,8 +240,8 @@ function ViewerPage() {
   const target = playing ?? nextPending;
 
   // If the request that's currently loaded disappears from the queue (e.g.
-  // cancelled by crowd vote, or deleted by the admin), stop it immediately
-  // instead of waiting for it to play out, so the claim effect can advance.
+  // deleted by the admin), stop it immediately instead of waiting for it to
+  // play out, so the claim effect can advance.
   useEffect(() => {
     if (!started || !currentRequestIdRef.current) return;
     const stillQueued = requests.some((r) => r.id === currentRequestIdRef.current);
@@ -255,19 +251,19 @@ function ViewerPage() {
     currentRequestIdRef.current = null;
   }, [started, requests]);
 
-  // Once the currently playing request's cancel votes reach the shorten
-  // threshold, cap its playback at SHORTENED_PLAYBACK_SECONDS instead of
-  // letting it run to the end — a video half the crowd wants skipped
-  // shouldn't hog the full runtime, even if it's short of the threshold
-  // that removes it from the queue outright. Runs off the same poll that
-  // refreshes `requests`, so the cutoff lands within one POLL_INTERVAL_MS
-  // of the 90s mark rather than exactly on it.
+  // Once the currently playing request's cancel votes reach
+  // cancelVoteThreshold, cap its playback at SHORTENED_PLAYBACK_SECONDS
+  // instead of letting it run to the end — a video the crowd wants skipped
+  // shouldn't hog the full runtime. Requests are never removed from the
+  // queue outright; this cap is the only consequence of cancel votes. Runs
+  // off the same poll that refreshes `requests`, so the cutoff lands within
+  // one POLL_INTERVAL_MS of the 90s mark rather than exactly on it.
   useEffect(() => {
     if (!started || !playerReady || endedHandledRef.current) return;
     const requestId = currentRequestIdRef.current;
     if (!requestId) return;
     const current = requests.find((r) => r.id === requestId);
-    if (!current || current.cancelVotes < CANCEL_VOTE_SHORTEN_THRESHOLD) return;
+    if (!current || current.cancelVotes < cancelVoteThreshold) return;
     const elapsed = playerRef.current?.getCurrentTime();
     if (typeof elapsed !== "number" || elapsed < SHORTENED_PLAYBACK_SECONDS) return;
 
@@ -276,7 +272,7 @@ function ViewerPage() {
     currentRequestIdRef.current = null;
     playerRef.current?.stopVideo();
     api.finishRequest(requestId).catch(() => {}).finally(refresh);
-  }, [started, playerReady, requests, refresh]);
+  }, [started, playerReady, requests, cancelVoteThreshold, refresh]);
 
   // Claim the next pending request when nothing is marked as playing yet.
   useEffect(() => {
@@ -506,7 +502,7 @@ function QueueRow({ request, threshold, likeThreshold, onVoteCancel, onLike }: Q
           </IconButton>
         </span>
       </Tooltip>
-      <Tooltip title={voted ? "投票済み" : `キャンセルに投票 (${request.cancelVotes}/${threshold})`}>
+      <Tooltip title={voted ? "投票済み" : `1:30に短縮へ投票 (${request.cancelVotes}/${threshold})`}>
         <span>
           <IconButton
             size="small"
