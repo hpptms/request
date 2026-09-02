@@ -75,6 +75,12 @@ function ViewerPage() {
   // True while the currently loaded filler video is a playlistTracks entry
   // (sequential, resumable) rather than a random fallback pick.
   const isPlaylistActiveRef = useRef(false);
+  // Last known-good playback position (seconds) and when it was last
+  // checked, for the seek-guard effect below to tell normal playback apart
+  // from someone dragging the seek bar (or skipping ahead any other way —
+  // touch gesture, OS media controls, etc.) and snap straight back.
+  const expectedTimeRef = useRef(0);
+  const seekGuardTickRef = useRef<number | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -167,6 +173,14 @@ function ViewerPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [started]);
 
+  // Rebase the seek-guard's expected position whenever a new video is
+  // intentionally loaded, so the jump to startSeconds isn't itself flagged as
+  // an unauthorized seek.
+  const resetSeekGuard = (startSeconds = 0) => {
+    expectedTimeRef.current = startSeconds;
+    seekGuardTickRef.current = null;
+  };
+
   // Starts (or resumes) filler playback when nothing is requested: the
   // admin-curated playlist takes priority when non-empty, resuming at
   // playlistPositionRef; otherwise a random World/Japan Top 100 (or static)
@@ -183,6 +197,7 @@ function ViewerPage() {
       currentRequestIdRef.current = null;
       endedHandledRef.current = false;
       setFallbackNowPlayingId(track.videoId);
+      resetSeekGuard(playlistPositionRef.current);
       playerRef.current?.loadVideoById({ videoId: track.videoId, startSeconds: playlistPositionRef.current });
       return;
     }
@@ -194,6 +209,7 @@ function ViewerPage() {
     currentRequestIdRef.current = null;
     endedHandledRef.current = false;
     setFallbackNowPlayingId(videoId);
+    resetSeekGuard();
     playerRef.current?.loadVideoById(videoId);
   };
 
@@ -223,6 +239,7 @@ function ViewerPage() {
         loadedVideoIdRef.current = track.videoId;
         endedHandledRef.current = false;
         setFallbackNowPlayingId(track.videoId);
+        resetSeekGuard();
         playerRef.current?.loadVideoById(track.videoId);
         return;
       }
@@ -233,6 +250,7 @@ function ViewerPage() {
     loadedVideoIdRef.current = nextVideoId;
     endedHandledRef.current = false;
     setFallbackNowPlayingId(nextVideoId);
+    resetSeekGuard();
     playerRef.current?.loadVideoById(nextVideoId);
   };
 
@@ -276,6 +294,49 @@ function ViewerPage() {
     api.finishRequest(requestId).catch(() => {}).finally(refresh);
   }, [started, playerReady, requests, cancelVoteThreshold, refresh]);
 
+  // Actively reverts any jump away from the expected playback position —
+  // whether from the (visually hidden, but still reachable via keyboard
+  // media keys, touch gestures, or OS-level media controls) seek bar, or any
+  // other way of scrubbing the player — so nobody can skip ahead (or back)
+  // in whatever's currently playing. This is enforced independently of the
+  // disablekb/controls playerVars and the click-absorbing overlay below,
+  // which only block the obvious on-screen interactions; this effect is the
+  // backstop that catches everything else by comparing the player's own
+  // clock against how much real time has actually passed.
+  useEffect(() => {
+    if (!started || !playerReady) return;
+    const TICK_MS = 300;
+    const TOLERANCE_SECONDS = 1.5;
+
+    const interval = setInterval(() => {
+      const player = playerRef.current;
+      if (!player) return;
+      const current = player.getCurrentTime();
+      if (typeof current !== "number" || !Number.isFinite(current)) return;
+
+      const now = performance.now();
+      if (seekGuardTickRef.current === null) {
+        seekGuardTickRef.current = now;
+        expectedTimeRef.current = current;
+        return;
+      }
+      const elapsedSeconds = (now - seekGuardTickRef.current) / 1000;
+      seekGuardTickRef.current = now;
+
+      const allowedMax = expectedTimeRef.current + elapsedSeconds + TOLERANCE_SECONDS;
+      const allowedMin = expectedTimeRef.current - TOLERANCE_SECONDS;
+
+      if (current > allowedMax || current < allowedMin) {
+        player.seekTo(expectedTimeRef.current, true);
+        return;
+      }
+
+      expectedTimeRef.current = current;
+    }, TICK_MS);
+
+    return () => clearInterval(interval);
+  }, [started, playerReady]);
+
   // Claim the next pending request when nothing is marked as playing yet.
   useEffect(() => {
     if (!started || playing || !nextPending) return;
@@ -304,6 +365,7 @@ function ViewerPage() {
       loadedVideoIdRef.current = target.videoId;
       currentRequestIdRef.current = target.id;
       endedHandledRef.current = false;
+      resetSeekGuard();
       playerRef.current.loadVideoById(target.videoId);
       return;
     }
