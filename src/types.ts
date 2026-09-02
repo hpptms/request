@@ -53,6 +53,7 @@ export interface FallbackTrack {
 export interface BannedIP {
   ip: string;
   bannedAt: string;
+  reason: string;
 }
 
 // A single entry in the admin-curated playlist the viewer screen plays, in

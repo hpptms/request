@@ -133,8 +133,19 @@ function AdminBansPage() {
                   }
                 >
                   <ListItemText
-                    primary={b.ip}
-                    secondary={`BAN日時: ${new Date(b.bannedAt).toLocaleString("ja-JP")}`}
+                    sx={{ pr: 6 }}
+                    primary={
+                      <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                        <span>{b.ip}</span>
+                        {b.reason && b.reason !== "manual" && (
+                          <Chip label="自動BAN" color="warning" size="small" sx={{ height: 18, fontSize: "0.65rem" }} />
+                        )}
+                      </Stack>
+                    }
+                    secondary={
+                      `BAN日時: ${new Date(b.bannedAt).toLocaleString("ja-JP")}` +
+                      (b.reason && b.reason !== "manual" ? ` (理由: ${b.reason})` : "")
+                    }
                   />
                 </ListItem>
               ))}
