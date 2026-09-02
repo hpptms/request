@@ -121,17 +121,19 @@ function BoardPage() {
             動画リクエストキュー
           </Typography>
           <Stack direction="row" spacing={0.5}>
-            <Button
-              component="a"
-              href="/viewer"
-              target="_blank"
-              rel="noopener"
-              size="small"
-              endIcon={<OpenInNewIcon />}
-              sx={{ whiteSpace: "nowrap" }}
-            >
-              再生画面
-            </Button>
+            {isAdmin && (
+              <Button
+                component="a"
+                href="/viewer"
+                target="_blank"
+                rel="noopener"
+                size="small"
+                endIcon={<OpenInNewIcon />}
+                sx={{ whiteSpace: "nowrap" }}
+              >
+                再生画面
+              </Button>
+            )}
             <Button
               component="a"
               href="/admin"
