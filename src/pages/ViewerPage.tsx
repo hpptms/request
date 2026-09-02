@@ -23,6 +23,11 @@ import type { FallbackTrack, PlaylistTrack, VideoRequest } from "../types";
 const POLL_INTERVAL_MS = 3000;
 const PLAYER_ELEMENT_ID = "yt-viewer-player";
 const DEFAULT_CANCEL_VOTE_THRESHOLD = 10;
+// A request that's accumulated this many cancel votes (but hasn't yet hit
+// the full CancelVoteThreshold that removes it outright) is still played,
+// but capped at SHORTENED_PLAYBACK_SECONDS instead of running to the end.
+const CANCEL_VOTE_SHORTEN_THRESHOLD = 5;
+const SHORTENED_PLAYBACK_SECONDS = 90; // 1:30
 
 // The OBS capture screen: video on the left (4), a live queue with cancel
 // voting on the right (1), and a request bar along the bottom. It plays
@@ -239,6 +244,29 @@ function ViewerPage() {
     loadedVideoIdRef.current = null;
     currentRequestIdRef.current = null;
   }, [started, requests]);
+
+  // Once the currently playing request's cancel votes reach the shorten
+  // threshold, cap its playback at SHORTENED_PLAYBACK_SECONDS instead of
+  // letting it run to the end — a video half the crowd wants skipped
+  // shouldn't hog the full runtime, even if it's short of the threshold
+  // that removes it from the queue outright. Runs off the same poll that
+  // refreshes `requests`, so the cutoff lands within one POLL_INTERVAL_MS
+  // of the 90s mark rather than exactly on it.
+  useEffect(() => {
+    if (!started || !playerReady || endedHandledRef.current) return;
+    const requestId = currentRequestIdRef.current;
+    if (!requestId) return;
+    const current = requests.find((r) => r.id === requestId);
+    if (!current || current.cancelVotes < CANCEL_VOTE_SHORTEN_THRESHOLD) return;
+    const elapsed = playerRef.current?.getCurrentTime();
+    if (typeof elapsed !== "number" || elapsed < SHORTENED_PLAYBACK_SECONDS) return;
+
+    endedHandledRef.current = true;
+    loadedVideoIdRef.current = null;
+    currentRequestIdRef.current = null;
+    playerRef.current?.stopVideo();
+    api.finishRequest(requestId).catch(() => {}).finally(refresh);
+  }, [started, playerReady, requests, refresh]);
 
   // Claim the next pending request when nothing is marked as playing yet.
   useEffect(() => {
