@@ -149,6 +149,7 @@ function BoardPage() {
             <QueueList
               requests={pending}
               cancelVoteThreshold={cancelVoteThreshold}
+              isAdmin={isAdmin}
               onPlay={handlePlay}
               onDelete={handleDelete}
               onVoteCancel={handleVoteCancel}

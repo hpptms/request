@@ -19,12 +19,13 @@ import type { VideoRequest } from "../types";
 interface Props {
   requests: VideoRequest[];
   cancelVoteThreshold: number;
+  isAdmin: boolean;
   onPlay: (id: string) => void;
   onDelete: (id: string) => void;
   onVoteCancel: (id: string) => Promise<void>;
 }
 
-export function QueueList({ requests, cancelVoteThreshold, onPlay, onDelete, onVoteCancel }: Props) {
+export function QueueList({ requests, cancelVoteThreshold, isAdmin, onPlay, onDelete, onVoteCancel }: Props) {
   if (requests.length === 0) {
     return (
       <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 }, textAlign: "center" }}>
@@ -53,11 +54,13 @@ export function QueueList({ requests, cancelVoteThreshold, onPlay, onDelete, onV
                     <PlayArrowIcon />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title="削除">
-                  <IconButton edge="end" onClick={() => onDelete(r.id)}>
-                    <DeleteIcon />
-                  </IconButton>
-                </Tooltip>
+                {isAdmin && (
+                  <Tooltip title="削除">
+                    <IconButton edge="end" onClick={() => onDelete(r.id)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </Tooltip>
+                )}
               </Stack>
             }
           >
