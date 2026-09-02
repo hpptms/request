@@ -4,6 +4,7 @@ import type {
   BannedIP,
   CancelVoteResult,
   FallbackTrack,
+  LikeResult,
   PlaylistImportResult,
   PlaylistTrack,
   PlaylistUpdateResult,
@@ -57,6 +58,9 @@ export const api = {
 
   voteCancel: (id: string) =>
     request<CancelVoteResult>(`/requests/${id}/cancel-vote`, { method: "POST" }),
+
+  likeRequest: (id: string) =>
+    request<LikeResult>(`/requests/${id}/like`, { method: "POST" }),
 
   search: (query: string) =>
     request<SearchResult[]>(`/search?q=${encodeURIComponent(query)}`),

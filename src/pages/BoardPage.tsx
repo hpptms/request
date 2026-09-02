@@ -19,10 +19,12 @@ import type { VideoRequest } from "../types";
 
 const POLL_INTERVAL_MS = 4000;
 const DEFAULT_CANCEL_VOTE_THRESHOLD = 10;
+const DEFAULT_LIKE_PRIORITY_THRESHOLD = 2;
 
 function BoardPage() {
   const [requests, setRequests] = useState<VideoRequest[]>([]);
   const [cancelVoteThreshold, setCancelVoteThreshold] = useState(DEFAULT_CANCEL_VOTE_THRESHOLD);
+  const [likePriorityThreshold, setLikePriorityThreshold] = useState(DEFAULT_LIKE_PRIORITY_THRESHOLD);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -36,7 +38,13 @@ function BoardPage() {
   }, []);
 
   useEffect(() => {
-    api.getConfig().then((config) => setCancelVoteThreshold(config.cancelVoteThreshold)).catch(() => {});
+    api
+      .getConfig()
+      .then((config) => {
+        setCancelVoteThreshold(config.cancelVoteThreshold);
+        setLikePriorityThreshold(config.likePriorityThreshold);
+      })
+      .catch(() => {});
     api.adminSession().then((session) => setIsAdmin(session.authenticated)).catch(() => {});
   }, []);
 
@@ -84,6 +92,15 @@ function BoardPage() {
       await refresh();
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "投票に失敗しました");
+    }
+  };
+
+  const handleLike = async (id: string) => {
+    try {
+      await api.likeRequest(id);
+      await refresh();
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "いいねに失敗しました");
     }
   };
 
@@ -149,10 +166,12 @@ function BoardPage() {
             <QueueList
               requests={pending}
               cancelVoteThreshold={cancelVoteThreshold}
+              likePriorityThreshold={likePriorityThreshold}
               isAdmin={isAdmin}
               onPlay={handlePlay}
               onDelete={handleDelete}
               onVoteCancel={handleVoteCancel}
+              onLike={handleLike}
             />
           </Box>
         </Stack>

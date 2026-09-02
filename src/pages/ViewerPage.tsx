@@ -14,15 +14,18 @@ import Typography from "@mui/material/Typography";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
+import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { api } from "../api";
 import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
 import { FALLBACK_VIDEO_IDS, pickRandomFallbackVideoId } from "../lib/fallbackPlaylist";
+import { hasLiked, markLiked } from "../lib/likeStorage";
 import { loadYouTubeIframeApi } from "../lib/loadYouTubeIframeApi";
 import type { FallbackTrack, PlaylistTrack, VideoRequest } from "../types";
 
 const POLL_INTERVAL_MS = 3000;
 const PLAYER_ELEMENT_ID = "yt-viewer-player";
 const DEFAULT_CANCEL_VOTE_THRESHOLD = 10;
+const DEFAULT_LIKE_PRIORITY_THRESHOLD = 2;
 // A request that's accumulated this many cancel votes (but hasn't yet hit
 // the full CancelVoteThreshold that removes it outright) is still played,
 // but capped at SHORTENED_PLAYBACK_SECONDS instead of running to the end.
@@ -40,6 +43,7 @@ function ViewerPage() {
   const solo = searchParams.get("solo") === "1";
   const [requests, setRequests] = useState<VideoRequest[]>([]);
   const [cancelVoteThreshold, setCancelVoteThreshold] = useState(DEFAULT_CANCEL_VOTE_THRESHOLD);
+  const [likePriorityThreshold, setLikePriorityThreshold] = useState(DEFAULT_LIKE_PRIORITY_THRESHOLD);
   const [started, setStarted] = useState(false);
   const [playerReady, setPlayerReady] = useState(false);
   const [isFallbackPlaying, setIsFallbackPlaying] = useState(false);
@@ -86,7 +90,13 @@ function ViewerPage() {
   }, []);
 
   useEffect(() => {
-    api.getConfig().then((config) => setCancelVoteThreshold(config.cancelVoteThreshold)).catch(() => {});
+    api
+      .getConfig()
+      .then((config) => {
+        setCancelVoteThreshold(config.cancelVoteThreshold);
+        setLikePriorityThreshold(config.likePriorityThreshold);
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -315,6 +325,12 @@ function ViewerPage() {
     await refresh();
   };
 
+  const handleLike = async (id: string) => {
+    await api.likeRequest(id);
+    markLiked(id);
+    await refresh();
+  };
+
   const handleCreateRequest = async (url: string) => {
     await api.createRequest(url, "");
     await refresh();
@@ -403,7 +419,9 @@ function ViewerPage() {
                     key={r.id}
                     request={r}
                     threshold={cancelVoteThreshold}
+                    likeThreshold={likePriorityThreshold}
                     onVoteCancel={handleVoteCancel}
+                    onLike={handleLike}
                   />
                 ))
               )}
@@ -420,12 +438,16 @@ function ViewerPage() {
 interface QueueRowProps {
   request: VideoRequest;
   threshold: number;
+  likeThreshold: number;
   onVoteCancel: (id: string) => Promise<void>;
+  onLike: (id: string) => Promise<void>;
 }
 
-function QueueRow({ request, threshold, onVoteCancel }: QueueRowProps) {
+function QueueRow({ request, threshold, likeThreshold, onVoteCancel, onLike }: QueueRowProps) {
   const [voting, setVoting] = useState(false);
+  const [liking, setLiking] = useState(false);
   const voted = hasVoted(request.id);
+  const liked = hasLiked(request.id);
 
   const handleClick = async () => {
     setVoting(true);
@@ -433,6 +455,15 @@ function QueueRow({ request, threshold, onVoteCancel }: QueueRowProps) {
       await onVoteCancel(request.id);
     } finally {
       setVoting(false);
+    }
+  };
+
+  const handleLikeClick = async () => {
+    setLiking(true);
+    try {
+      await onLike(request.id);
+    } finally {
+      setLiking(false);
     }
   };
 
@@ -444,13 +475,37 @@ function QueueRow({ request, threshold, onVoteCancel }: QueueRowProps) {
     >
       <Avatar variant="rounded" src={request.thumbnailUrl} sx={{ width: 44, height: 32, flexShrink: 0 }} />
       <Box sx={{ minWidth: 0, flex: 1 }}>
-        <Typography variant="body2" noWrap sx={{ color: "white", lineHeight: 1.3 }}>
-          {request.title}
-        </Typography>
+        <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
+          {request.likes >= likeThreshold && (
+            <Chip
+              label="優先"
+              size="small"
+              color="primary"
+              sx={{ height: 16, fontSize: "0.6rem", flexShrink: 0, "& .MuiChip-label": { px: 0.6 } }}
+            />
+          )}
+          <Typography variant="body2" noWrap sx={{ color: "white", lineHeight: 1.3 }}>
+            {request.title}
+          </Typography>
+        </Stack>
         <Typography variant="caption" noWrap sx={{ color: "grey.500" }}>
           {request.channelTitle}
         </Typography>
       </Box>
+      <Tooltip title={liked ? "いいね済み" : `いいね (${request.likes}/${likeThreshold}で優先再生)`}>
+        <span>
+          <IconButton
+            size="small"
+            onClick={handleLikeClick}
+            disabled={liking || liked}
+            sx={{ color: liked ? "primary.main" : "grey.500", flexShrink: 0 }}
+          >
+            <Badge badgeContent={request.likes} color="primary">
+              <ThumbUpAltIcon fontSize="small" />
+            </Badge>
+          </IconButton>
+        </span>
+      </Tooltip>
       <Tooltip title={voted ? "投票済み" : `キャンセルに投票 (${request.cancelVotes}/${threshold})`}>
         <span>
           <IconButton
