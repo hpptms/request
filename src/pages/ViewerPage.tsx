@@ -144,7 +144,9 @@ function ViewerPage() {
       playerRef.current = new YTApi.Player(PLAYER_ELEMENT_ID, {
         width: "100%",
         height: "100%",
-        playerVars: { autoplay: 1, rel: 0, playsinline: 1 },
+        // controls/disablekb off: seeking to the end here fires the same
+        // ENDED event handleEnded uses to advance the queue.
+        playerVars: { autoplay: 1, rel: 0, playsinline: 1, controls: 0, disablekb: 1 },
         events: {
           onReady: () => setPlayerReady(true),
           onStateChange: (event) => {
@@ -364,6 +366,8 @@ function ViewerPage() {
           ) : (
             <>
               <Box id={PLAYER_ELEMENT_ID} sx={{ width: "100%", height: "100%" }} />
+              {/* Absorbs clicks/drags so visitors can't reach the player under it (see the playerVars comment above). */}
+              <Box sx={{ position: "absolute", inset: 0 }} onContextMenu={(e) => e.preventDefault()} />
               {isFallbackPlaying && (
                 <Chip
                   label={
