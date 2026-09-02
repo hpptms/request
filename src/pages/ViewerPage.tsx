@@ -5,6 +5,7 @@ import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
+import CircularProgress from "@mui/material/CircularProgress";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
@@ -16,6 +17,7 @@ import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { api } from "../api";
+import { AdminLoginForm } from "../components/AdminLoginForm";
 import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
 import { FALLBACK_VIDEO_IDS, pickRandomFallbackVideoId } from "../lib/fallbackPlaylist";
 import { hasLiked, markLiked } from "../lib/likeStorage";
@@ -28,12 +30,57 @@ const DEFAULT_CANCEL_VOTE_THRESHOLD = 10;
 const DEFAULT_LIKE_PRIORITY_THRESHOLD = 2;
 const SHORTENED_PLAYBACK_SECONDS = 90; // 1:30
 
+// Gatekeeper for /viewer: the actual YouTube playback only ever loads inside
+// an authenticated admin session (see the OBS setup note in AuthenticatedViewerPage's
+// comment below), so nobody who merely finds/guesses the URL can reach the
+// live iframe and mess with playback (seeking, pausing, etc.) for everyone
+// watching the stream. Requesting/liking/cancel-voting stays open to
+// everyone via the public board page (/) — this gate is only about who can
+// load the actual player.
+function ViewerPage() {
+  const [checkingSession, setCheckingSession] = useState(true);
+  const [authenticated, setAuthenticated] = useState(false);
+
+  const checkSession = useCallback(async () => {
+    try {
+      const { authenticated } = await api.adminSession();
+      setAuthenticated(authenticated);
+    } catch {
+      setAuthenticated(false);
+    } finally {
+      setCheckingSession(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkSession();
+  }, [checkSession]);
+
+  if (checkingSession) {
+    return (
+      <Box sx={{ position: "fixed", inset: 0, bgcolor: "black", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <CircularProgress sx={{ color: "white" }} />
+      </Box>
+    );
+  }
+
+  return authenticated ? (
+    <AuthenticatedViewerPage />
+  ) : (
+    <AdminLoginForm onLoggedIn={() => setAuthenticated(true)} />
+  );
+}
+
 // The OBS capture screen: video on the left (4), a live queue with cancel
 // voting on the right (1), and a request bar along the bottom. It plays
 // whatever the queue says is current, auto-advances when a video ends, and
 // fills silence with the admin's playlist (or, failing that, a random
 // fallback video) when nothing is queued.
-function ViewerPage() {
+//
+// Only rendered once ViewerPage above has confirmed an admin session, so set
+// OBS's Browser Source to this URL and use its "Interact" option to log in
+// once — the session cookie then persists for that source.
+function AuthenticatedViewerPage() {
   const [searchParams] = useSearchParams();
   // ?solo=1 : OBSキャプチャ用に動画だけをフルサイズで表示し、キューと入力欄を隠す。
   const solo = searchParams.get("solo") === "1";
