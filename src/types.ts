@@ -10,17 +10,24 @@ export interface VideoRequest {
   status: RequestStatus;
   createdAt: string;
   cancelVotes: number;
+  likes: number;
 }
 
 export interface AppConfig {
   searchEnabled: boolean;
   cancelVoteThreshold: number;
+  likePriorityThreshold: number;
 }
 
 export interface CancelVoteResult {
   voteCount: number;
   threshold: number;
   cancelled: boolean;
+}
+
+export interface LikeResult {
+  likeCount: number;
+  priorityThreshold: number;
 }
 
 export interface SearchResult {

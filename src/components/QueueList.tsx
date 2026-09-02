@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Avatar from "@mui/material/Avatar";
 import Badge from "@mui/material/Badge";
+import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
@@ -13,19 +14,32 @@ import Typography from "@mui/material/Typography";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
+import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
+import { hasLiked, markLiked } from "../lib/likeStorage";
 import type { VideoRequest } from "../types";
 
 interface Props {
   requests: VideoRequest[];
   cancelVoteThreshold: number;
+  likePriorityThreshold: number;
   isAdmin: boolean;
   onPlay: (id: string) => void;
   onDelete: (id: string) => void;
   onVoteCancel: (id: string) => Promise<void>;
+  onLike: (id: string) => Promise<void>;
 }
 
-export function QueueList({ requests, cancelVoteThreshold, isAdmin, onPlay, onDelete, onVoteCancel }: Props) {
+export function QueueList({
+  requests,
+  cancelVoteThreshold,
+  likePriorityThreshold,
+  isAdmin,
+  onPlay,
+  onDelete,
+  onVoteCancel,
+  onLike,
+}: Props) {
   if (requests.length === 0) {
     return (
       <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 }, textAlign: "center" }}>
@@ -44,6 +58,7 @@ export function QueueList({ requests, cancelVoteThreshold, isAdmin, onPlay, onDe
             sx={{ px: { xs: 1.5, sm: 2 } }}
             secondaryAction={
               <Stack direction="row" spacing={0}>
+                <LikeIconButton request={r} threshold={likePriorityThreshold} onLike={onLike} />
                 <CancelVoteIconButton
                   request={r}
                   threshold={cancelVoteThreshold}
@@ -73,12 +88,25 @@ export function QueueList({ requests, cancelVoteThreshold, isAdmin, onPlay, onDe
             </ListItemAvatar>
             <ListItemText
               sx={{ pr: { xs: 10, sm: 13 } }}
-              primary={r.title}
+              primary={
+                <Stack direction="row" spacing={0.75} sx={{ alignItems: "center", minWidth: 0 }}>
+                  {r.likes >= likePriorityThreshold && (
+                    <Chip
+                      label="優先"
+                      size="small"
+                      color="primary"
+                      sx={{ height: 18, fontSize: "0.65rem", flexShrink: 0, "& .MuiChip-label": { px: 0.75 } }}
+                    />
+                  )}
+                  <Typography component="span" noWrap>
+                    {r.title}
+                  </Typography>
+                </Stack>
+              }
               secondary={
                 r.channelTitle + (r.requesterName ? ` ・ リクエスト: ${r.requesterName}` : "")
               }
               slotProps={{
-                primary: { noWrap: true },
                 secondary: { noWrap: true },
               }}
             />
@@ -86,6 +114,39 @@ export function QueueList({ requests, cancelVoteThreshold, isAdmin, onPlay, onDe
         ))}
       </List>
     </Paper>
+  );
+}
+
+interface LikeIconButtonProps {
+  request: VideoRequest;
+  threshold: number;
+  onLike: (id: string) => Promise<void>;
+}
+
+function LikeIconButton({ request, threshold, onLike }: LikeIconButtonProps) {
+  const [liking, setLiking] = useState(false);
+  const liked = hasLiked(request.id);
+
+  const handleClick = async () => {
+    setLiking(true);
+    try {
+      await onLike(request.id);
+      markLiked(request.id);
+    } finally {
+      setLiking(false);
+    }
+  };
+
+  return (
+    <Tooltip title={liked ? "いいね済み" : `いいね (${request.likes}/${threshold}で優先再生)`}>
+      <span>
+        <IconButton edge="end" color={liked ? "primary" : "default"} onClick={handleClick} disabled={liking || liked}>
+          <Badge badgeContent={request.likes} color="primary">
+            <ThumbUpAltIcon fontSize="small" />
+          </Badge>
+        </IconButton>
+      </span>
+    </Tooltip>
   );
 }
 
