@@ -71,3 +71,10 @@ export interface PlaylistUpdateResult {
   tracks: PlaylistTrack[];
   errors: PlaylistResolveError[];
 }
+
+// Result of expanding a YouTube playlist URL into its member videos' watch
+// URLs (see AdminPlaylistPage) — these aren't saved yet, just handed back
+// for the admin to review/prune before the existing save flow resolves them.
+export interface PlaylistImportResult {
+  urls: string[];
+}
