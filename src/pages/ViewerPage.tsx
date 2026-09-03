@@ -88,6 +88,11 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   const [requests, setRequests] = useState<VideoRequest[]>([]);
   const [cancelVoteThreshold, setCancelVoteThreshold] = useState(DEFAULT_CANCEL_VOTE_THRESHOLD);
   const [likePriorityThreshold, setLikePriorityThreshold] = useState(DEFAULT_LIKE_PRIORITY_THRESHOLD);
+  // Backlog fast-forward mode (see AppConfig.fastForwardActive): re-polled
+  // periodically, not just fetched once, since it's expected to flip on/off
+  // while this screen stays open for hours at a time.
+  const [fastForwardActive, setFastForwardActive] = useState(false);
+  const [fastForwardCapSeconds, setFastForwardCapSeconds] = useState(60);
   const [started, setStarted] = useState(false);
   const [playerReady, setPlayerReady] = useState(false);
   const [isFallbackPlaying, setIsFallbackPlaying] = useState(false);
@@ -139,14 +144,23 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     }
   }, []);
 
+  // Polled (not just fetched once) so a fast-forward window starting or
+  // ending mid-session takes effect without reloading the viewer screen.
   useEffect(() => {
-    api
-      .getConfig()
-      .then((config) => {
-        setCancelVoteThreshold(config.cancelVoteThreshold);
-        setLikePriorityThreshold(config.likePriorityThreshold);
-      })
-      .catch(() => {});
+    const fetchConfig = () => {
+      api
+        .getConfig()
+        .then((config) => {
+          setCancelVoteThreshold(config.cancelVoteThreshold);
+          setLikePriorityThreshold(config.likePriorityThreshold);
+          setFastForwardActive(config.fastForwardActive);
+          setFastForwardCapSeconds(config.fastForwardCapSeconds);
+        })
+        .catch(() => {});
+    };
+    fetchConfig();
+    const interval = setInterval(fetchConfig, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -377,28 +391,36 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     currentRequestIdRef.current = null;
   }, [started, requests]);
 
-  // Once the currently playing request's cancel votes reach
-  // cancelVoteThreshold, cap its playback at SHORTENED_PLAYBACK_SECONDS
-  // instead of letting it run to the end — a video the crowd wants skipped
-  // shouldn't hog the full runtime. Requests are never removed from the
-  // queue outright; this cap is the only consequence of cancel votes. Runs
-  // off the same poll that refreshes `requests`, so the cutoff lands within
-  // one POLL_INTERVAL_MS of the 90s mark rather than exactly on it.
+  // Caps the currently playing request's remaining runtime once either
+  // condition applies, instead of letting it run to the end: enough cancel
+  // votes (SHORTENED_PLAYBACK_SECONDS), or the queue being in a backlog
+  // fast-forward window (fastForwardCapSeconds — see AppConfig). When both
+  // apply, whichever cap is smaller wins. Requests are never removed from
+  // the queue outright; this cap is the only consequence. Runs off the same
+  // poll that refreshes `requests`, so the cutoff lands within one
+  // POLL_INTERVAL_MS of the cap rather than exactly on it.
   useEffect(() => {
     if (!started || !playerReady || endedHandledRef.current) return;
     const requestId = currentRequestIdRef.current;
     if (!requestId) return;
     const current = requests.find((r) => r.id === requestId);
-    if (!current || current.cancelVotes < cancelVoteThreshold) return;
+    if (!current) return;
+
+    const caps: number[] = [];
+    if (fastForwardActive) caps.push(fastForwardCapSeconds);
+    if (current.cancelVotes >= cancelVoteThreshold) caps.push(SHORTENED_PLAYBACK_SECONDS);
+    if (caps.length === 0) return;
+    const capSeconds = Math.min(...caps);
+
     const elapsed = playerRef.current?.getCurrentTime();
-    if (typeof elapsed !== "number" || elapsed < SHORTENED_PLAYBACK_SECONDS) return;
+    if (typeof elapsed !== "number" || elapsed < capSeconds) return;
 
     endedHandledRef.current = true;
     loadedVideoIdRef.current = null;
     currentRequestIdRef.current = null;
     playerRef.current?.stopVideo();
     api.finishRequest(requestId).catch(() => {}).finally(refresh);
-  }, [started, playerReady, requests, cancelVoteThreshold, refresh]);
+  }, [started, playerReady, requests, cancelVoteThreshold, fastForwardActive, fastForwardCapSeconds, refresh]);
 
   // Actively reverts any jump away from the expected playback position —
   // whether from the (visually hidden, but still reachable via keyboard
