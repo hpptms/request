@@ -14,7 +14,6 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
-import SkipNextIcon from "@mui/icons-material/SkipNext";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { api } from "../api";
@@ -558,26 +557,6 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
               <Box id={PLAYER_ELEMENT_ID} sx={{ width: "100%", height: "100%" }} />
               {/* Absorbs clicks/drags so visitors can't reach the player under it (see the playerVars comment above). */}
               <Box sx={{ position: "absolute", inset: 0 }} onContextMenu={(e) => e.preventDefault()} />
-              {/* Admin-only manual skip; hidden in solo mode so it never shows up in the OBS capture. */}
-              {!solo && (
-                <Button
-                  variant="contained"
-                  size="small"
-                  color="inherit"
-                  startIcon={<SkipNextIcon />}
-                  onClick={handleSkip}
-                  sx={{
-                    position: "absolute",
-                    top: 16,
-                    right: 16,
-                    bgcolor: "rgba(0,0,0,0.6)",
-                    color: "white",
-                    "&:hover": { bgcolor: "rgba(0,0,0,0.8)" },
-                  }}
-                >
-                  スキップ
-                </Button>
-              )}
               {isFallbackPlaying && (
                 <Chip
                   label={
