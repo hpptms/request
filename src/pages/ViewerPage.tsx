@@ -218,8 +218,23 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
         width: "100%",
         height: "100%",
         // controls/disablekb off: seeking to the end here fires the same
-        // ENDED event handleEnded uses to advance the queue.
-        playerVars: { autoplay: 1, rel: 0, playsinline: 1, controls: 0, disablekb: 1 },
+        // ENDED event handleEnded uses to advance the queue. iv_load_policy
+        // drops the old annotations overlay; modestbranding/fs/cc_load_policy
+        // trim what YouTube's own chrome would otherwise draw on top of the
+        // video — though YouTube's branding requirements mean a small
+        // logo watermark and (briefly, right as a video ends) its
+        // related-videos end screen can't be suppressed via this API at all.
+        playerVars: {
+          autoplay: 1,
+          rel: 0,
+          playsinline: 1,
+          controls: 0,
+          disablekb: 1,
+          modestbranding: 1,
+          iv_load_policy: 3,
+          fs: 0,
+          cc_load_policy: 0,
+        },
         events: {
           onReady: () => setPlayerReady(true),
           onStateChange: (event) => {
