@@ -139,6 +139,15 @@ function BoardPage() {
 
       <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1.5, sm: 3 } }}>
         <Stack spacing={3}>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ whiteSpace: "pre-line" }}
+          >
+            {"6時と12時はリクエスト早送りタイムです。\n" +
+              "荒し対策のため操作が頻繁な場合自動BANされます。BANされるとリクエストが削除されます。\n" +
+              "自動BANは特定のタイミングで解除されます。"}
+          </Typography>
           <RequestForm onSubmit={handleCreate} />
           <NowPlaying
             nowPlaying={nowPlaying}
