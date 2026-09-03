@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Avatar from "@mui/material/Avatar";
 import Badge from "@mui/material/Badge";
+import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
@@ -59,6 +60,7 @@ export function QueueList({
             secondaryAction={
               <Stack direction="row" spacing={0}>
                 <LikeIconButton request={r} threshold={likePriorityThreshold} onLike={onLike} />
+                <Box sx={{ width: { xs: 12, sm: 16 } }} />
                 <CancelVoteIconButton
                   request={r}
                   threshold={cancelVoteThreshold}
