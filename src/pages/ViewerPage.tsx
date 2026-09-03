@@ -668,6 +668,7 @@ function QueueRow({ request, threshold, likeThreshold, onVoteCancel, onLike }: Q
           </IconButton>
         </span>
       </Tooltip>
+      <Box sx={{ width: 12, flexShrink: 0 }} />
       <Tooltip title={voted ? "投票済み" : `1:30に短縮へ投票 (${request.cancelVotes}/${threshold})`}>
         <span>
           <IconButton
