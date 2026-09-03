@@ -48,8 +48,8 @@ export const api = {
     request<VideoRequest>(`/requests/${id}/done`, { method: "POST" }),
 
   // Called by the viewer screen when a video finishes playing on its own,
-  // to advance the queue. Unauthenticated, unlike doneRequest (the admin's
-  // manual skip button).
+  // to advance the queue. Requires the same admin session the viewer
+  // screen itself is gated behind.
   finishRequest: (id: string) =>
     request<VideoRequest>(`/requests/${id}/finish`, { method: "POST" }),
 
