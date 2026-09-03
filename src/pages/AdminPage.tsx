@@ -10,6 +10,8 @@ import Tabs from "@mui/material/Tabs";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import LogoutIcon from "@mui/icons-material/Logout";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import PlaylistPlayIcon from "@mui/icons-material/PlaylistPlay";
 import ShieldIcon from "@mui/icons-material/Shield";
 import { api } from "../api";
@@ -76,6 +78,18 @@ function AdminLayout({ onLoggedOut }: { onLoggedOut: () => void }) {
           <Typography variant="h6" component="h1" sx={{ flexGrow: 1 }}>
             管理者画面
           </Typography>
+          <Button
+            component="a"
+            href="/viewer"
+            target="_blank"
+            rel="noopener"
+            size="small"
+            startIcon={<PlayCircleIcon />}
+            endIcon={<OpenInNewIcon />}
+            sx={{ whiteSpace: "nowrap" }}
+          >
+            再生画面を開く
+          </Button>
           <Button size="small" startIcon={<LogoutIcon />} onClick={handleLogout}>
             ログアウト
           </Button>
