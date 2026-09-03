@@ -14,6 +14,7 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
+import SkipNextIcon from "@mui/icons-material/SkipNext";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { api } from "../api";
@@ -260,12 +261,16 @@ function AuthenticatedViewerPage() {
     playerRef.current?.loadVideoById(videoId);
   };
 
-  // A real request finishing plays the next queued one (handled by the
-  // effects below). A playlist track finishing advances to the next one in
-  // order (looping back to the start); a random fallback video finishing
-  // just picks another random one — either way the screen never goes idle
-  // while nothing is requested.
-  const handleEnded = () => {
+  // Shared by handleEnded (the player naturally reaching the end) and
+  // handleSkip (the admin cutting the current video short): a real request
+  // finishing plays the next queued one (handled by the effects below). A
+  // playlist track finishing advances to the next one in order (looping
+  // back to the start); a random fallback video finishing just picks
+  // another random one — either way the screen never goes idle while
+  // nothing is requested. finishRequest differs between the two callers:
+  // the natural-end path enforces MinPlaybackBeforeFinish server-side, the
+  // admin skip doesn't.
+  const advanceQueue = (finishRequest: (id: string) => Promise<unknown>) => {
     if (endedHandledRef.current) return;
     endedHandledRef.current = true;
 
@@ -273,7 +278,8 @@ function AuthenticatedViewerPage() {
     if (finishedRequestId) {
       loadedVideoIdRef.current = null;
       currentRequestIdRef.current = null;
-      api.finishRequest(finishedRequestId).catch(() => {}).finally(refresh);
+      playerRef.current?.stopVideo();
+      finishRequest(finishedRequestId).catch(() => {}).finally(refresh);
       return;
     }
 
@@ -300,6 +306,14 @@ function AuthenticatedViewerPage() {
     resetSeekGuard();
     playerRef.current?.loadVideoById(nextVideoId);
   };
+
+  const handleEnded = () => advanceQueue(api.finishRequest);
+
+  // Manual admin skip button (hidden in solo/OBS-capture mode): unlike the
+  // natural-end path, this bypasses the server's MinPlaybackBeforeFinish
+  // floor via doneRequest instead of finishRequest, since it's a deliberate
+  // admin action rather than something anyone could trigger.
+  const handleSkip = () => advanceQueue(api.doneRequest);
 
   const playing = requests.find((r) => r.status === "playing") ?? null;
   const pendingList = requests.filter((r) => r.status === "pending");
@@ -477,6 +491,26 @@ function AuthenticatedViewerPage() {
               <Box id={PLAYER_ELEMENT_ID} sx={{ width: "100%", height: "100%" }} />
               {/* Absorbs clicks/drags so visitors can't reach the player under it (see the playerVars comment above). */}
               <Box sx={{ position: "absolute", inset: 0 }} onContextMenu={(e) => e.preventDefault()} />
+              {/* Admin-only manual skip; hidden in solo mode so it never shows up in the OBS capture. */}
+              {!solo && (
+                <Button
+                  variant="contained"
+                  size="small"
+                  color="inherit"
+                  startIcon={<SkipNextIcon />}
+                  onClick={handleSkip}
+                  sx={{
+                    position: "absolute",
+                    top: 16,
+                    right: 16,
+                    bgcolor: "rgba(0,0,0,0.6)",
+                    color: "white",
+                    "&:hover": { bgcolor: "rgba(0,0,0,0.8)" },
+                  }}
+                >
+                  スキップ
+                </Button>
+              )}
               {isFallbackPlaying && (
                 <Chip
                   label={
