@@ -66,7 +66,7 @@ function ViewerPage() {
   }
 
   return authenticated ? (
-    <AuthenticatedViewerPage />
+    <AuthenticatedViewerPage onSessionExpired={() => setAuthenticated(false)} />
   ) : (
     <AdminLoginForm onLoggedIn={() => setAuthenticated(true)} />
   );
@@ -81,7 +81,7 @@ function ViewerPage() {
 // Only rendered once ViewerPage above has confirmed an admin session, so set
 // OBS's Browser Source to this URL and use its "Interact" option to log in
 // once — the session cookie then persists for that source.
-function AuthenticatedViewerPage() {
+function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () => void }) {
   const [searchParams] = useSearchParams();
   // ?solo=1 : OBSキャプチャ用に動画だけをフルサイズで表示し、キューと入力欄を隠す。
   const solo = searchParams.get("solo") === "1";
@@ -187,6 +187,25 @@ function AuthenticatedViewerPage() {
     const interval = setInterval(refresh, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [refresh]);
+
+  // The admin actions below (play/done/finish) silently swallow failures so
+  // a transient network blip doesn't interrupt playback — but that also
+  // means a session that's gone invalid (e.g. the backend restarted, or the
+  // cookie expired) fails the same way: finishRequest keeps 401ing forever,
+  // and since nothing else notices, the same video just reloads from the
+  // start on every natural end instead of advancing. Polling the session
+  // independently catches that and drops back to the login screen instead.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      api
+        .adminSession()
+        .then(({ authenticated }) => {
+          if (!authenticated) onSessionExpired();
+        })
+        .catch(() => {});
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [onSessionExpired]);
 
   // Create the player once, after the user's tap unlocks autoplay-with-sound.
   useEffect(() => {
