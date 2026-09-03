@@ -227,6 +227,17 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
               handleEnded();
             }
           },
+          // YouTube itself refusing to play something (age restriction,
+          // embedding disabled by the uploader, region lock, video
+          // deleted, ...) never fires ENDED, so without this the screen
+          // would just sit frozen forever. Treat it like a manual skip
+          // (doneRequest, not finishRequest) since nothing actually
+          // played — there's no reason to wait out
+          // MinPlaybackBeforeFinish for a video that never started.
+          onError: (event) => {
+            console.warn("YouTube player error, skipping:", event.data);
+            handleSkip();
+          },
         },
       });
     });
