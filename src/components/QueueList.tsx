@@ -64,11 +64,13 @@ export function QueueList({
                   threshold={cancelVoteThreshold}
                   onVoteCancel={onVoteCancel}
                 />
-                <Tooltip title="再生する">
-                  <IconButton edge="end" color="primary" onClick={() => onPlay(r.id)}>
-                    <PlayArrowIcon />
-                  </IconButton>
-                </Tooltip>
+                {isAdmin && (
+                  <Tooltip title="再生する">
+                    <IconButton edge="end" color="primary" onClick={() => onPlay(r.id)}>
+                      <PlayArrowIcon />
+                    </IconButton>
+                  </Tooltip>
+                )}
                 {isAdmin && (
                   <Tooltip title="削除">
                     <IconButton edge="end" onClick={() => onDelete(r.id)}>
