@@ -17,6 +17,11 @@ export interface AppConfig {
   searchEnabled: boolean;
   cancelVoteThreshold: number;
   likePriorityThreshold: number;
+  // True 4x/day for 30 minutes (00:00/06:00/12:00/18:00 JST), but only once
+  // the pending queue has backed up past the backend's threshold — see
+  // ViewerPage's playback-capping effect.
+  fastForwardActive: boolean;
+  fastForwardCapSeconds: number;
 }
 
 export interface CancelVoteResult {
