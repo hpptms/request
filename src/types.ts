@@ -17,6 +17,11 @@ export interface AppConfig {
   searchEnabled: boolean;
   cancelVoteThreshold: number;
   likePriorityThreshold: number;
+  // Reaching this many distinct cancel-voters drops the playback floor
+  // even further, to cancelVoteSevereCapSeconds — below the normal
+  // (cancelVoteThreshold) cap. See ViewerPage's playback-capping effect.
+  cancelVoteSevereThreshold: number;
+  cancelVoteSevereCapSeconds: number;
   // True 4x/day for 1 hour (00:00/06:00/12:00/18:00 JST), but only once
   // the pending queue has backed up past the backend's threshold — see
   // ViewerPage's playback-capping effect.

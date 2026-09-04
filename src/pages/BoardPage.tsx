@@ -18,7 +18,7 @@ import { RequestForm } from "../components/RequestForm";
 import type { VideoRequest } from "../types";
 
 const POLL_INTERVAL_MS = 4000;
-const DEFAULT_CANCEL_VOTE_THRESHOLD = 10;
+const DEFAULT_CANCEL_VOTE_THRESHOLD = 5;
 const DEFAULT_LIKE_PRIORITY_THRESHOLD = 2;
 
 function BoardPage() {
