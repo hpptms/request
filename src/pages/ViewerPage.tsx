@@ -36,7 +36,7 @@ const DEFAULT_CANCEL_VOTE_SEVERE_THRESHOLD = 10;
 const DEFAULT_CANCEL_VOTE_SEVERE_CAP_SECONDS = 60;
 const DEFAULT_LIKE_PRIORITY_THRESHOLD = 2;
 const SHORTENED_PLAYBACK_SECONDS = 90; // 1:30
-// Non-YouTube platforms (niconico/bilibili/vimeo/dailymotion) have no ended/error event
+// Non-YouTube platforms (niconico/bilibili/vimeo) have no ended/error event
 // this screen can listen for, so their queue advance is a plain timer
 // instead: NON_YOUTUBE_DEFAULT_DURATION_SECONDS when the platform didn't
 // report a duration (always true for bilibili — see the backend's
@@ -54,6 +54,7 @@ const NOW_PLAYING_INTRO_MS = 20000;
 const DURATION_BADGE_DELAY_MS = 5000;
 const DURATION_BADGE_VISIBLE_MS = 3000;
 const NEW_REQUEST_NOTICE_MS = 4000;
+const VOTE_STATUS_VISIBLE_MS = 4000;
 
 // niconico's embed doesn't honor a plain ?autoplay=1 query flag (confirmed
 // by inspecting its server-rendered config — the flag is silently
@@ -147,7 +148,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   const [started, setStarted] = useState(false);
   const [playerReady, setPlayerReady] = useState(false);
   const [isFallbackPlaying, setIsFallbackPlaying] = useState(false);
-  // Non-null while a non-YouTube request (niconico/bilibili/vimeo/dailymotion) is the
+  // Non-null while a non-YouTube request (niconico/bilibili/vimeo) is the
   // current target: shown as a plain <iframe> layered over the YouTube
   // player element instead of driving it. Filler (playlist/fallback) is
   // always YouTube, so this is only ever set for a real request.
@@ -166,6 +167,12 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // New-request toast (feature: notify every time someone adds a request).
   // One at a time, oldest first — see enqueueNewRequestNotice.
   const [newRequestNotice, setNewRequestNotice] = useState<{ id: string; title: string } | null>(null);
+  // Vote-status badge (😨 cancel votes / 😊 likes) for the currently
+  // playing real request: shown as soon as it starts if it already has any
+  // votes, and again every time either count goes up while it's still
+  // playing — see the effect watching `requests` for lastShownVoteCountsRef.
+  const [voteStatusVisible, setVoteStatusVisible] = useState(false);
+  const [voteStatusContent, setVoteStatusContent] = useState<{ cancelVotes: number; likes: number } | null>(null);
   const [fallbackNowPlayingId, setFallbackNowPlayingId] = useState<string | null>(null);
   // World/Japan Top 100 tracks from the backend; empty until resolved (or
   // permanently, with no YouTube API key configured), in which case the
@@ -224,6 +231,12 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   const knownRequestIdsRef = useRef<Set<string> | null>(null);
   const newRequestQueueRef = useRef<{ id: string; title: string }[]>([]);
   const newRequestTimerRef = useRef<number | null>(null);
+  // Vote-status badge bookkeeping: the last counts shown for whichever
+  // request this refers to, so the watcher effect can tell "just started
+  // playing" (id differs) apart from "a vote came in" (id matches, a count
+  // went up) — see the effect below and showVoteStatus.
+  const lastShownVoteCountsRef = useRef<{ id: string; cancelVotes: number; likes: number } | null>(null);
+  const voteStatusHideTimerRef = useRef<number | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -405,6 +418,16 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     }
   };
 
+  const showVoteStatus = (cancelVotes: number, likes: number) => {
+    if (voteStatusHideTimerRef.current !== null) window.clearTimeout(voteStatusHideTimerRef.current);
+    setVoteStatusContent({ cancelVotes, likes });
+    setVoteStatusVisible(true);
+    voteStatusHideTimerRef.current = window.setTimeout(() => {
+      setVoteStatusVisible(false);
+      voteStatusHideTimerRef.current = null;
+    }, VOTE_STATUS_VISIBLE_MS);
+  };
+
   // See NICONICO_ORIGIN's comment: niconico's embed needs an explicit
   // postMessage to actually start playing (and unmute/max the volume),
   // unlike every other platform here which honors a plain autoplay=1 URL
@@ -525,6 +548,11 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     endedHandledRef.current = true;
     clearNonYouTubeTimer();
     setNonYouTubeEmbedUrl(null);
+    if (voteStatusHideTimerRef.current !== null) {
+      window.clearTimeout(voteStatusHideTimerRef.current);
+      voteStatusHideTimerRef.current = null;
+    }
+    setVoteStatusVisible(false);
 
     const finishedRequestId = currentRequestIdRef.current;
     if (finishedRequestId) {
@@ -589,9 +617,41 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     playerRef.current?.stopVideo();
     clearNonYouTubeTimer();
     setNonYouTubeEmbedUrl(null);
+    if (voteStatusHideTimerRef.current !== null) {
+      window.clearTimeout(voteStatusHideTimerRef.current);
+      voteStatusHideTimerRef.current = null;
+    }
+    setVoteStatusVisible(false);
     loadedVideoIdRef.current = null;
     currentRequestIdRef.current = null;
   }, [started, requests]);
+
+  // Vote-status badge: whenever the currently playing real request's
+  // cancel-vote or like count changes. A different id than last time means
+  // a new video just started — show its starting tally right away if it's
+  // not zero (a video can arrive already liked/cancel-voted from before it
+  // was picked up); the same id with a higher count means a vote came in
+  // during playback, which should surface immediately regardless of the
+  // starting tally.
+  useEffect(() => {
+    const requestId = currentRequestIdRef.current;
+    if (!requestId) return;
+    const current = requests.find((r) => r.id === requestId);
+    if (!current) return;
+
+    const last = lastShownVoteCountsRef.current;
+    if (!last || last.id !== requestId) {
+      lastShownVoteCountsRef.current = { id: requestId, cancelVotes: current.cancelVotes, likes: current.likes };
+      if (current.cancelVotes > 0 || current.likes > 0) {
+        showVoteStatus(current.cancelVotes, current.likes);
+      }
+      return;
+    }
+    if (current.cancelVotes > last.cancelVotes || current.likes > last.likes) {
+      lastShownVoteCountsRef.current = { id: requestId, cancelVotes: current.cancelVotes, likes: current.likes };
+      showVoteStatus(current.cancelVotes, current.likes);
+    }
+  }, [requests]);
 
   // Caps the currently playing request's remaining runtime once any
   // applicable condition is met, instead of letting it run to the end:
@@ -801,7 +861,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
               <Box id={PLAYER_ELEMENT_ID} sx={{ width: "100%", height: "100%" }} />
               {/* Absorbs clicks/drags so visitors can't reach the player under it (see the playerVars comment above). */}
               <Box sx={{ position: "absolute", inset: 0 }} onContextMenu={(e) => e.preventDefault()} />
-              {/* niconico/bilibili/vimeo/dailymotion: plain embed layered over the (stopped) YouTube player, with no seek-guard/click-blocking equivalent — see nonYouTubeEmbedUrl. */}
+              {/* niconico/bilibili/vimeo: plain embed layered over the (stopped) YouTube player, with no seek-guard/click-blocking equivalent — see nonYouTubeEmbedUrl. */}
               {nonYouTubeEmbedUrl && (
                 <Box
                   component="iframe"
@@ -885,6 +945,28 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
                     size="small"
                     sx={{ bgcolor: "rgba(0,0,0,0.7)", color: "white", fontWeight: 600 }}
                   />
+                </Grow>
+              </Box>
+
+              {/* Vote-status badge: current cancel-vote/like tally for the playing request, shown on start (if non-zero) and again on every increase — see the effect watching `requests` above. */}
+              <Box sx={{ position: "absolute", top: 16, left: 16, pointerEvents: "none" }}>
+                <Grow in={voteStatusVisible} timeout={250}>
+                  <Stack direction="row" spacing={0.75}>
+                    {voteStatusContent && voteStatusContent.cancelVotes > 0 && (
+                      <Chip
+                        label={`😨+${voteStatusContent.cancelVotes}`}
+                        size="small"
+                        sx={{ bgcolor: "rgba(0,0,0,0.7)", color: "white", fontWeight: 700 }}
+                      />
+                    )}
+                    {voteStatusContent && voteStatusContent.likes > 0 && (
+                      <Chip
+                        label={`😊+${voteStatusContent.likes}`}
+                        size="small"
+                        sx={{ bgcolor: "rgba(0,0,0,0.7)", color: "white", fontWeight: 700 }}
+                      />
+                    )}
+                  </Stack>
                 </Grow>
               </Box>
 
@@ -1072,7 +1154,7 @@ function RequestBar({ onSubmit }: { onSubmit: (url: string) => Promise<void> }) 
     >
       <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
         <TextField
-          placeholder="動画のURL(YouTube・ニコニコ動画・bilibili・Vimeo・Dailymotion)を貼り付けてリクエスト"
+          placeholder="動画のURL(YouTube・ニコニコ動画・bilibili・Vimeo)を貼り付けてリクエスト"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           size="small"
