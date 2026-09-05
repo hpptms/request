@@ -12,8 +12,8 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
-import CancelIcon from "@mui/icons-material/Cancel";
 import DeleteIcon from "@mui/icons-material/Delete";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
@@ -73,7 +73,7 @@ export function QueueList({
                 {isMyRequest(r.id) && (
                   <Tooltip title="自分のリクエストをキャンセル">
                     <IconButton edge="end" color="warning" onClick={() => onCancelMine(r.id)}>
-                      <CancelIcon />
+                      <DeleteOutlineIcon />
                     </IconButton>
                   </Tooltip>
                 )}

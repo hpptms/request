@@ -5,8 +5,8 @@ import Chip from "@mui/material/Chip";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import CancelIcon from "@mui/icons-material/Cancel";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
 import { isMyRequest } from "../lib/myRequestStorage";
@@ -87,7 +87,7 @@ export function NowPlaying({ nowPlaying, cancelVoteThreshold, isAdmin, onMarkDon
               <Button
                 variant="outlined"
                 color="warning"
-                startIcon={<CancelIcon />}
+                startIcon={<DeleteOutlineIcon />}
                 onClick={handleCancelMine}
                 disabled={cancelling}
                 sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
