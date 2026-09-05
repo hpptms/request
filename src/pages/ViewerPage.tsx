@@ -948,22 +948,34 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
                 </Grow>
               </Box>
 
-              {/* Vote-status badge: current cancel-vote/like tally for the playing request, shown on start (if non-zero) and again on every increase — see the effect watching `requests` above. */}
+              {/* Vote-status badge: current cancel-vote/like tally for the playing request, shown on start (if non-zero) and again on every increase — see the effect watching `requests` above. ~3x a normal small Chip. */}
               <Box sx={{ position: "absolute", top: 16, left: 16, pointerEvents: "none" }}>
                 <Grow in={voteStatusVisible} timeout={250}>
-                  <Stack direction="row" spacing={0.75}>
+                  <Stack direction="row" spacing={1.5}>
                     {voteStatusContent && voteStatusContent.cancelVotes > 0 && (
                       <Chip
                         label={`😨+${voteStatusContent.cancelVotes}`}
-                        size="small"
-                        sx={{ bgcolor: "rgba(0,0,0,0.7)", color: "white", fontWeight: 700 }}
+                        sx={{
+                          bgcolor: "rgba(0,0,0,0.7)",
+                          color: "white",
+                          fontWeight: 700,
+                          height: 72,
+                          borderRadius: 4,
+                          "& .MuiChip-label": { fontSize: "2.4rem", px: 3 },
+                        }}
                       />
                     )}
                     {voteStatusContent && voteStatusContent.likes > 0 && (
                       <Chip
                         label={`😊+${voteStatusContent.likes}`}
-                        size="small"
-                        sx={{ bgcolor: "rgba(0,0,0,0.7)", color: "white", fontWeight: 700 }}
+                        sx={{
+                          bgcolor: "rgba(0,0,0,0.7)",
+                          color: "white",
+                          fontWeight: 700,
+                          height: 72,
+                          borderRadius: 4,
+                          "& .MuiChip-label": { fontSize: "2.4rem", px: 3 },
+                        }}
                       />
                     )}
                   </Stack>
