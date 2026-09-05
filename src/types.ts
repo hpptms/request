@@ -11,6 +11,16 @@ export interface VideoRequest {
   createdAt: string;
   cancelVotes: number;
   likes: number;
+  // Which video site videoId belongs to: "youtube" | "niconico" | "bilibili"
+  // | "vimeo" | "dailymotion". YouTube is driven by the IFrame Player API
+  // (see ViewerPage); the others are shown as a plain
+  // <iframe src={embedUrl}> with no
+  // seek-guard/auto-advance-on-end/cancel-vote-shortening, since none of
+  // those platforms expose an equivalent control API — queue advance for
+  // them is a plain durationSeconds timer instead.
+  platform: string;
+  embedUrl?: string;
+  durationSeconds?: number;
 }
 
 export interface AppConfig {
