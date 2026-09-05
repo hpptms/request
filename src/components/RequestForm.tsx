@@ -46,7 +46,7 @@ export function RequestForm({ onSubmit }: Props) {
         >
           <TextField
             label="動画のURL"
-            placeholder="YouTube・ニコニコ動画・bilibili・Vimeo・Dailymotion のURL"
+            placeholder="YouTube・ニコニコ動画・bilibili・Vimeo のURL"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             fullWidth
