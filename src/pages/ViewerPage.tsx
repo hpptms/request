@@ -55,6 +55,24 @@ const DURATION_BADGE_DELAY_MS = 5000;
 const DURATION_BADGE_VISIBLE_MS = 3000;
 const NEW_REQUEST_NOTICE_MS = 4000;
 
+// niconico's embed doesn't honor a plain ?autoplay=1 query flag (confirmed
+// by inspecting its server-rendered config — the flag is silently
+// ignored); autoplay only works through its postMessage-based "external
+// player API" (jsapi=1 in the embed URL — see the backend's niconico
+// package), which requires explicitly posting a {eventName:"play"}
+// command once the player has loaded. NICONICO_PLAYER_ID must match the
+// playerId= the backend put in the embed URL, or the player's
+// origin/playerId check silently rejects the command.
+const NICONICO_ORIGIN = "https://embed.nicovideo.jp";
+const NICONICO_PLAYER_ID = "recest-viewer";
+// How many times (and how far apart) to (re-)send the play/unmute
+// commands after the iframe's onLoad fires — the player's own JS bundle
+// needs a moment to bootstrap and wire up its message listener after the
+// surrounding HTML document finishes loading, so a single immediate
+// attempt isn't reliable; sending "play" to an already-playing video is a
+// harmless no-op.
+const NICONICO_COMMAND_RETRY_DELAYS_MS = [300, 1000, 2000];
+
 function formatDuration(totalSeconds: number): string {
   const s = Math.max(0, Math.round(totalSeconds));
   const m = Math.floor(s / 60);
@@ -190,6 +208,11 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // nonYouTubeEmbedUrl); cleared whenever the target changes for any
   // reason so a stale timer can't fire against whatever's playing next.
   const nonYouTubeTimerRef = useRef<number | null>(null);
+  // Which platform the current non-YouTube iframe is showing (set
+  // alongside nonYouTubeEmbedUrl) and a handle to the iframe element
+  // itself, so sendNiconicoPlayCommand knows when/where to postMessage.
+  const nonYouTubePlatformRef = useRef<string | null>(null);
+  const nonYouTubeIframeRef = useRef<HTMLIFrameElement | null>(null);
   // Timers for the now-playing intro card / duration badge (see the state
   // declared above); cleared and re-armed each time a new video starts.
   const introHideTimerRef = useRef<number | null>(null);
@@ -379,6 +402,27 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     if (nonYouTubeTimerRef.current !== null) {
       window.clearTimeout(nonYouTubeTimerRef.current);
       nonYouTubeTimerRef.current = null;
+    }
+  };
+
+  // See NICONICO_ORIGIN's comment: niconico's embed needs an explicit
+  // postMessage to actually start playing (and unmute/max the volume),
+  // unlike every other platform here which honors a plain autoplay=1 URL
+  // flag. Called from the iframe's onLoad, with a few delayed retries.
+  const sendNiconicoPlayCommand = () => {
+    for (const delay of NICONICO_COMMAND_RETRY_DELAYS_MS) {
+      window.setTimeout(() => {
+        // Bail if the target changed (a different video, or no longer
+        // niconico) since this was scheduled.
+        if (nonYouTubePlatformRef.current !== "niconico") return;
+        const win = nonYouTubeIframeRef.current?.contentWindow;
+        if (!win) return;
+        const post = (eventName: string, data?: unknown) =>
+          win.postMessage({ sourceConnectorType: 1, playerId: NICONICO_PLAYER_ID, eventName, data }, NICONICO_ORIGIN);
+        post("play");
+        post("mute", { mute: false });
+        post("volumeChange", { volume: 1 });
+      }, delay);
     }
   };
 
@@ -676,6 +720,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
       if (target.platform !== "youtube" && target.embedUrl) {
         playerRef.current.stopVideo();
         resetSeekGuard();
+        nonYouTubePlatformRef.current = target.platform;
         setNonYouTubeEmbedUrl(target.embedUrl);
         const timerSeconds = Math.min(
           Math.max(target.durationSeconds || NON_YOUTUBE_DEFAULT_DURATION_SECONDS, SHORTENED_PLAYBACK_SECONDS),
@@ -760,8 +805,12 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
               {nonYouTubeEmbedUrl && (
                 <Box
                   component="iframe"
+                  ref={nonYouTubeIframeRef}
                   src={nonYouTubeEmbedUrl}
                   allow="autoplay; fullscreen"
+                  onLoad={() => {
+                    if (nonYouTubePlatformRef.current === "niconico") sendNiconicoPlayCommand();
+                  }}
                   sx={{
                     position: "absolute",
                     inset: 0,
