@@ -50,7 +50,7 @@ const NON_YOUTUBE_MAX_DURATION_SECONDS = 600; // 10 min
 
 // How long the music-program-style title card stays up when a video
 // starts, and how long after that the duration badge shows.
-const NOW_PLAYING_INTRO_MS = 5000;
+const NOW_PLAYING_INTRO_MS = 20000;
 const DURATION_BADGE_DELAY_MS = 5000;
 const DURATION_BADGE_VISIBLE_MS = 3000;
 const NEW_REQUEST_NOTICE_MS = 4000;
