@@ -7,13 +7,18 @@ import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
 import Divider from "@mui/material/Divider";
+import Grow from "@mui/material/Grow";
 import IconButton from "@mui/material/IconButton";
+import Slide from "@mui/material/Slide";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import Zoom from "@mui/material/Zoom";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
+import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
+import ScheduleIcon from "@mui/icons-material/Schedule";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { api } from "../api";
@@ -42,6 +47,20 @@ const SHORTENED_PLAYBACK_SECONDS = 90; // 1:30
 // the server will actually accept finishRequest.
 const NON_YOUTUBE_DEFAULT_DURATION_SECONDS = 300; // 5 min
 const NON_YOUTUBE_MAX_DURATION_SECONDS = 600; // 10 min
+
+// How long the music-program-style title card stays up when a video
+// starts, and how long after that the duration badge shows.
+const NOW_PLAYING_INTRO_MS = 5000;
+const DURATION_BADGE_DELAY_MS = 5000;
+const DURATION_BADGE_VISIBLE_MS = 3000;
+const NEW_REQUEST_NOTICE_MS = 4000;
+
+function formatDuration(totalSeconds: number): string {
+  const s = Math.max(0, Math.round(totalSeconds));
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${sec.toString().padStart(2, "0")}`;
+}
 
 // Gatekeeper for /viewer: the actual YouTube playback only ever loads inside
 // an authenticated admin session (see the OBS setup note in AuthenticatedViewerPage's
@@ -115,6 +134,20 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // player element instead of driving it. Filler (playlist/fallback) is
   // always YouTube, so this is only ever set for a real request.
   const [nonYouTubeEmbedUrl, setNonYouTubeEmbedUrl] = useState<string | null>(null);
+  // Music-program-style title card, shown for NOW_PLAYING_INTRO_MS whenever
+  // a new video (request or filler) starts. introContent only ever updates
+  // when showing a new one — introVisible drives the Zoom pop in/out so the
+  // exit animation still has the right title to fade away with.
+  const [introVisible, setIntroVisible] = useState(false);
+  const [introContent, setIntroContent] = useState<{ title: string; channelTitle: string } | null>(null);
+  // Duration badge, shown DURATION_BADGE_VISIBLE_MS starting
+  // DURATION_BADGE_DELAY_MS after a video starts (same lagging-content
+  // pattern as the intro card above).
+  const [durationBadgeVisible, setDurationBadgeVisible] = useState(false);
+  const [durationBadgeSeconds, setDurationBadgeSeconds] = useState<number | null>(null);
+  // New-request toast (feature: notify every time someone adds a request).
+  // One at a time, oldest first — see enqueueNewRequestNotice.
+  const [newRequestNotice, setNewRequestNotice] = useState<{ id: string; title: string } | null>(null);
   const [fallbackNowPlayingId, setFallbackNowPlayingId] = useState<string | null>(null);
   // World/Japan Top 100 tracks from the backend; empty until resolved (or
   // permanently, with no YouTube API key configured), in which case the
@@ -157,11 +190,40 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // nonYouTubeEmbedUrl); cleared whenever the target changes for any
   // reason so a stale timer can't fire against whatever's playing next.
   const nonYouTubeTimerRef = useRef<number | null>(null);
+  // Timers for the now-playing intro card / duration badge (see the state
+  // declared above); cleared and re-armed each time a new video starts.
+  const introHideTimerRef = useRef<number | null>(null);
+  const durationBadgeShowTimerRef = useRef<number | null>(null);
+  const durationBadgeHideTimerRef = useRef<number | null>(null);
+  // New-request notice queue + whether one is currently being shown (see
+  // enqueueNewRequestNotice). null after the very first poll seeds it, so
+  // the existing backlog on page load doesn't fire a notice per request.
+  const knownRequestIdsRef = useRef<Set<string> | null>(null);
+  const newRequestQueueRef = useRef<{ id: string; title: string }[]>([]);
+  const newRequestTimerRef = useRef<number | null>(null);
 
   const refresh = useCallback(async () => {
     try {
       const data = await api.listRequests();
       setRequests(data);
+
+      // Notify (once each) for every request that showed up since the
+      // last poll. The very first poll only seeds knownRequestIdsRef —
+      // otherwise the entire pre-existing backlog would fire a notice on
+      // every page load.
+      const currentIds = new Set(data.map((r) => r.id));
+      if (knownRequestIdsRef.current === null) {
+        knownRequestIdsRef.current = currentIds;
+      } else {
+        const known = knownRequestIdsRef.current;
+        for (const r of data) {
+          if (!known.has(r.id)) {
+            newRequestQueueRef.current.push({ id: r.id, title: r.title });
+          }
+        }
+        knownRequestIdsRef.current = currentIds;
+        showNextNewRequestNotice();
+      }
     } catch {
       // Keep the last known state; the next poll will retry.
     }
@@ -320,6 +382,52 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     }
   };
 
+  // Kicks off the title-card + duration-badge sequence for a freshly
+  // started video. getDurationSeconds is a callback (not a plain value) so
+  // the YouTube path can read playerRef.current.getDuration() at the
+  // moment the badge is about to show — right after loadVideoById, the
+  // player hasn't buffered enough to report it yet.
+  const startNowPlayingIntro = (title: string, channelTitle: string, getDurationSeconds: () => number | null) => {
+    if (introHideTimerRef.current !== null) window.clearTimeout(introHideTimerRef.current);
+    if (durationBadgeShowTimerRef.current !== null) window.clearTimeout(durationBadgeShowTimerRef.current);
+    if (durationBadgeHideTimerRef.current !== null) window.clearTimeout(durationBadgeHideTimerRef.current);
+    setDurationBadgeVisible(false);
+
+    setIntroContent({ title, channelTitle });
+    setIntroVisible(true);
+    introHideTimerRef.current = window.setTimeout(() => {
+      setIntroVisible(false);
+      introHideTimerRef.current = null;
+    }, NOW_PLAYING_INTRO_MS);
+
+    durationBadgeShowTimerRef.current = window.setTimeout(() => {
+      durationBadgeShowTimerRef.current = null;
+      const duration = getDurationSeconds();
+      if (!duration || duration <= 0) return;
+      setDurationBadgeSeconds(duration);
+      setDurationBadgeVisible(true);
+      durationBadgeHideTimerRef.current = window.setTimeout(() => {
+        setDurationBadgeVisible(false);
+        durationBadgeHideTimerRef.current = null;
+      }, DURATION_BADGE_VISIBLE_MS);
+    }, DURATION_BADGE_DELAY_MS);
+  };
+
+  // Shows queued new-request notices one at a time (oldest first) so a
+  // burst of simultaneous requests doesn't overlap; see refresh() for where
+  // notices are enqueued.
+  const showNextNewRequestNotice = () => {
+    if (newRequestTimerRef.current !== null) return;
+    const next = newRequestQueueRef.current.shift();
+    if (!next) return;
+    setNewRequestNotice(next);
+    newRequestTimerRef.current = window.setTimeout(() => {
+      setNewRequestNotice(null);
+      newRequestTimerRef.current = null;
+      showNextNewRequestNotice();
+    }, NEW_REQUEST_NOTICE_MS);
+  };
+
   // Starts (or resumes) filler playback when nothing is requested: the
   // admin-curated playlist takes priority when non-empty, resuming at
   // playlistPositionRef; otherwise a random World/Japan Top 100 (or static)
@@ -338,6 +446,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
       setFallbackNowPlayingId(track.videoId);
       resetSeekGuard(playlistPositionRef.current);
       playerRef.current?.loadVideoById({ videoId: track.videoId, startSeconds: playlistPositionRef.current });
+      startNowPlayingIntro(track.title, track.channelTitle, () => playerRef.current?.getDuration() ?? null);
       return;
     }
 
@@ -350,6 +459,12 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     setFallbackNowPlayingId(videoId);
     resetSeekGuard();
     playerRef.current?.loadVideoById(videoId);
+    const fallbackInfo = fallbackTracks.find((t) => t.videoId === videoId);
+    startNowPlayingIntro(
+      fallbackInfo?.title ?? "自動再生",
+      fallbackInfo?.channelTitle ?? "",
+      () => playerRef.current?.getDuration() ?? null,
+    );
   };
 
   // Shared by handleEnded (the player naturally reaching the end) and
@@ -387,6 +502,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
         setFallbackNowPlayingId(track.videoId);
         resetSeekGuard();
         playerRef.current?.loadVideoById(track.videoId);
+        startNowPlayingIntro(track.title, track.channelTitle, () => playerRef.current?.getDuration() ?? null);
         return;
       }
       isPlaylistActiveRef.current = false;
@@ -398,6 +514,12 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     setFallbackNowPlayingId(nextVideoId);
     resetSeekGuard();
     playerRef.current?.loadVideoById(nextVideoId);
+    const fallbackInfo = fallbackTracks.find((t) => t.videoId === nextVideoId);
+    startNowPlayingIntro(
+      fallbackInfo?.title ?? "自動再生",
+      fallbackInfo?.channelTitle ?? "",
+      () => playerRef.current?.getDuration() ?? null,
+    );
   };
 
   const handleEnded = () => advanceQueue(api.finishRequest);
@@ -562,12 +684,14 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
         nonYouTubeTimerRef.current = window.setTimeout(() => {
           advanceQueue(api.finishRequest);
         }, timerSeconds * 1000);
+        startNowPlayingIntro(target.title, target.channelTitle, () => target.durationSeconds ?? null);
         return;
       }
 
       setNonYouTubeEmbedUrl(null);
       resetSeekGuard();
       playerRef.current.loadVideoById(target.videoId);
+      startNowPlayingIntro(target.title, target.channelTitle, () => playerRef.current?.getDuration() ?? null);
       return;
     }
 
@@ -669,6 +793,66 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
                   }}
                 />
               )}
+
+              {/* Music-program-style title card: pops in when a video starts, pops out after NOW_PLAYING_INTRO_MS. */}
+              <Box sx={{ position: "absolute", left: 0, right: 0, bottom: 24, display: "flex", justifyContent: "center", px: 3, pointerEvents: "none" }}>
+                <Zoom in={introVisible} timeout={{ enter: 350, exit: 250 }} style={{ transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" }}>
+                  <Stack
+                    direction="row"
+                    spacing={1.5}
+                    sx={{
+                      alignItems: "center",
+                      maxWidth: "90%",
+                      bgcolor: "rgba(20,20,20,0.85)",
+                      border: "2px solid",
+                      borderColor: "primary.main",
+                      borderRadius: 3,
+                      px: 2.5,
+                      py: 1.5,
+                      boxShadow: "0 4px 24px rgba(0,0,0,0.5)",
+                    }}
+                  >
+                    <MusicNoteIcon color="primary" fontSize="large" />
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="h6" noWrap sx={{ color: "white", fontWeight: 700, lineHeight: 1.25 }}>
+                        {introContent?.title ?? ""}
+                      </Typography>
+                      {introContent?.channelTitle && (
+                        <Typography variant="body2" noWrap sx={{ color: "grey.400" }}>
+                          {introContent.channelTitle}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Stack>
+                </Zoom>
+              </Box>
+
+              {/* Duration badge: shows DURATION_BADGE_VISIBLE_MS starting DURATION_BADGE_DELAY_MS after the video started. */}
+              <Box sx={{ position: "absolute", top: 16, right: 16, pointerEvents: "none" }}>
+                <Grow in={durationBadgeVisible} timeout={250}>
+                  <Chip
+                    icon={<ScheduleIcon sx={{ color: "white !important" }} />}
+                    label={durationBadgeSeconds !== null ? formatDuration(durationBadgeSeconds) : ""}
+                    size="small"
+                    sx={{ bgcolor: "rgba(0,0,0,0.7)", color: "white", fontWeight: 600 }}
+                  />
+                </Grow>
+              </Box>
+
+              {/* New-request toast: fires once per request as it's added to the queue (see refresh/enqueue logic above). */}
+              <Box sx={{ position: "absolute", top: 16, left: 0, right: 0, display: "flex", justifyContent: "center", px: 3, pointerEvents: "none" }}>
+                <Slide in={newRequestNotice !== null} direction="down" timeout={{ enter: 300, exit: 200 }}>
+                  <Chip
+                    color="primary"
+                    label={newRequestNotice ? `🎵 新しいリクエスト: ${newRequestNotice.title}` : ""}
+                    sx={{
+                      maxWidth: "90%",
+                      fontWeight: 600,
+                      "& .MuiChip-label": { overflow: "hidden", textOverflow: "ellipsis" },
+                    }}
+                  />
+                </Slide>
+              </Box>
             </>
           )}
         </Box>

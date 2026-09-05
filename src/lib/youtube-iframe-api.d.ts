@@ -48,6 +48,7 @@ declare namespace YT {
     unMute(): void;
     destroy(): void;
     getCurrentTime(): number;
+    getDuration(): number;
     seekTo(seconds: number, allowSeekAhead: boolean): void;
   }
 }
