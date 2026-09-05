@@ -12,12 +12,14 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import CancelIcon from "@mui/icons-material/Cancel";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
 import { hasLiked, markLiked } from "../lib/likeStorage";
+import { isMyRequest } from "../lib/myRequestStorage";
 import type { VideoRequest } from "../types";
 
 interface Props {
@@ -29,6 +31,7 @@ interface Props {
   onDelete: (id: string) => void;
   onVoteCancel: (id: string) => Promise<void>;
   onLike: (id: string) => Promise<void>;
+  onCancelMine: (id: string) => Promise<void>;
 }
 
 export function QueueList({
@@ -40,6 +43,7 @@ export function QueueList({
   onDelete,
   onVoteCancel,
   onLike,
+  onCancelMine,
 }: Props) {
   if (requests.length === 0) {
     return (
@@ -66,6 +70,13 @@ export function QueueList({
                   threshold={cancelVoteThreshold}
                   onVoteCancel={onVoteCancel}
                 />
+                {isMyRequest(r.id) && (
+                  <Tooltip title="自分のリクエストをキャンセル">
+                    <IconButton edge="end" color="warning" onClick={() => onCancelMine(r.id)}>
+                      <CancelIcon />
+                    </IconButton>
+                  </Tooltip>
+                )}
                 {isAdmin && (
                   <Tooltip title="再生する">
                     <IconButton edge="end" color="primary" onClick={() => onPlay(r.id)}>

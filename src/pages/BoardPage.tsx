@@ -15,6 +15,7 @@ import { api } from "../api";
 import { NowPlaying } from "../components/NowPlaying";
 import { QueueList } from "../components/QueueList";
 import { RequestForm } from "../components/RequestForm";
+import { markMyRequest } from "../lib/myRequestStorage";
 import type { VideoRequest } from "../types";
 
 const POLL_INTERVAL_MS = 4000;
@@ -55,8 +56,18 @@ function BoardPage() {
   }, [refresh]);
 
   const handleCreate = async (url: string) => {
-    await api.createRequest(url, "");
+    const created = await api.createRequest(url, "");
+    markMyRequest(created.id);
     await refresh();
+  };
+
+  const handleCancelMine = async (id: string) => {
+    try {
+      await api.cancelMyRequest(id);
+      await refresh();
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "キャンセルに失敗しました");
+    }
   };
 
   const handlePlay = async (id: string) => {
@@ -155,6 +166,7 @@ function BoardPage() {
             isAdmin={isAdmin}
             onMarkDone={handleDone}
             onVoteCancel={handleVoteCancel}
+            onCancelMine={handleCancelMine}
           />
 
           <Box>
@@ -170,6 +182,7 @@ function BoardPage() {
               onDelete={handleDelete}
               onVoteCancel={handleVoteCancel}
               onLike={handleLike}
+              onCancelMine={handleCancelMine}
             />
           </Box>
         </Stack>

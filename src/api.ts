@@ -56,6 +56,11 @@ export const api = {
   deleteRequest: (id: string) =>
     request<void>(`/requests/${id}`, { method: "DELETE" }),
 
+  // Self-service withdrawal: the server only allows this for the request's
+  // own submitter (matched by IP), unlike deleteRequest above (admin-only).
+  cancelMyRequest: (id: string) =>
+    request<void>(`/requests/${id}/mine`, { method: "DELETE" }),
+
   voteCancel: (id: string) =>
     request<CancelVoteResult>(`/requests/${id}/cancel-vote`, { method: "POST" }),
 
