@@ -163,9 +163,11 @@ function BoardPage() {
           <NowPlaying
             nowPlaying={nowPlaying}
             cancelVoteThreshold={cancelVoteThreshold}
+            likePriorityThreshold={likePriorityThreshold}
             isAdmin={isAdmin}
             onMarkDone={handleDone}
             onVoteCancel={handleVoteCancel}
+            onLike={handleLike}
             onCancelMine={handleCancelMine}
           />
 

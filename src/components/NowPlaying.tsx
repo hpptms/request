@@ -8,21 +8,35 @@ import Typography from "@mui/material/Typography";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
+import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
+import { hasLiked, markLiked } from "../lib/likeStorage";
 import { isMyRequest } from "../lib/myRequestStorage";
 import type { VideoRequest } from "../types";
 
 interface Props {
   nowPlaying: VideoRequest | null;
   cancelVoteThreshold: number;
+  likePriorityThreshold: number;
   isAdmin: boolean;
   onMarkDone: (id: string) => void;
   onVoteCancel: (id: string) => Promise<void>;
+  onLike: (id: string) => Promise<void>;
   onCancelMine: (id: string) => Promise<void>;
 }
 
-export function NowPlaying({ nowPlaying, cancelVoteThreshold, isAdmin, onMarkDone, onVoteCancel, onCancelMine }: Props) {
+export function NowPlaying({
+  nowPlaying,
+  cancelVoteThreshold,
+  likePriorityThreshold,
+  isAdmin,
+  onMarkDone,
+  onVoteCancel,
+  onLike,
+  onCancelMine,
+}: Props) {
   const [voting, setVoting] = useState(false);
+  const [liking, setLiking] = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
   if (!nowPlaying) {
@@ -34,6 +48,7 @@ export function NowPlaying({ nowPlaying, cancelVoteThreshold, isAdmin, onMarkDon
   }
 
   const voted = hasVoted(nowPlaying.id);
+  const liked = hasLiked(nowPlaying.id);
 
   const handleVote = async () => {
     setVoting(true);
@@ -42,6 +57,16 @@ export function NowPlaying({ nowPlaying, cancelVoteThreshold, isAdmin, onMarkDon
       markVoted(nowPlaying.id);
     } finally {
       setVoting(false);
+    }
+  };
+
+  const handleLike = async () => {
+    setLiking(true);
+    try {
+      await onLike(nowPlaying.id);
+      markLiked(nowPlaying.id);
+    } finally {
+      setLiking(false);
     }
   };
 
@@ -73,6 +98,16 @@ export function NowPlaying({ nowPlaying, cancelVoteThreshold, isAdmin, onMarkDon
             </Typography>
           </Box>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ flexShrink: 0 }}>
+            <Button
+              variant="outlined"
+              color={liked ? "primary" : "inherit"}
+              startIcon={<ThumbUpAltIcon />}
+              onClick={handleLike}
+              disabled={liking || liked}
+              sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
+            >
+              {liked ? "いいね済み" : "いいね"} ({nowPlaying.likes}/{likePriorityThreshold})
+            </Button>
             <Button
               variant="outlined"
               color="error"
