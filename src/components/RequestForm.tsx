@@ -45,8 +45,8 @@ export function RequestForm({ onSubmit }: Props) {
           sx={{ alignItems: "flex-start" }}
         >
           <TextField
-            label="YouTube の URL"
-            placeholder="https://www.youtube.com/watch?v=..."
+            label="動画のURL"
+            placeholder="YouTube・ニコニコ動画・bilibili・Vimeo・Dailymotion のURL"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             fullWidth

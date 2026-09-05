@@ -31,6 +31,17 @@ const DEFAULT_CANCEL_VOTE_SEVERE_THRESHOLD = 10;
 const DEFAULT_CANCEL_VOTE_SEVERE_CAP_SECONDS = 60;
 const DEFAULT_LIKE_PRIORITY_THRESHOLD = 2;
 const SHORTENED_PLAYBACK_SECONDS = 90; // 1:30
+// Non-YouTube platforms (niconico/bilibili/vimeo/dailymotion) have no ended/error event
+// this screen can listen for, so their queue advance is a plain timer
+// instead: NON_YOUTUBE_DEFAULT_DURATION_SECONDS when the platform didn't
+// report a duration (always true for bilibili — see the backend's
+// bilibili package), capped at NON_YOUTUBE_MAX_DURATION_SECONDS either way
+// so one long video can't hog the queue. Never allowed below
+// SHORTENED_PLAYBACK_SECONDS, which mirrors the backend's default
+// MinPlaybackBeforeFinish floor — otherwise the timer could fire before
+// the server will actually accept finishRequest.
+const NON_YOUTUBE_DEFAULT_DURATION_SECONDS = 300; // 5 min
+const NON_YOUTUBE_MAX_DURATION_SECONDS = 600; // 10 min
 
 // Gatekeeper for /viewer: the actual YouTube playback only ever loads inside
 // an authenticated admin session (see the OBS setup note in AuthenticatedViewerPage's
@@ -99,6 +110,11 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   const [started, setStarted] = useState(false);
   const [playerReady, setPlayerReady] = useState(false);
   const [isFallbackPlaying, setIsFallbackPlaying] = useState(false);
+  // Non-null while a non-YouTube request (niconico/bilibili/vimeo/dailymotion) is the
+  // current target: shown as a plain <iframe> layered over the YouTube
+  // player element instead of driving it. Filler (playlist/fallback) is
+  // always YouTube, so this is only ever set for a real request.
+  const [nonYouTubeEmbedUrl, setNonYouTubeEmbedUrl] = useState<string | null>(null);
   const [fallbackNowPlayingId, setFallbackNowPlayingId] = useState<string | null>(null);
   // World/Japan Top 100 tracks from the backend; empty until resolved (or
   // permanently, with no YouTube API key configured), in which case the
@@ -137,6 +153,10 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // touch gesture, OS media controls, etc.) and snap straight back.
   const expectedTimeRef = useRef(0);
   const seekGuardTickRef = useRef<number | null>(null);
+  // One-shot timer standing in for a non-YouTube video's ended event (see
+  // nonYouTubeEmbedUrl); cleared whenever the target changes for any
+  // reason so a stale timer can't fire against whatever's playing next.
+  const nonYouTubeTimerRef = useRef<number | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -293,6 +313,13 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     seekGuardTickRef.current = null;
   };
 
+  const clearNonYouTubeTimer = () => {
+    if (nonYouTubeTimerRef.current !== null) {
+      window.clearTimeout(nonYouTubeTimerRef.current);
+      nonYouTubeTimerRef.current = null;
+    }
+  };
+
   // Starts (or resumes) filler playback when nothing is requested: the
   // admin-curated playlist takes priority when non-empty, resuming at
   // playlistPositionRef; otherwise a random World/Japan Top 100 (or static)
@@ -337,6 +364,8 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   const advanceQueue = (finishRequest: (id: string) => Promise<unknown>) => {
     if (endedHandledRef.current) return;
     endedHandledRef.current = true;
+    clearNonYouTubeTimer();
+    setNonYouTubeEmbedUrl(null);
 
     const finishedRequestId = currentRequestIdRef.current;
     if (finishedRequestId) {
@@ -392,6 +421,8 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     const stillQueued = requests.some((r) => r.id === currentRequestIdRef.current);
     if (stillQueued) return;
     playerRef.current?.stopVideo();
+    clearNonYouTubeTimer();
+    setNonYouTubeEmbedUrl(null);
     loadedVideoIdRef.current = null;
     currentRequestIdRef.current = null;
   }, [started, requests]);
@@ -405,9 +436,11 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // smallest wins. Requests are never removed from the queue outright; this
   // cap is the only consequence. Runs off the same poll that refreshes
   // `requests`, so the cutoff lands within one POLL_INTERVAL_MS of the cap
-  // rather than exactly on it.
+  // rather than exactly on it. YouTube-only: there's no getCurrentTime
+  // equivalent for the non-YouTube platforms (see nonYouTubeEmbedUrl),
+  // whose advance is a plain duration timer set when they start instead.
   useEffect(() => {
-    if (!started || !playerReady || endedHandledRef.current) return;
+    if (!started || !playerReady || endedHandledRef.current || nonYouTubeEmbedUrl) return;
     const requestId = currentRequestIdRef.current;
     if (!requestId) return;
     const current = requests.find((r) => r.id === requestId);
@@ -437,6 +470,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     cancelVoteSevereCapSeconds,
     fastForwardActive,
     fastForwardCapSeconds,
+    nonYouTubeEmbedUrl,
     refresh,
   ]);
 
@@ -495,6 +529,10 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // interrupts filler playback (remembering the playlist's position so it
   // can resume later); with nothing queued, start (and only start — looping
   // and advancing is handled by handleEnded) filler playback via playFiller.
+  // A non-YouTube request (platform !== "youtube") is shown as a plain
+  // iframe instead of driving the YouTube player, and its queue advance is
+  // a one-shot duration timer rather than a real ended event — see
+  // nonYouTubeEmbedUrl.
   useEffect(() => {
     if (!started || !playerReady || !playerRef.current) return;
 
@@ -511,11 +549,29 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
       loadedVideoIdRef.current = target.videoId;
       currentRequestIdRef.current = target.id;
       endedHandledRef.current = false;
+      clearNonYouTubeTimer();
+
+      if (target.platform !== "youtube" && target.embedUrl) {
+        playerRef.current.stopVideo();
+        resetSeekGuard();
+        setNonYouTubeEmbedUrl(target.embedUrl);
+        const timerSeconds = Math.min(
+          Math.max(target.durationSeconds || NON_YOUTUBE_DEFAULT_DURATION_SECONDS, SHORTENED_PLAYBACK_SECONDS),
+          NON_YOUTUBE_MAX_DURATION_SECONDS,
+        );
+        nonYouTubeTimerRef.current = window.setTimeout(() => {
+          advanceQueue(api.finishRequest);
+        }, timerSeconds * 1000);
+        return;
+      }
+
+      setNonYouTubeEmbedUrl(null);
       resetSeekGuard();
       playerRef.current.loadVideoById(target.videoId);
       return;
     }
 
+    setNonYouTubeEmbedUrl(null);
     if (loadedVideoIdRef.current === null) {
       playFiller();
     }
@@ -576,6 +632,22 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
               <Box id={PLAYER_ELEMENT_ID} sx={{ width: "100%", height: "100%" }} />
               {/* Absorbs clicks/drags so visitors can't reach the player under it (see the playerVars comment above). */}
               <Box sx={{ position: "absolute", inset: 0 }} onContextMenu={(e) => e.preventDefault()} />
+              {/* niconico/bilibili/vimeo/dailymotion: plain embed layered over the (stopped) YouTube player, with no seek-guard/click-blocking equivalent — see nonYouTubeEmbedUrl. */}
+              {nonYouTubeEmbedUrl && (
+                <Box
+                  component="iframe"
+                  src={nonYouTubeEmbedUrl}
+                  allow="autoplay; fullscreen"
+                  sx={{
+                    position: "absolute",
+                    inset: 0,
+                    width: "100%",
+                    height: "100%",
+                    border: 0,
+                    bgcolor: "black",
+                  }}
+                />
+              )}
               {isFallbackPlaying && (
                 <Chip
                   label={
@@ -767,7 +839,7 @@ function RequestBar({ onSubmit }: { onSubmit: (url: string) => Promise<void> }) 
     >
       <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
         <TextField
-          placeholder="YouTubeのURLを貼り付けてリクエスト"
+          placeholder="動画のURL(YouTube・ニコニコ動画・bilibili・Vimeo・Dailymotion)を貼り付けてリクエスト"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           size="small"
