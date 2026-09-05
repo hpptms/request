@@ -52,7 +52,7 @@ const NON_YOUTUBE_MAX_DURATION_SECONDS = 600; // 10 min
 // starts, and how long after that the duration badge shows.
 const NOW_PLAYING_INTRO_MS = 20000;
 const DURATION_BADGE_DELAY_MS = 5000;
-const DURATION_BADGE_VISIBLE_MS = 3000;
+const DURATION_BADGE_VISIBLE_MS = 9000; // 3x the original 3s
 const NEW_REQUEST_NOTICE_MS = 4000;
 const VOTE_STATUS_VISIBLE_MS = 4000;
 
@@ -936,14 +936,20 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
                 </Zoom>
               </Box>
 
-              {/* Duration badge: shows DURATION_BADGE_VISIBLE_MS starting DURATION_BADGE_DELAY_MS after the video started. */}
+              {/* Duration badge: shows DURATION_BADGE_VISIBLE_MS starting DURATION_BADGE_DELAY_MS after the video started. ~3x a normal small Chip. */}
               <Box sx={{ position: "absolute", top: 16, right: 16, pointerEvents: "none" }}>
                 <Grow in={durationBadgeVisible} timeout={250}>
                   <Chip
-                    icon={<ScheduleIcon sx={{ color: "white !important" }} />}
+                    icon={<ScheduleIcon sx={{ color: "white !important", fontSize: "2.4rem !important" }} />}
                     label={durationBadgeSeconds !== null ? formatDuration(durationBadgeSeconds) : ""}
-                    size="small"
-                    sx={{ bgcolor: "rgba(0,0,0,0.7)", color: "white", fontWeight: 600 }}
+                    sx={{
+                      bgcolor: "rgba(0,0,0,0.7)",
+                      color: "white",
+                      fontWeight: 600,
+                      height: 72,
+                      borderRadius: 4,
+                      "& .MuiChip-label": { fontSize: "2.4rem", px: 2 },
+                    }}
                   />
                 </Grow>
               </Box>
