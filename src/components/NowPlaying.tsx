@@ -5,9 +5,11 @@ import Chip from "@mui/material/Chip";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import CancelIcon from "@mui/icons-material/Cancel";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
+import { isMyRequest } from "../lib/myRequestStorage";
 import type { VideoRequest } from "../types";
 
 interface Props {
@@ -16,10 +18,12 @@ interface Props {
   isAdmin: boolean;
   onMarkDone: (id: string) => void;
   onVoteCancel: (id: string) => Promise<void>;
+  onCancelMine: (id: string) => Promise<void>;
 }
 
-export function NowPlaying({ nowPlaying, cancelVoteThreshold, isAdmin, onMarkDone, onVoteCancel }: Props) {
+export function NowPlaying({ nowPlaying, cancelVoteThreshold, isAdmin, onMarkDone, onVoteCancel, onCancelMine }: Props) {
   const [voting, setVoting] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   if (!nowPlaying) {
     return (
@@ -38,6 +42,15 @@ export function NowPlaying({ nowPlaying, cancelVoteThreshold, isAdmin, onMarkDon
       markVoted(nowPlaying.id);
     } finally {
       setVoting(false);
+    }
+  };
+
+  const handleCancelMine = async () => {
+    setCancelling(true);
+    try {
+      await onCancelMine(nowPlaying.id);
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -70,6 +83,18 @@ export function NowPlaying({ nowPlaying, cancelVoteThreshold, isAdmin, onMarkDon
             >
               {voted ? "投票済み" : "1:30に短縮へ投票"} ({nowPlaying.cancelVotes}/{cancelVoteThreshold})
             </Button>
+            {isMyRequest(nowPlaying.id) && (
+              <Button
+                variant="outlined"
+                color="warning"
+                startIcon={<CancelIcon />}
+                onClick={handleCancelMine}
+                disabled={cancelling}
+                sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
+              >
+                自分のリクエストをキャンセル
+              </Button>
+            )}
             {isAdmin && (
               <Button
                 variant="outlined"
