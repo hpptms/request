@@ -538,37 +538,6 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     );
   };
 
-  // finishRequest can fail transiently — most notably ErrTooSoon, if the
-  // server's playback floor hasn't quite elapsed yet by the time our own
-  // elapsed-time check fires (the two clocks aren't perfectly in sync).
-  // Retries after a short delay instead of giving up: the caller only
-  // clears loadedVideoIdRef/currentRequestIdRef once this succeeds, so
-  // retrying (rather than clearing those refs on a failed attempt) keeps
-  // the "load whatever should be showing" effect from treating the
-  // still-"playing" request as a fresh target and reloading it from
-  // 0:00 — which is what made short/capped videos visibly repeat.
-  const FINISH_RETRY_DELAY_MS = 2000;
-  const FINISH_RETRY_MAX_ATTEMPTS = 10;
-  const finishWithRetry = (
-    finishRequest: (id: string) => Promise<unknown>,
-    id: string,
-    onSuccess: () => void,
-    attempt = 0,
-  ) => {
-    finishRequest(id)
-      .then(onSuccess)
-      .catch(() => {
-        if (attempt >= FINISH_RETRY_MAX_ATTEMPTS) {
-          // Given up retrying — clearing the refs at least lets the next
-          // poll attempt a fresh recovery, even though that may mean a
-          // restart in this rare worst case.
-          onSuccess();
-          return;
-        }
-        window.setTimeout(() => finishWithRetry(finishRequest, id, onSuccess, attempt + 1), FINISH_RETRY_DELAY_MS);
-      });
-  };
-
   // Shared by handleEnded (the player naturally reaching the end) and
   // handleSkip (the admin cutting the current video short): a real request
   // finishing plays the next queued one (handled by the effects below). A
@@ -578,6 +547,17 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // nothing is requested. finishRequest differs between the two callers:
   // the natural-end path enforces MinPlaybackBeforeFinish server-side, the
   // admin skip doesn't.
+  //
+  // finishRequest can fail with ErrTooSoon: a video shorter than the
+  // server's playback floor reaches its own natural end (or gets cut by a
+  // cap) before that floor has elapsed. Rather than sitting on a stopped
+  // player (or, worse, having the "load whatever should be showing" effect
+  // mistake the still-"playing" request for a fresh target and reload it —
+  // both of which read as "stuck"/"repeats" to a viewer), this replays the
+  // same video immediately and un-sets endedHandledRef so the *next*
+  // natural end retries — matching store.MinPlaybackBeforeFinish's
+  // documented behavior of replaying a too-short video until its floor is
+  // met, just without the visible stop/reload gap in between.
   const advanceQueue = (finishRequest: (id: string) => Promise<unknown>) => {
     if (endedHandledRef.current) return;
     endedHandledRef.current = true;
@@ -591,12 +571,19 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
 
     const finishedRequestId = currentRequestIdRef.current;
     if (finishedRequestId) {
-      playerRef.current?.stopVideo();
-      finishWithRetry(finishRequest, finishedRequestId, () => {
-        loadedVideoIdRef.current = null;
-        currentRequestIdRef.current = null;
-        refresh();
-      });
+      finishRequest(finishedRequestId)
+        .then(() => {
+          loadedVideoIdRef.current = null;
+          currentRequestIdRef.current = null;
+          playerRef.current?.stopVideo();
+          refresh();
+        })
+        .catch(() => {
+          endedHandledRef.current = false;
+          resetSeekGuard();
+          playerRef.current?.seekTo(0, true);
+          playerRef.current?.playVideo();
+        });
       return;
     }
 
@@ -720,12 +707,19 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     if (typeof elapsed !== "number" || elapsed < capSeconds) return;
 
     endedHandledRef.current = true;
-    playerRef.current?.stopVideo();
-    finishWithRetry(api.finishRequest, requestId, () => {
-      loadedVideoIdRef.current = null;
-      currentRequestIdRef.current = null;
-      refresh();
-    });
+    api.finishRequest(requestId)
+      .then(() => {
+        loadedVideoIdRef.current = null;
+        currentRequestIdRef.current = null;
+        playerRef.current?.stopVideo();
+        refresh();
+      })
+      .catch(() => {
+        // Floor not met yet — let it keep playing (rather than sitting
+        // stopped) and re-check on the next poll, by which point more
+        // real time will have elapsed toward that floor.
+        endedHandledRef.current = false;
+      });
   }, [
     started,
     playerReady,
