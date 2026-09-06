@@ -356,11 +356,15 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
         height: "100%",
         // controls/disablekb off: seeking to the end here fires the same
         // ENDED event handleEnded uses to advance the queue. iv_load_policy
-        // drops the old annotations overlay; modestbranding/fs/cc_load_policy
-        // trim what YouTube's own chrome would otherwise draw on top of the
-        // video — though YouTube's branding requirements mean a small
-        // logo watermark and (briefly, right as a video ends) its
-        // related-videos end screen can't be suppressed via this API at all.
+        // drops the old annotations overlay; modestbranding/fs trim what
+        // YouTube's own chrome would otherwise draw on top of the video —
+        // though YouTube's branding requirements mean a small logo
+        // watermark and (briefly, right as a video ends) its
+        // related-videos end screen can't be suppressed via this API at
+        // all. cc_load_policy=1 turns on the video's own captions
+        // whenever it has any (many official music videos ship synced
+        // lyrics this way) — this is YouTube's own player rendering
+        // them, not anything fetched/reproduced by this app.
         playerVars: {
           autoplay: 1,
           rel: 0,
@@ -370,7 +374,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
           modestbranding: 1,
           iv_load_policy: 3,
           fs: 0,
-          cc_load_policy: 0,
+          cc_load_policy: 1,
         },
         events: {
           onReady: () => setPlayerReady(true),
@@ -534,6 +538,37 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     );
   };
 
+  // finishRequest can fail transiently — most notably ErrTooSoon, if the
+  // server's playback floor hasn't quite elapsed yet by the time our own
+  // elapsed-time check fires (the two clocks aren't perfectly in sync).
+  // Retries after a short delay instead of giving up: the caller only
+  // clears loadedVideoIdRef/currentRequestIdRef once this succeeds, so
+  // retrying (rather than clearing those refs on a failed attempt) keeps
+  // the "load whatever should be showing" effect from treating the
+  // still-"playing" request as a fresh target and reloading it from
+  // 0:00 — which is what made short/capped videos visibly repeat.
+  const FINISH_RETRY_DELAY_MS = 2000;
+  const FINISH_RETRY_MAX_ATTEMPTS = 10;
+  const finishWithRetry = (
+    finishRequest: (id: string) => Promise<unknown>,
+    id: string,
+    onSuccess: () => void,
+    attempt = 0,
+  ) => {
+    finishRequest(id)
+      .then(onSuccess)
+      .catch(() => {
+        if (attempt >= FINISH_RETRY_MAX_ATTEMPTS) {
+          // Given up retrying — clearing the refs at least lets the next
+          // poll attempt a fresh recovery, even though that may mean a
+          // restart in this rare worst case.
+          onSuccess();
+          return;
+        }
+        window.setTimeout(() => finishWithRetry(finishRequest, id, onSuccess, attempt + 1), FINISH_RETRY_DELAY_MS);
+      });
+  };
+
   // Shared by handleEnded (the player naturally reaching the end) and
   // handleSkip (the admin cutting the current video short): a real request
   // finishing plays the next queued one (handled by the effects below). A
@@ -556,10 +591,12 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
 
     const finishedRequestId = currentRequestIdRef.current;
     if (finishedRequestId) {
-      loadedVideoIdRef.current = null;
-      currentRequestIdRef.current = null;
       playerRef.current?.stopVideo();
-      finishRequest(finishedRequestId).catch(() => {}).finally(refresh);
+      finishWithRetry(finishRequest, finishedRequestId, () => {
+        loadedVideoIdRef.current = null;
+        currentRequestIdRef.current = null;
+        refresh();
+      });
       return;
     }
 
@@ -683,10 +720,12 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     if (typeof elapsed !== "number" || elapsed < capSeconds) return;
 
     endedHandledRef.current = true;
-    loadedVideoIdRef.current = null;
-    currentRequestIdRef.current = null;
     playerRef.current?.stopVideo();
-    api.finishRequest(requestId).catch(() => {}).finally(refresh);
+    finishWithRetry(api.finishRequest, requestId, () => {
+      loadedVideoIdRef.current = null;
+      currentRequestIdRef.current = null;
+      refresh();
+    });
   }, [
     started,
     playerReady,
