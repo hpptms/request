@@ -155,7 +155,7 @@ function BoardPage() {
             color="text.secondary"
             sx={{ whiteSpace: "pre-line" }}
           >
-            {"6時と12時はリクエスト早送りタイムです。\n" +
+            {"0時・6時・12時・15時・18時・21時はリクエスト早送りタイムです。\n" +
               "荒し対策のため操作が頻繁な場合自動BANされます。BANされるとリクエストが削除されます。\n" +
               "自動BANは特定のタイミングで解除されます。"}
           </Typography>
