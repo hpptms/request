@@ -20,6 +20,10 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "/api";
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     headers: { "Content-Type": "application/json" },
+    // Needed so the admin session cookie is sent/stored now that the API is
+    // a separate origin (api.request.tokyo) from the frontend; harmless
+    // no-op for same-origin dev (npm run dev / Docker preview).
+    credentials: "include",
     ...init,
   });
   if (!res.ok) {
