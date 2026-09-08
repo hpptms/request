@@ -11,8 +11,8 @@ export interface VideoRequest {
   createdAt: string;
   cancelVotes: number;
   likes: number;
-  // Which video site videoId belongs to: "youtube" | "niconico" | "bilibili"
-  // | "vimeo". YouTube is driven by the IFrame Player API
+  // Which video site videoId belongs to: "youtube" | "niconico" | "vimeo".
+  // YouTube is driven by the IFrame Player API
   // (see ViewerPage); the others are shown as a plain
   // <iframe src={embedUrl}> with no
   // seek-guard/auto-advance-on-end/cancel-vote-shortening, since none of
