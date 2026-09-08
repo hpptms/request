@@ -9,6 +9,7 @@ import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
+import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import LogoutIcon from "@mui/icons-material/Logout";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
@@ -55,12 +56,17 @@ function AdminPage() {
 }
 
 // Shared header for every authenticated /admin/* screen: title, logout, and
-// a tab bar that switches between BAN management and the playlist screen.
-// The matched child route renders below via <Outlet />.
+// a tab bar that switches between BAN management, the playlist screen, and
+// the banned-keyword screen. The matched child route renders below via
+// <Outlet />.
 function AdminLayout({ onLoggedOut }: { onLoggedOut: () => void }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const tab = location.pathname.startsWith("/admin/playlist") ? "playlist" : "bans";
+  const tab = location.pathname.startsWith("/admin/playlist")
+    ? "playlist"
+    : location.pathname.startsWith("/admin/keywords")
+      ? "keywords"
+      : "bans";
 
   const handleLogout = async () => {
     try {
@@ -96,11 +102,14 @@ function AdminLayout({ onLoggedOut }: { onLoggedOut: () => void }) {
         </Toolbar>
         <Tabs
           value={tab}
-          onChange={(_, value: string) => navigate(value === "playlist" ? "/admin/playlist" : "/admin")}
+          onChange={(_, value: string) =>
+            navigate(value === "playlist" ? "/admin/playlist" : value === "keywords" ? "/admin/keywords" : "/admin")
+          }
           sx={{ px: { xs: 1.5, sm: 3 } }}
         >
           <Tab value="bans" label="BAN管理" icon={<ShieldIcon fontSize="small" />} iconPosition="start" />
           <Tab value="playlist" label="プレイリスト" icon={<PlaylistPlayIcon fontSize="small" />} iconPosition="start" />
+          <Tab value="keywords" label="禁止ワード" icon={<FilterAltIcon fontSize="small" />} iconPosition="start" />
         </Tabs>
       </AppBar>
 

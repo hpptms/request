@@ -121,4 +121,15 @@ export const api = {
 
   adminUnbanIP: (ip: string) =>
     request<void>(`/admin/bans/${encodeURIComponent(ip)}`, { method: "DELETE" }),
+
+  adminListKeywords: () => request<string[]>("/admin/keywords"),
+
+  adminAddKeyword: (keyword: string) =>
+    request<{ ok: boolean }>("/admin/keywords", {
+      method: "POST",
+      body: JSON.stringify({ keyword }),
+    }),
+
+  adminRemoveKeyword: (keyword: string) =>
+    request<void>(`/admin/keywords/${encodeURIComponent(keyword)}`, { method: "DELETE" }),
 };
