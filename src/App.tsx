@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import AdminBansPage from "./pages/AdminBansPage";
+import AdminKeywordsPage from "./pages/AdminKeywordsPage";
 import AdminPage from "./pages/AdminPage";
 import AdminPlaylistPage from "./pages/AdminPlaylistPage";
 import BoardPage from "./pages/BoardPage";
@@ -14,6 +15,7 @@ function App() {
         <Route path="/admin" element={<AdminPage />}>
           <Route index element={<AdminBansPage />} />
           <Route path="playlist" element={<AdminPlaylistPage />} />
+          <Route path="keywords" element={<AdminKeywordsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
