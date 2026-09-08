@@ -35,7 +35,7 @@ const DEFAULT_CANCEL_VOTE_THRESHOLD = 5;
 const DEFAULT_CANCEL_VOTE_SEVERE_THRESHOLD = 10;
 const DEFAULT_CANCEL_VOTE_SEVERE_CAP_SECONDS = 60;
 const DEFAULT_LIKE_PRIORITY_THRESHOLD = 2;
-const SHORTENED_PLAYBACK_SECONDS = 90; // 1:30
+const SHORTENED_PLAYBACK_SECONDS = 60; // 1:00
 // Non-YouTube platforms (niconico/vimeo) have no ended/error event this
 // screen can listen for, so their queue advance is a plain timer instead:
 // NON_YOUTUBE_DEFAULT_DURATION_SECONDS when the platform didn't report a
