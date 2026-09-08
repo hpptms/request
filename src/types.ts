@@ -76,6 +76,15 @@ export interface BannedIP {
   reason: string;
 }
 
+// A daily fast-forward window (see backend/internal/fastforward): starting
+// at hour (0-23, JST) and running for durationMinutes, during which a
+// backed-up queue plays each request for only fastForwardCapSeconds
+// (AppConfig) instead of the normal minimum.
+export interface FastForwardWindow {
+  hour: number;
+  durationMinutes: number;
+}
+
 // A single entry in the admin-curated playlist the viewer screen plays, in
 // order, whenever the request queue is empty. Distinct from FallbackTrack
 // (the automatic World/Japan Top 100 fallback): this list is a plain,
