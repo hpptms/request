@@ -9,6 +9,7 @@ import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
+import FastForwardIcon from "@mui/icons-material/FastForward";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import LogoutIcon from "@mui/icons-material/Logout";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
@@ -55,18 +56,28 @@ function AdminPage() {
   );
 }
 
+// The tab bar's entries: each maps a /admin/* sub-path to its tab value,
+// label and icon. "bans" is the index route (/admin itself).
+const adminTabs = [
+  { value: "bans", path: "/admin", label: "BAN管理", icon: <ShieldIcon fontSize="small" /> },
+  { value: "playlist", path: "/admin/playlist", label: "プレイリスト", icon: <PlaylistPlayIcon fontSize="small" /> },
+  { value: "keywords", path: "/admin/keywords", label: "禁止ワード", icon: <FilterAltIcon fontSize="small" /> },
+  {
+    value: "fastforward",
+    path: "/admin/fastforward",
+    label: "早送り",
+    icon: <FastForwardIcon fontSize="small" />,
+  },
+] as const;
+
 // Shared header for every authenticated /admin/* screen: title, logout, and
-// a tab bar that switches between BAN management, the playlist screen, and
-// the banned-keyword screen. The matched child route renders below via
-// <Outlet />.
+// a tab bar that switches between BAN management, the playlist screen, the
+// banned-keyword screen, and the fast-forward schedule screen. The matched
+// child route renders below via <Outlet />.
 function AdminLayout({ onLoggedOut }: { onLoggedOut: () => void }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const tab = location.pathname.startsWith("/admin/playlist")
-    ? "playlist"
-    : location.pathname.startsWith("/admin/keywords")
-      ? "keywords"
-      : "bans";
+  const tab = adminTabs.find((t) => t.value !== "bans" && location.pathname.startsWith(t.path))?.value ?? "bans";
 
   const handleLogout = async () => {
     try {
@@ -102,14 +113,12 @@ function AdminLayout({ onLoggedOut }: { onLoggedOut: () => void }) {
         </Toolbar>
         <Tabs
           value={tab}
-          onChange={(_, value: string) =>
-            navigate(value === "playlist" ? "/admin/playlist" : value === "keywords" ? "/admin/keywords" : "/admin")
-          }
+          onChange={(_, value: string) => navigate(adminTabs.find((t) => t.value === value)?.path ?? "/admin")}
           sx={{ px: { xs: 1.5, sm: 3 } }}
         >
-          <Tab value="bans" label="BAN管理" icon={<ShieldIcon fontSize="small" />} iconPosition="start" />
-          <Tab value="playlist" label="プレイリスト" icon={<PlaylistPlayIcon fontSize="small" />} iconPosition="start" />
-          <Tab value="keywords" label="禁止ワード" icon={<FilterAltIcon fontSize="small" />} iconPosition="start" />
+          {adminTabs.map((t) => (
+            <Tab key={t.value} value={t.value} label={t.label} icon={t.icon} iconPosition="start" />
+          ))}
         </Tabs>
       </AppBar>
 

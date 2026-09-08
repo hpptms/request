@@ -4,6 +4,7 @@ import type {
   BannedIP,
   CancelVoteResult,
   FallbackTrack,
+  FastForwardWindow,
   LikeResult,
   PlaylistImportResult,
   PlaylistTrack,
@@ -132,4 +133,12 @@ export const api = {
 
   adminRemoveKeyword: (keyword: string) =>
     request<void>(`/admin/keywords/${encodeURIComponent(keyword)}`, { method: "DELETE" }),
+
+  adminListFastForward: () => request<FastForwardWindow[]>("/admin/fastforward"),
+
+  adminSetFastForward: (windows: FastForwardWindow[]) =>
+    request<FastForwardWindow[]>("/admin/fastforward", {
+      method: "PUT",
+      body: JSON.stringify({ windows }),
+    }),
 };
