@@ -36,12 +36,11 @@ const DEFAULT_CANCEL_VOTE_SEVERE_THRESHOLD = 10;
 const DEFAULT_CANCEL_VOTE_SEVERE_CAP_SECONDS = 60;
 const DEFAULT_LIKE_PRIORITY_THRESHOLD = 2;
 const SHORTENED_PLAYBACK_SECONDS = 90; // 1:30
-// Non-YouTube platforms (niconico/bilibili/vimeo) have no ended/error event
-// this screen can listen for, so their queue advance is a plain timer
-// instead: NON_YOUTUBE_DEFAULT_DURATION_SECONDS when the platform didn't
-// report a duration (always true for bilibili — see the backend's
-// bilibili package), capped at NON_YOUTUBE_MAX_DURATION_SECONDS either way
-// so one long video can't hog the queue. Never allowed below
+// Non-YouTube platforms (niconico/vimeo) have no ended/error event this
+// screen can listen for, so their queue advance is a plain timer instead:
+// NON_YOUTUBE_DEFAULT_DURATION_SECONDS when the platform didn't report a
+// duration, capped at NON_YOUTUBE_MAX_DURATION_SECONDS either way so one
+// long video can't hog the queue. Never allowed below
 // SHORTENED_PLAYBACK_SECONDS, which mirrors the backend's default
 // MinPlaybackBeforeFinish floor — otherwise the timer could fire before
 // the server will actually accept finishRequest.
@@ -148,7 +147,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   const [started, setStarted] = useState(false);
   const [playerReady, setPlayerReady] = useState(false);
   const [isFallbackPlaying, setIsFallbackPlaying] = useState(false);
-  // Non-null while a non-YouTube request (niconico/bilibili/vimeo) is the
+  // Non-null while a non-YouTube request (niconico/vimeo) is the
   // current target: shown as a plain <iframe> layered over the YouTube
   // player element instead of driving it. Filler (playlist/fallback) is
   // always YouTube, so this is only ever set for a real request.
@@ -894,7 +893,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
               <Box id={PLAYER_ELEMENT_ID} sx={{ width: "100%", height: "100%" }} />
               {/* Absorbs clicks/drags so visitors can't reach the player under it (see the playerVars comment above). */}
               <Box sx={{ position: "absolute", inset: 0 }} onContextMenu={(e) => e.preventDefault()} />
-              {/* niconico/bilibili/vimeo: plain embed layered over the (stopped) YouTube player, with no seek-guard/click-blocking equivalent — see nonYouTubeEmbedUrl. */}
+              {/* niconico/vimeo: plain embed layered over the (stopped) YouTube player, with no seek-guard/click-blocking equivalent — see nonYouTubeEmbedUrl. */}
               {nonYouTubeEmbedUrl && (
                 <Box
                   component="iframe"
@@ -1205,7 +1204,7 @@ function RequestBar({ onSubmit }: { onSubmit: (url: string) => Promise<void> }) 
     >
       <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
         <TextField
-          placeholder="動画のURL(YouTube・ニコニコ動画・bilibili・Vimeo)を貼り付けてリクエスト"
+          placeholder="動画のURL(YouTube・ニコニコ動画・Vimeo)を貼り付けてリクエスト"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           size="small"
