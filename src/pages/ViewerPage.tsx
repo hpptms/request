@@ -1,30 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import Avatar from "@mui/material/Avatar";
-import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
-import Divider from "@mui/material/Divider";
 import Grow from "@mui/material/Grow";
-import IconButton from "@mui/material/IconButton";
 import Slide from "@mui/material/Slide";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import Zoom from "@mui/material/Zoom";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import ScheduleIcon from "@mui/icons-material/Schedule";
-import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
-import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { api } from "../api";
 import { AdminLoginForm } from "../components/AdminLoginForm";
-import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
 import { FALLBACK_VIDEO_IDS, pickRandomFallbackVideoId } from "../lib/fallbackPlaylist";
-import { hasLiked, markLiked } from "../lib/likeStorage";
 import { loadYouTubeIframeApi } from "../lib/loadYouTubeIframeApi";
 import type { FallbackTrack, PlaylistTrack, VideoRequest } from "../types";
 
@@ -33,7 +24,6 @@ const PLAYER_ELEMENT_ID = "yt-viewer-player";
 const DEFAULT_CANCEL_VOTE_THRESHOLD = 5;
 const DEFAULT_CANCEL_VOTE_SEVERE_THRESHOLD = 10;
 const DEFAULT_CANCEL_VOTE_SEVERE_CAP_SECONDS = 60;
-const DEFAULT_LIKE_PRIORITY_THRESHOLD = 2;
 const SHORTENED_PLAYBACK_SECONDS = 60; // 1:00
 // Non-YouTube platforms (niconico/vimeo) have no ended/error event this
 // screen can listen for, so their queue advance is a plain timer instead:
@@ -131,11 +121,11 @@ function ViewerPage() {
 // once — the session cookie then persists for that source.
 function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () => void }) {
   const [searchParams] = useSearchParams();
-  // ?solo=1 : OBSキャプチャ用に動画だけをフルサイズで表示し、キューと入力欄を隠す。
+  // ?solo=1 : OBSキャプチャ用に入力欄も隠す(キューは常に非表示、動画は常に
+  // フルサイズ — 下のvideo Boxのflexとキュー表示の削除を参照)。
   const solo = searchParams.get("solo") === "1";
   const [requests, setRequests] = useState<VideoRequest[]>([]);
   const [cancelVoteThreshold, setCancelVoteThreshold] = useState(DEFAULT_CANCEL_VOTE_THRESHOLD);
-  const [likePriorityThreshold, setLikePriorityThreshold] = useState(DEFAULT_LIKE_PRIORITY_THRESHOLD);
   const [cancelVoteSevereThreshold, setCancelVoteSevereThreshold] = useState(DEFAULT_CANCEL_VOTE_SEVERE_THRESHOLD);
   const [cancelVoteSevereCapSeconds, setCancelVoteSevereCapSeconds] = useState(DEFAULT_CANCEL_VOTE_SEVERE_CAP_SECONDS);
   // Backlog fast-forward mode (see AppConfig.fastForwardActive): re-polled
@@ -278,7 +268,6 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
         .getConfig()
         .then((config) => {
           setCancelVoteThreshold(config.cancelVoteThreshold);
-          setLikePriorityThreshold(config.likePriorityThreshold);
           setCancelVoteSevereThreshold(config.cancelVoteSevereThreshold);
           setCancelVoteSevereCapSeconds(config.cancelVoteSevereCapSeconds);
           setFastForwardActive(config.fastForwardActive);
@@ -868,18 +857,6 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   const playlistNowPlaying = playlistTracks.find((t) => t.videoId === fallbackNowPlayingId) ?? null;
   const fallbackNowPlaying = fallbackTracks.find((t) => t.videoId === fallbackNowPlayingId) ?? null;
 
-  const handleVoteCancel = async (id: string) => {
-    await api.voteCancel(id);
-    markVoted(id);
-    await refresh();
-  };
-
-  const handleLike = async (id: string) => {
-    await api.likeRequest(id);
-    markLiked(id);
-    await refresh();
-  };
-
   const handleCreateRequest = async (url: string) => {
     await api.createRequest(url, "");
     await refresh();
@@ -888,7 +865,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   return (
     <Box sx={{ position: "fixed", inset: 0, bgcolor: "black", display: "flex", flexDirection: "column" }}>
       <Box sx={{ flex: 1, minHeight: 0, display: "flex" }}>
-        <Box sx={{ flex: solo ? "1 1 0%" : "4 1 0%", position: "relative", bgcolor: "black" }}>
+        <Box sx={{ flex: "1 1 0%", position: "relative", bgcolor: "black" }}>
           <>
             <Box id={PLAYER_ELEMENT_ID} sx={{ width: "100%", height: "100%" }} />
             {/* Absorbs clicks/drags so visitors can't reach the player under it (see the playerVars comment above). */}
@@ -1036,136 +1013,10 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
             </Box>
           </>
         </Box>
-
-        {!solo && (
-          <Box
-            sx={{
-              flex: "1 1 0%",
-              minWidth: 0,
-              display: "flex",
-              flexDirection: "column",
-              bgcolor: "#141414",
-              borderLeft: "1px solid rgba(255,255,255,0.12)",
-            }}
-          >
-            <Typography variant="subtitle2" sx={{ color: "grey.400", px: 1.5, py: 1, flexShrink: 0 }}>
-              キュー {pendingList.length > 0 && `(${pendingList.length})`}
-            </Typography>
-            <Divider sx={{ borderColor: "rgba(255,255,255,0.12)" }} />
-            <Box sx={{ flex: 1, overflowY: "auto" }}>
-              {pendingList.length === 0 ? (
-                <Typography variant="body2" sx={{ color: "grey.600", p: 2, textAlign: "center" }}>
-                  リクエストはありません
-                </Typography>
-              ) : (
-                pendingList.map((r) => (
-                  <QueueRow
-                    key={r.id}
-                    request={r}
-                    threshold={cancelVoteThreshold}
-                    likeThreshold={likePriorityThreshold}
-                    onVoteCancel={handleVoteCancel}
-                    onLike={handleLike}
-                  />
-                ))
-              )}
-            </Box>
-          </Box>
-        )}
       </Box>
 
       {!solo && <RequestBar onSubmit={handleCreateRequest} />}
     </Box>
-  );
-}
-
-interface QueueRowProps {
-  request: VideoRequest;
-  threshold: number;
-  likeThreshold: number;
-  onVoteCancel: (id: string) => Promise<void>;
-  onLike: (id: string) => Promise<void>;
-}
-
-function QueueRow({ request, threshold, likeThreshold, onVoteCancel, onLike }: QueueRowProps) {
-  const [voting, setVoting] = useState(false);
-  const [liking, setLiking] = useState(false);
-  const voted = hasVoted(request.id);
-  const liked = hasLiked(request.id);
-
-  const handleClick = async () => {
-    setVoting(true);
-    try {
-      await onVoteCancel(request.id);
-    } finally {
-      setVoting(false);
-    }
-  };
-
-  const handleLikeClick = async () => {
-    setLiking(true);
-    try {
-      await onLike(request.id);
-    } finally {
-      setLiking(false);
-    }
-  };
-
-  return (
-    <Stack
-      direction="row"
-      spacing={1}
-      sx={{ alignItems: "center", px: 1.5, py: 1, borderBottom: "1px solid rgba(255,255,255,0.08)" }}
-    >
-      <Avatar variant="rounded" src={request.thumbnailUrl} sx={{ width: 44, height: 32, flexShrink: 0 }} />
-      <Box sx={{ minWidth: 0, flex: 1 }}>
-        <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
-          {request.likes >= likeThreshold && (
-            <Chip
-              label="優先"
-              size="small"
-              color="primary"
-              sx={{ height: 16, fontSize: "0.6rem", flexShrink: 0, "& .MuiChip-label": { px: 0.6 } }}
-            />
-          )}
-          <Typography variant="body2" noWrap sx={{ color: "white", lineHeight: 1.3 }}>
-            {request.title}
-          </Typography>
-        </Stack>
-        <Typography variant="caption" noWrap sx={{ color: "grey.500" }}>
-          {request.channelTitle}
-        </Typography>
-      </Box>
-      <Tooltip title={liked ? "いいね済み" : `いいね (${request.likes}/${likeThreshold}で優先再生)`}>
-        <span>
-          <IconButton
-            size="small"
-            onClick={handleLikeClick}
-            disabled={liking || liked}
-            sx={{ color: liked ? "primary.main" : "grey.500", flexShrink: 0 }}
-          >
-            <Badge badgeContent={request.likes} color="primary">
-              <ThumbUpAltIcon fontSize="small" />
-            </Badge>
-          </IconButton>
-        </span>
-      </Tooltip>
-      <Box sx={{ width: 12, flexShrink: 0 }} />
-      <Tooltip title={voted ? "投票済み" : `1:30に短縮へ投票 (${request.cancelVotes}/${threshold})`}>
-        <span>
-          <IconButton
-            size="small"
-            onClick={handleClick}
-            disabled={voting || voted}
-            sx={{ color: voted ? "grey.700" : "error.main", flexShrink: 0 }}
-          >
-            <Badge badgeContent={request.cancelVotes} color="error">
-              <ThumbDownAltIcon fontSize="small" />
-            </Badge>
-          </IconButton>
-        </span>
-      </Tooltip>
-    </Stack>
   );
 }
 
