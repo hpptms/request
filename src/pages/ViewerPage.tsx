@@ -987,39 +987,6 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
               </Grow>
             </Box>
 
-            {/* Vote-status badge: current cancel-vote/like tally for the playing request, shown on start (if non-zero) and again on every increase — see the effect watching `requests` above. ~6x a normal small Chip. */}
-            <Box sx={{ position: "absolute", top: 16, left: 16, pointerEvents: "none" }}>
-              <Grow in={voteStatusVisible} timeout={250}>
-                <Stack direction="row" spacing={1.5}>
-                  {voteStatusContent && voteStatusContent.cancelVotes > 0 && (
-                    <Chip
-                      label={`😨+${voteStatusContent.cancelVotes}`}
-                      sx={{
-                        bgcolor: "rgba(0,0,0,0.7)",
-                        color: "white",
-                        fontWeight: 700,
-                        height: 144,
-                        borderRadius: 6,
-                        "& .MuiChip-label": { fontSize: "4.8rem", px: 5 },
-                      }}
-                    />
-                  )}
-                  {voteStatusContent && voteStatusContent.likes > 0 && (
-                    <Chip
-                      label={`😊+${voteStatusContent.likes}`}
-                      sx={{
-                        bgcolor: "rgba(0,0,0,0.7)",
-                        color: "white",
-                        fontWeight: 700,
-                        height: 144,
-                        borderRadius: 6,
-                        "& .MuiChip-label": { fontSize: "4.8rem", px: 5 },
-                      }}
-                    />
-                  )}
-                </Stack>
-              </Grow>
-            </Box>
 
             {/* New-request toast: fires once per request as it's added to the
                 queue (see refresh/enqueue logic above). Below it (and unlike
@@ -1112,6 +1079,41 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
                     </Stack>
                   );
                 })()}
+
+              {/* Vote-status badge: current cancel-vote/like tally for the
+                  playing request, shown on start (if non-zero) and again on
+                  every increase — see the effect watching `requests` above.
+                  ~6x a normal small Chip. */}
+              <Grow in={voteStatusVisible} timeout={250} style={{ pointerEvents: "none" }}>
+                <Stack direction="row" spacing={1.5}>
+                  {voteStatusContent && voteStatusContent.cancelVotes > 0 && (
+                    <Chip
+                      label={`😨+${voteStatusContent.cancelVotes}`}
+                      sx={{
+                        bgcolor: "rgba(0,0,0,0.7)",
+                        color: "white",
+                        fontWeight: 700,
+                        height: 144,
+                        borderRadius: 6,
+                        "& .MuiChip-label": { fontSize: "4.8rem", px: 5 },
+                      }}
+                    />
+                  )}
+                  {voteStatusContent && voteStatusContent.likes > 0 && (
+                    <Chip
+                      label={`😊+${voteStatusContent.likes}`}
+                      sx={{
+                        bgcolor: "rgba(0,0,0,0.7)",
+                        color: "white",
+                        fontWeight: 700,
+                        height: 144,
+                        borderRadius: 6,
+                        "& .MuiChip-label": { fontSize: "4.8rem", px: 5 },
+                      }}
+                    />
+                  )}
+                </Stack>
+              </Grow>
             </Box>
           </>
         </Box>
