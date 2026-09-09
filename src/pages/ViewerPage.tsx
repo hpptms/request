@@ -937,28 +937,9 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
               />
             )}
 
-            {/* Music-program-style title card: pops in when a video starts,
-                pops out after NOW_PLAYING_INTRO_MS. Below it (and unlike it,
-                staying up for as long as a real request is playing) sit the
-                like/BAD buttons for that request. */}
-            <Box
-              sx={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                bottom: 24,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 1.5,
-                px: 3,
-              }}
-            >
-              <Zoom
-                in={introVisible}
-                timeout={{ enter: 350, exit: 250 }}
-                style={{ transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)", pointerEvents: "none" }}
-              >
+            {/* Music-program-style title card: pops in when a video starts, pops out after NOW_PLAYING_INTRO_MS. */}
+            <Box sx={{ position: "absolute", left: 0, right: 0, bottom: 24, display: "flex", justifyContent: "center", px: 3, pointerEvents: "none" }}>
+              <Zoom in={introVisible} timeout={{ enter: 350, exit: 250 }} style={{ transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" }}>
                 <Stack
                   direction="row"
                   spacing={1.5}
@@ -987,6 +968,93 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
                   </Box>
                 </Stack>
               </Zoom>
+            </Box>
+
+            {/* Duration badge: shows DURATION_BADGE_VISIBLE_MS starting DURATION_BADGE_DELAY_MS after the video started. ~3x a normal small Chip. */}
+            <Box sx={{ position: "absolute", top: 16, right: 16, pointerEvents: "none" }}>
+              <Grow in={durationBadgeVisible} timeout={250}>
+                <Chip
+                  icon={<ScheduleIcon sx={{ color: "white !important", fontSize: "2.4rem !important" }} />}
+                  label={durationBadgeSeconds !== null ? formatDuration(durationBadgeSeconds) : ""}
+                  sx={{
+                    bgcolor: "rgba(0,0,0,0.7)",
+                    color: "white",
+                    fontWeight: 600,
+                    height: 72,
+                    borderRadius: 4,
+                    "& .MuiChip-label": { fontSize: "2.4rem", px: 2 },
+                  }}
+                />
+              </Grow>
+            </Box>
+
+            {/* Vote-status badge: current cancel-vote/like tally for the playing request, shown on start (if non-zero) and again on every increase — see the effect watching `requests` above. ~6x a normal small Chip. */}
+            <Box sx={{ position: "absolute", top: 16, left: 16, pointerEvents: "none" }}>
+              <Grow in={voteStatusVisible} timeout={250}>
+                <Stack direction="row" spacing={1.5}>
+                  {voteStatusContent && voteStatusContent.cancelVotes > 0 && (
+                    <Chip
+                      label={`😨+${voteStatusContent.cancelVotes}`}
+                      sx={{
+                        bgcolor: "rgba(0,0,0,0.7)",
+                        color: "white",
+                        fontWeight: 700,
+                        height: 144,
+                        borderRadius: 6,
+                        "& .MuiChip-label": { fontSize: "4.8rem", px: 5 },
+                      }}
+                    />
+                  )}
+                  {voteStatusContent && voteStatusContent.likes > 0 && (
+                    <Chip
+                      label={`😊+${voteStatusContent.likes}`}
+                      sx={{
+                        bgcolor: "rgba(0,0,0,0.7)",
+                        color: "white",
+                        fontWeight: 700,
+                        height: 144,
+                        borderRadius: 6,
+                        "& .MuiChip-label": { fontSize: "4.8rem", px: 5 },
+                      }}
+                    />
+                  )}
+                </Stack>
+              </Grow>
+            </Box>
+
+            {/* New-request toast: fires once per request as it's added to the
+                queue (see refresh/enqueue logic above). Below it (and unlike
+                it, staying up for as long as a real request is playing) sit
+                the like/BAD buttons for that request. */}
+            <Box
+              sx={{
+                position: "absolute",
+                top: 16,
+                left: 0,
+                right: 0,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 1.5,
+                px: 3,
+              }}
+            >
+              <Slide
+                in={newRequestNotice !== null}
+                direction="down"
+                timeout={{ enter: 300, exit: 200 }}
+                style={{ pointerEvents: "none" }}
+              >
+                <Chip
+                  color="primary"
+                  label={newRequestNotice ? `🎵 新しいリクエスト: ${newRequestNotice.title}` : ""}
+                  sx={{
+                    maxWidth: "90%",
+                    fontWeight: 600,
+                    "& .MuiChip-label": { overflow: "hidden", textOverflow: "ellipsis" },
+                  }}
+                />
+              </Slide>
 
               {playing &&
                 (() => {
@@ -1045,73 +1113,6 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
                     </Stack>
                   );
                 })()}
-            </Box>
-
-            {/* Duration badge: shows DURATION_BADGE_VISIBLE_MS starting DURATION_BADGE_DELAY_MS after the video started. ~3x a normal small Chip. */}
-            <Box sx={{ position: "absolute", top: 16, right: 16, pointerEvents: "none" }}>
-              <Grow in={durationBadgeVisible} timeout={250}>
-                <Chip
-                  icon={<ScheduleIcon sx={{ color: "white !important", fontSize: "2.4rem !important" }} />}
-                  label={durationBadgeSeconds !== null ? formatDuration(durationBadgeSeconds) : ""}
-                  sx={{
-                    bgcolor: "rgba(0,0,0,0.7)",
-                    color: "white",
-                    fontWeight: 600,
-                    height: 72,
-                    borderRadius: 4,
-                    "& .MuiChip-label": { fontSize: "2.4rem", px: 2 },
-                  }}
-                />
-              </Grow>
-            </Box>
-
-            {/* Vote-status badge: current cancel-vote/like tally for the playing request, shown on start (if non-zero) and again on every increase — see the effect watching `requests` above. ~6x a normal small Chip. */}
-            <Box sx={{ position: "absolute", top: 16, left: 16, pointerEvents: "none" }}>
-              <Grow in={voteStatusVisible} timeout={250}>
-                <Stack direction="row" spacing={1.5}>
-                  {voteStatusContent && voteStatusContent.cancelVotes > 0 && (
-                    <Chip
-                      label={`😨+${voteStatusContent.cancelVotes}`}
-                      sx={{
-                        bgcolor: "rgba(0,0,0,0.7)",
-                        color: "white",
-                        fontWeight: 700,
-                        height: 144,
-                        borderRadius: 6,
-                        "& .MuiChip-label": { fontSize: "4.8rem", px: 5 },
-                      }}
-                    />
-                  )}
-                  {voteStatusContent && voteStatusContent.likes > 0 && (
-                    <Chip
-                      label={`😊+${voteStatusContent.likes}`}
-                      sx={{
-                        bgcolor: "rgba(0,0,0,0.7)",
-                        color: "white",
-                        fontWeight: 700,
-                        height: 144,
-                        borderRadius: 6,
-                        "& .MuiChip-label": { fontSize: "4.8rem", px: 5 },
-                      }}
-                    />
-                  )}
-                </Stack>
-              </Grow>
-            </Box>
-
-            {/* New-request toast: fires once per request as it's added to the queue (see refresh/enqueue logic above). */}
-            <Box sx={{ position: "absolute", top: 16, left: 0, right: 0, display: "flex", justifyContent: "center", px: 3, pointerEvents: "none" }}>
-              <Slide in={newRequestNotice !== null} direction="down" timeout={{ enter: 300, exit: 200 }}>
-                <Chip
-                  color="primary"
-                  label={newRequestNotice ? `🎵 新しいリクエスト: ${newRequestNotice.title}` : ""}
-                  sx={{
-                    maxWidth: "90%",
-                    fontWeight: 600,
-                    "& .MuiChip-label": { overflow: "hidden", textOverflow: "ellipsis" },
-                  }}
-                />
-              </Slide>
             </Box>
           </>
         </Box>
