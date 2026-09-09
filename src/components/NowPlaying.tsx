@@ -96,13 +96,9 @@ export function NowPlaying({
   };
 
   return (
-    <Paper elevation={2} sx={{ overflow: "hidden" }}>
+    <Paper elevation={2}>
       <Box sx={{ p: 2 }}>
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          spacing={1}
-          sx={{ justifyContent: "space-between", alignItems: { sm: "center" } }}
-        >
+        <Stack direction="column" spacing={1.5}>
           <Box>
             <Chip label="NOW PLAYING" color="primary" size="small" sx={{ mb: 1 }} />
             <Typography variant="h6" sx={{ lineHeight: 1.3 }}>
@@ -113,7 +109,12 @@ export function NowPlaying({
               {nowPlaying.requesterName && ` ・ リクエスト: ${nowPlaying.requesterName}`}
             </Typography>
           </Box>
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ flexShrink: 0 }}>
+          <Stack
+            useFlexGap
+            direction="row"
+            spacing={1}
+            sx={{ flexWrap: "wrap" }}
+          >
             <Button
               variant="outlined"
               color="inherit"
