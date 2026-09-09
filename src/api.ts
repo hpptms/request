@@ -6,6 +6,7 @@ import type {
   DurationLimit,
   FallbackTrack,
   FastForwardWindow,
+  KeywordLimit,
   LikeResult,
   PlaylistImportResult,
   PlaylistTrack,
@@ -134,6 +135,14 @@ export const api = {
 
   adminRemoveKeyword: (keyword: string) =>
     request<void>(`/admin/keywords/${encodeURIComponent(keyword)}`, { method: "DELETE" }),
+
+  adminListKeywordLimits: () => request<KeywordLimit[]>("/admin/keywordlimits"),
+
+  adminSetKeywordLimits: (entries: KeywordLimit[]) =>
+    request<KeywordLimit[]>("/admin/keywordlimits", {
+      method: "PUT",
+      body: JSON.stringify({ entries }),
+    }),
 
   adminListFastForward: () => request<FastForwardWindow[]>("/admin/fastforward"),
 
