@@ -11,6 +11,7 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import FastForwardIcon from "@mui/icons-material/FastForward";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
+import FilterAltOutlinedIcon from "@mui/icons-material/FilterAltOutlined";
 import LogoutIcon from "@mui/icons-material/Logout";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
@@ -63,6 +64,12 @@ const adminTabs = [
   { value: "bans", path: "/admin", label: "BAN管理", icon: <ShieldIcon fontSize="small" /> },
   { value: "playlist", path: "/admin/playlist", label: "プレイリスト", icon: <PlaylistPlayIcon fontSize="small" /> },
   { value: "keywords", path: "/admin/keywords", label: "禁止ワード", icon: <FilterAltIcon fontSize="small" /> },
+  {
+    value: "keywordlimits",
+    path: "/admin/keywordlimits",
+    label: "セミ禁止ワード",
+    icon: <FilterAltOutlinedIcon fontSize="small" />,
+  },
   {
     value: "fastforward",
     path: "/admin/fastforward",

@@ -82,6 +82,15 @@ export interface BannedIP {
   reason: string;
 }
 
+// A "semi-banned" keyword (see backend/internal/keywordlimit): unlike
+// BannedKeyword-style outright bans, a title/channel-title match here is
+// perfectly allowed content — it just can't have more than limit requests
+// pending/playing in the queue at once.
+export interface KeywordLimit {
+  keyword: string;
+  limit: number;
+}
+
 // The admin-configured long-video shortening rule (see
 // backend/internal/durationlimit): any request whose video is at least
 // thresholdSeconds long is capped at capSeconds instead of playing out
