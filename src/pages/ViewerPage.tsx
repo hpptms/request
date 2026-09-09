@@ -5,23 +5,17 @@ import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
 import Grow from "@mui/material/Grow";
-import IconButton from "@mui/material/IconButton";
 import Slide from "@mui/material/Slide";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import Zoom from "@mui/material/Zoom";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import ScheduleIcon from "@mui/icons-material/Schedule";
-import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
-import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { api } from "../api";
 import { AdminLoginForm } from "../components/AdminLoginForm";
-import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
 import { FALLBACK_VIDEO_IDS, pickRandomFallbackVideoId } from "../lib/fallbackPlaylist";
-import { hasLiked, markLiked } from "../lib/likeStorage";
 import { loadYouTubeIframeApi } from "../lib/loadYouTubeIframeApi";
 import type { FallbackTrack, PlaylistTrack, VideoRequest } from "../types";
 
@@ -142,12 +136,6 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // 長い動画の短縮(see AppConfig.durationLimitThresholdSeconds): 0はオフ。
   const [durationLimitThresholdSeconds, setDurationLimitThresholdSeconds] = useState(0);
   const [durationLimitCapSeconds, setDurationLimitCapSeconds] = useState(30);
-  // In-flight state for the like/bad buttons below the title card (see
-  // that JSX further down) — disables the button while its request is
-  // pending so a slow network doesn't let someone double-tap past the
-  // one-vote-per-browser limit that hasLiked/hasVoted otherwise enforce.
-  const [liking, setLiking] = useState(false);
-  const [voting, setVoting] = useState(false);
   // Always true: this screen auto-starts as soon as it's opened, no click
   // needed (see the player-creation effect below for the autoplay-with-sound
   // caveat that implies). Kept as a named constant (rather than removing it
@@ -869,18 +857,6 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   const playlistNowPlaying = playlistTracks.find((t) => t.videoId === fallbackNowPlayingId) ?? null;
   const fallbackNowPlaying = fallbackTracks.find((t) => t.videoId === fallbackNowPlayingId) ?? null;
 
-  const handleVoteCancel = async (id: string) => {
-    await api.voteCancel(id);
-    markVoted(id);
-    await refresh();
-  };
-
-  const handleLike = async (id: string) => {
-    await api.likeRequest(id);
-    markLiked(id);
-    await refresh();
-  };
-
   const handleCreateRequest = async (url: string) => {
     await api.createRequest(url, "");
     await refresh();
@@ -987,15 +963,10 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
               </Grow>
             </Box>
 
-
             {/* New-request toast: fires once per request as it's added to the
-                queue (see refresh/enqueue logic above). Below it (and unlike
-                it, staying up for as long as a real request is playing) sit
-                the like/BAD buttons for that request — plain icon buttons
-                with no persistent count, since pressing one bumps
-                cancelVotes/likes in `requests`, which the vote-status-badge
-                effect above (showVoteStatus) already surfaces as its own
-                transient 😨+N/😊+N popup. */}
+                queue (see refresh/enqueue logic above). Below it sits the
+                vote-status badge (see further down), so both transient
+                notices share one column instead of competing for space. */}
             <Box
               sx={{
                 position: "absolute",
@@ -1025,60 +996,6 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
                   }}
                 />
               </Slide>
-
-              {playing &&
-                (() => {
-                  const liked = hasLiked(playing.id);
-                  const voted = hasVoted(playing.id);
-                  return (
-                    <Stack direction="row" spacing={2}>
-                      <Tooltip title={liked ? "いいね済み" : "いいね"}>
-                        <span>
-                          <IconButton
-                            onClick={async () => {
-                              setLiking(true);
-                              try {
-                                await handleLike(playing.id);
-                              } finally {
-                                setLiking(false);
-                              }
-                            }}
-                            disabled={liking || liked}
-                            sx={{
-                              bgcolor: liked ? "rgba(25,118,210,0.55)" : "rgba(255,255,255,0.14)",
-                              color: "white",
-                              "&:hover": { bgcolor: liked ? "rgba(25,118,210,0.55)" : "rgba(255,255,255,0.24)" },
-                            }}
-                          >
-                            <ThumbUpAltIcon />
-                          </IconButton>
-                        </span>
-                      </Tooltip>
-                      <Tooltip title={voted ? "投票済み" : "BAD"}>
-                        <span>
-                          <IconButton
-                            onClick={async () => {
-                              setVoting(true);
-                              try {
-                                await handleVoteCancel(playing.id);
-                              } finally {
-                                setVoting(false);
-                              }
-                            }}
-                            disabled={voting || voted}
-                            sx={{
-                              bgcolor: voted ? "rgba(211,47,47,0.55)" : "rgba(255,255,255,0.14)",
-                              color: "white",
-                              "&:hover": { bgcolor: voted ? "rgba(211,47,47,0.55)" : "rgba(255,255,255,0.24)" },
-                            }}
-                          >
-                            <ThumbDownAltIcon />
-                          </IconButton>
-                        </span>
-                      </Tooltip>
-                    </Stack>
-                  );
-                })()}
 
               {/* Vote-status badge: current cancel-vote/like tally for the
                   playing request, shown on start (if non-zero) and again on
