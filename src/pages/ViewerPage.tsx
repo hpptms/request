@@ -1,21 +1,28 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
 import Grow from "@mui/material/Grow";
+import IconButton from "@mui/material/IconButton";
 import Slide from "@mui/material/Slide";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import Zoom from "@mui/material/Zoom";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import ScheduleIcon from "@mui/icons-material/Schedule";
+import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
+import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { api } from "../api";
 import { AdminLoginForm } from "../components/AdminLoginForm";
+import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
 import { FALLBACK_VIDEO_IDS, pickRandomFallbackVideoId } from "../lib/fallbackPlaylist";
+import { hasLiked, markLiked } from "../lib/likeStorage";
 import { loadYouTubeIframeApi } from "../lib/loadYouTubeIframeApi";
 import type { FallbackTrack, PlaylistTrack, VideoRequest } from "../types";
 
@@ -136,6 +143,12 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // 長い動画の短縮(see AppConfig.durationLimitThresholdSeconds): 0はオフ。
   const [durationLimitThresholdSeconds, setDurationLimitThresholdSeconds] = useState(0);
   const [durationLimitCapSeconds, setDurationLimitCapSeconds] = useState(30);
+  // In-flight state for the like/bad buttons below the title card (see
+  // that JSX further down) — disables the button while its request is
+  // pending so a slow network doesn't let someone double-tap past the
+  // one-vote-per-browser limit that hasLiked/hasVoted otherwise enforce.
+  const [liking, setLiking] = useState(false);
+  const [voting, setVoting] = useState(false);
   // Always true: this screen auto-starts as soon as it's opened, no click
   // needed (see the player-creation effect below for the autoplay-with-sound
   // caveat that implies). Kept as a named constant (rather than removing it
@@ -857,6 +870,18 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   const playlistNowPlaying = playlistTracks.find((t) => t.videoId === fallbackNowPlayingId) ?? null;
   const fallbackNowPlaying = fallbackTracks.find((t) => t.videoId === fallbackNowPlayingId) ?? null;
 
+  const handleVoteCancel = async (id: string) => {
+    await api.voteCancel(id);
+    markVoted(id);
+    await refresh();
+  };
+
+  const handleLike = async (id: string) => {
+    await api.likeRequest(id);
+    markLiked(id);
+    await refresh();
+  };
+
   const handleCreateRequest = async (url: string) => {
     await api.createRequest(url, "");
     await refresh();
@@ -912,9 +937,28 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
               />
             )}
 
-            {/* Music-program-style title card: pops in when a video starts, pops out after NOW_PLAYING_INTRO_MS. */}
-            <Box sx={{ position: "absolute", left: 0, right: 0, bottom: 24, display: "flex", justifyContent: "center", px: 3, pointerEvents: "none" }}>
-              <Zoom in={introVisible} timeout={{ enter: 350, exit: 250 }} style={{ transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" }}>
+            {/* Music-program-style title card: pops in when a video starts,
+                pops out after NOW_PLAYING_INTRO_MS. Below it (and unlike it,
+                staying up for as long as a real request is playing) sit the
+                like/BAD buttons for that request. */}
+            <Box
+              sx={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                bottom: 24,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 1.5,
+                px: 3,
+              }}
+            >
+              <Zoom
+                in={introVisible}
+                timeout={{ enter: 350, exit: 250 }}
+                style={{ transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)", pointerEvents: "none" }}
+              >
                 <Stack
                   direction="row"
                   spacing={1.5}
@@ -943,6 +987,64 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
                   </Box>
                 </Stack>
               </Zoom>
+
+              {playing &&
+                (() => {
+                  const liked = hasLiked(playing.id);
+                  const voted = hasVoted(playing.id);
+                  return (
+                    <Stack direction="row" spacing={2}>
+                      <Tooltip title={liked ? "いいね済み" : "いいね"}>
+                        <span>
+                          <IconButton
+                            onClick={async () => {
+                              setLiking(true);
+                              try {
+                                await handleLike(playing.id);
+                              } finally {
+                                setLiking(false);
+                              }
+                            }}
+                            disabled={liking || liked}
+                            sx={{
+                              bgcolor: liked ? "rgba(25,118,210,0.55)" : "rgba(255,255,255,0.14)",
+                              color: "white",
+                              "&:hover": { bgcolor: liked ? "rgba(25,118,210,0.55)" : "rgba(255,255,255,0.24)" },
+                            }}
+                          >
+                            <Badge badgeContent={playing.likes} color="primary">
+                              <ThumbUpAltIcon />
+                            </Badge>
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                      <Tooltip title={voted ? "投票済み" : "BAD"}>
+                        <span>
+                          <IconButton
+                            onClick={async () => {
+                              setVoting(true);
+                              try {
+                                await handleVoteCancel(playing.id);
+                              } finally {
+                                setVoting(false);
+                              }
+                            }}
+                            disabled={voting || voted}
+                            sx={{
+                              bgcolor: voted ? "rgba(211,47,47,0.55)" : "rgba(255,255,255,0.14)",
+                              color: "white",
+                              "&:hover": { bgcolor: voted ? "rgba(211,47,47,0.55)" : "rgba(255,255,255,0.24)" },
+                            }}
+                          >
+                            <Badge badgeContent={playing.cancelVotes} color="error">
+                              <ThumbDownAltIcon />
+                            </Badge>
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                    </Stack>
+                  );
+                })()}
             </Box>
 
             {/* Duration badge: shows DURATION_BADGE_VISIBLE_MS starting DURATION_BADGE_DELAY_MS after the video started. ~3x a normal small Chip. */}
