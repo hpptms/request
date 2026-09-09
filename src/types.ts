@@ -37,6 +37,12 @@ export interface AppConfig {
   // ViewerPage's playback-capping effect.
   fastForwardActive: boolean;
   fastForwardCapSeconds: number;
+  // A request whose video is at least this long is capped at
+  // durationLimitCapSeconds instead of playing out normally — see
+  // ViewerPage's playback-capping effect and AdminFeaturesPage. 0 means the
+  // admin has turned this off ("短縮しない").
+  durationLimitThresholdSeconds: number;
+  durationLimitCapSeconds: number;
 }
 
 export interface CancelVoteResult {
@@ -74,6 +80,16 @@ export interface BannedIP {
   ip: string;
   bannedAt: string;
   reason: string;
+}
+
+// The admin-configured long-video shortening rule (see
+// backend/internal/durationlimit): any request whose video is at least
+// thresholdSeconds long is capped at capSeconds instead of playing out
+// normally. thresholdSeconds of 0 means the feature is off ("短縮しない");
+// capSeconds isn't itself editable.
+export interface DurationLimit {
+  thresholdSeconds: number;
+  capSeconds: number;
 }
 
 // A daily fast-forward window (see backend/internal/fastforward): starting

@@ -15,6 +15,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import PlaylistPlayIcon from "@mui/icons-material/PlaylistPlay";
+import SettingsIcon from "@mui/icons-material/Settings";
 import ShieldIcon from "@mui/icons-material/Shield";
 import { api } from "../api";
 import { AdminLoginForm } from "../components/AdminLoginForm";
@@ -68,12 +69,12 @@ const adminTabs = [
     label: "早送り",
     icon: <FastForwardIcon fontSize="small" />,
   },
+  { value: "features", path: "/admin/features", label: "機能", icon: <SettingsIcon fontSize="small" /> },
 ] as const;
 
 // Shared header for every authenticated /admin/* screen: title, logout, and
-// a tab bar that switches between BAN management, the playlist screen, the
-// banned-keyword screen, and the fast-forward schedule screen. The matched
-// child route renders below via <Outlet />.
+// a tab bar that switches between the screens listed in adminTabs above.
+// The matched child route renders below via <Outlet />.
 function AdminLayout({ onLoggedOut }: { onLoggedOut: () => void }) {
   const location = useLocation();
   const navigate = useNavigate();

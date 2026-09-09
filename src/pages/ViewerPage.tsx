@@ -144,6 +144,9 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // while this screen stays open for hours at a time.
   const [fastForwardActive, setFastForwardActive] = useState(false);
   const [fastForwardCapSeconds, setFastForwardCapSeconds] = useState(60);
+  // 長い動画の短縮(see AppConfig.durationLimitThresholdSeconds): 0はオフ。
+  const [durationLimitThresholdSeconds, setDurationLimitThresholdSeconds] = useState(0);
+  const [durationLimitCapSeconds, setDurationLimitCapSeconds] = useState(30);
   const [started, setStarted] = useState(false);
   const [playerReady, setPlayerReady] = useState(false);
   const [isFallbackPlaying, setIsFallbackPlaying] = useState(false);
@@ -277,6 +280,8 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
           setCancelVoteSevereCapSeconds(config.cancelVoteSevereCapSeconds);
           setFastForwardActive(config.fastForwardActive);
           setFastForwardCapSeconds(config.fastForwardCapSeconds);
+          setDurationLimitThresholdSeconds(config.durationLimitThresholdSeconds);
+          setDurationLimitCapSeconds(config.durationLimitCapSeconds);
         })
         .catch(() => {});
     };
@@ -680,14 +685,18 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // applicable condition is met, instead of letting it run to the end:
   // enough cancel votes (SHORTENED_PLAYBACK_SECONDS at cancelVoteThreshold,
   // or the shorter cancelVoteSevereCapSeconds at cancelVoteSevereThreshold),
-  // or the queue being in a backlog fast-forward window
-  // (fastForwardCapSeconds — see AppConfig). Whichever applicable cap is
-  // smallest wins. Requests are never removed from the queue outright; this
-  // cap is the only consequence. Runs off the same poll that refreshes
-  // `requests`, so the cutoff lands within one POLL_INTERVAL_MS of the cap
-  // rather than exactly on it. YouTube-only: there's no getCurrentTime
-  // equivalent for the non-YouTube platforms (see nonYouTubeEmbedUrl),
-  // whose advance is a plain duration timer set when they start instead.
+  // the queue being in a backlog fast-forward window (fastForwardCapSeconds
+  // — see AppConfig), or the video itself being at least
+  // durationLimitThresholdSeconds long (durationLimitCapSeconds — an admin
+  // opt-in for unusually long requests, see AdminFeaturesPage). Whichever
+  // applicable cap is smallest wins. Requests are never removed from the
+  // queue outright; this cap is the only consequence. Runs off the same
+  // poll that refreshes `requests`, so the cutoff lands within one
+  // POLL_INTERVAL_MS of the cap rather than exactly on it. YouTube-only:
+  // there's no getCurrentTime equivalent for the non-YouTube platforms (see
+  // nonYouTubeEmbedUrl), whose advance is a plain duration timer set when
+  // they start instead (see the target-loading effect below, which applies
+  // the same durationLimitThresholdSeconds check there).
   useEffect(() => {
     if (!started || !playerReady || endedHandledRef.current || nonYouTubeEmbedUrl) return;
     const requestId = currentRequestIdRef.current;
@@ -699,6 +708,9 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     if (fastForwardActive) caps.push(fastForwardCapSeconds);
     if (current.cancelVotes >= cancelVoteSevereThreshold) caps.push(cancelVoteSevereCapSeconds);
     if (current.cancelVotes >= cancelVoteThreshold) caps.push(SHORTENED_PLAYBACK_SECONDS);
+    if (durationLimitThresholdSeconds > 0 && (current.durationSeconds ?? 0) >= durationLimitThresholdSeconds) {
+      caps.push(durationLimitCapSeconds);
+    }
     if (caps.length === 0) return;
     const capSeconds = Math.min(...caps);
 
@@ -728,6 +740,8 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     cancelVoteSevereCapSeconds,
     fastForwardActive,
     fastForwardCapSeconds,
+    durationLimitThresholdSeconds,
+    durationLimitCapSeconds,
     nonYouTubeEmbedUrl,
     refresh,
   ]);
@@ -814,10 +828,14 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
         resetSeekGuard();
         nonYouTubePlatformRef.current = target.platform;
         setNonYouTubeEmbedUrl(target.embedUrl);
-        const timerSeconds = Math.min(
-          Math.max(target.durationSeconds || NON_YOUTUBE_DEFAULT_DURATION_SECONDS, SHORTENED_PLAYBACK_SECONDS),
-          NON_YOUTUBE_MAX_DURATION_SECONDS,
-        );
+        const durationLimited =
+          durationLimitThresholdSeconds > 0 && (target.durationSeconds ?? 0) >= durationLimitThresholdSeconds;
+        const timerSeconds = durationLimited
+          ? durationLimitCapSeconds
+          : Math.min(
+              Math.max(target.durationSeconds || NON_YOUTUBE_DEFAULT_DURATION_SECONDS, SHORTENED_PLAYBACK_SECONDS),
+              NON_YOUTUBE_MAX_DURATION_SECONDS,
+            );
         nonYouTubeTimerRef.current = window.setTimeout(() => {
           advanceQueue(api.finishRequest);
         }, timerSeconds * 1000);
