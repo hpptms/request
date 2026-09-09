@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
@@ -1025,7 +1024,11 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
             {/* New-request toast: fires once per request as it's added to the
                 queue (see refresh/enqueue logic above). Below it (and unlike
                 it, staying up for as long as a real request is playing) sit
-                the like/BAD buttons for that request. */}
+                the like/BAD buttons for that request — plain icon buttons
+                with no persistent count, since pressing one bumps
+                cancelVotes/likes in `requests`, which the vote-status-badge
+                effect above (showVoteStatus) already surfaces as its own
+                transient 😨+N/😊+N popup. */}
             <Box
               sx={{
                 position: "absolute",
@@ -1080,9 +1083,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
                               "&:hover": { bgcolor: liked ? "rgba(25,118,210,0.55)" : "rgba(255,255,255,0.24)" },
                             }}
                           >
-                            <Badge badgeContent={playing.likes} color="primary">
-                              <ThumbUpAltIcon />
-                            </Badge>
+                            <ThumbUpAltIcon />
                           </IconButton>
                         </span>
                       </Tooltip>
@@ -1104,9 +1105,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
                               "&:hover": { bgcolor: voted ? "rgba(211,47,47,0.55)" : "rgba(255,255,255,0.24)" },
                             }}
                           >
-                            <Badge badgeContent={playing.cancelVotes} color="error">
-                              <ThumbDownAltIcon />
-                            </Badge>
+                            <ThumbDownAltIcon />
                           </IconButton>
                         </span>
                       </Tooltip>
