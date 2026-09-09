@@ -39,8 +39,14 @@ function AdminPage() {
     }
   }, []);
 
+  // Re-checked periodically (not just once on mount) so an admin who gets
+  // evicted by a 3rd concurrent login (see adminauth.MaxConcurrentSessions)
+  // is dropped back to the login form within one interval, instead of
+  // silently having their next action fail.
   useEffect(() => {
     checkSession();
+    const interval = setInterval(checkSession, 15000);
+    return () => clearInterval(interval);
   }, [checkSession]);
 
   if (checkingSession) {
