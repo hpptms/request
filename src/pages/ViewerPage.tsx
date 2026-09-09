@@ -17,7 +17,6 @@ import Typography from "@mui/material/Typography";
 import Zoom from "@mui/material/Zoom";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
-import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
@@ -147,7 +146,11 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // 長い動画の短縮(see AppConfig.durationLimitThresholdSeconds): 0はオフ。
   const [durationLimitThresholdSeconds, setDurationLimitThresholdSeconds] = useState(0);
   const [durationLimitCapSeconds, setDurationLimitCapSeconds] = useState(30);
-  const [started, setStarted] = useState(false);
+  // Always true: this screen auto-starts as soon as it's opened, no click
+  // needed (see the player-creation effect below for the autoplay-with-sound
+  // caveat that implies). Kept as a named constant (rather than removing it
+  // outright) since every effect below still gates on it.
+  const started = true;
   const [playerReady, setPlayerReady] = useState(false);
   const [isFallbackPlaying, setIsFallbackPlaying] = useState(false);
   // Non-null while a non-YouTube request (niconico/vimeo) is the
@@ -348,7 +351,12 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     return () => clearInterval(interval);
   }, [onSessionExpired]);
 
-  // Create the player once, after the user's tap unlocks autoplay-with-sound.
+  // Create the player as soon as this screen mounts (autoplay:1 below, no
+  // click needed). Relies on the browser allowing autoplay-with-sound with
+  // no user gesture for this origin — Chrome blocks that by default unless
+  // the site's Sound setting is set to Allow (chrome://settings/content/sound),
+  // which only needs doing once per browser/device. A browser source inside
+  // OBS isn't subject to this restriction.
   useEffect(() => {
     if (!started) return;
 
@@ -881,179 +889,152 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     <Box sx={{ position: "fixed", inset: 0, bgcolor: "black", display: "flex", flexDirection: "column" }}>
       <Box sx={{ flex: 1, minHeight: 0, display: "flex" }}>
         <Box sx={{ flex: solo ? "1 1 0%" : "4 1 0%", position: "relative", bgcolor: "black" }}>
-          {!started ? (
-            <Stack
-              spacing={3}
-              sx={{
-                position: "absolute",
-                inset: 0,
-                alignItems: "center",
-                justifyContent: "center",
-                px: 3,
-                textAlign: "center",
-              }}
-            >
-              <Typography variant="h5" color="white">
-                動画リクエストキュー
-              </Typography>
-              <Typography color="grey.400">タップして再生を開始します</Typography>
-              <Button
-                variant="contained"
-                size="large"
-                startIcon={<PlayCircleIcon />}
-                onClick={() => setStarted(true)}
-              >
-                再生を開始
-              </Button>
-            </Stack>
-          ) : (
-            <>
-              <Box id={PLAYER_ELEMENT_ID} sx={{ width: "100%", height: "100%" }} />
-              {/* Absorbs clicks/drags so visitors can't reach the player under it (see the playerVars comment above). */}
-              <Box sx={{ position: "absolute", inset: 0 }} onContextMenu={(e) => e.preventDefault()} />
-              {/* niconico/vimeo: plain embed layered over the (stopped) YouTube player, with no seek-guard/click-blocking equivalent — see nonYouTubeEmbedUrl. */}
-              {nonYouTubeEmbedUrl && (
-                <Box
-                  component="iframe"
-                  ref={nonYouTubeIframeRef}
-                  src={nonYouTubeEmbedUrl}
-                  allow="autoplay; fullscreen"
-                  onLoad={() => {
-                    if (nonYouTubePlatformRef.current === "niconico") sendNiconicoPlayCommand();
-                  }}
+          <>
+            <Box id={PLAYER_ELEMENT_ID} sx={{ width: "100%", height: "100%" }} />
+            {/* Absorbs clicks/drags so visitors can't reach the player under it (see the playerVars comment above). */}
+            <Box sx={{ position: "absolute", inset: 0 }} onContextMenu={(e) => e.preventDefault()} />
+            {/* niconico/vimeo: plain embed layered over the (stopped) YouTube player, with no seek-guard/click-blocking equivalent — see nonYouTubeEmbedUrl. */}
+            {nonYouTubeEmbedUrl && (
+              <Box
+                component="iframe"
+                ref={nonYouTubeIframeRef}
+                src={nonYouTubeEmbedUrl}
+                allow="autoplay; fullscreen"
+                onLoad={() => {
+                  if (nonYouTubePlatformRef.current === "niconico") sendNiconicoPlayCommand();
+                }}
+                sx={{
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  border: 0,
+                  bgcolor: "black",
+                }}
+              />
+            )}
+            {isFallbackPlaying && (
+              <Chip
+                label={
+                  playlistNowPlaying
+                    ? `リクエスト待ち・プレイリスト再生中: ${playlistNowPlaying.title}`
+                    : fallbackNowPlaying
+                      ? `リクエスト待ち・${fallbackNowPlaying.region === "japan" ? "日本" : "世界"}Top100自動再生中: ${fallbackNowPlaying.title}`
+                      : "リクエスト待ち・自動再生中"
+                }
+                size="small"
+                sx={{
+                  position: "absolute",
+                  top: 16,
+                  left: 16,
+                  maxWidth: "calc(100% - 32px)",
+                  bgcolor: "rgba(0,0,0,0.6)",
+                  color: "white",
+                  "& .MuiChip-label": { overflow: "hidden", textOverflow: "ellipsis" },
+                }}
+              />
+            )}
+
+            {/* Music-program-style title card: pops in when a video starts, pops out after NOW_PLAYING_INTRO_MS. */}
+            <Box sx={{ position: "absolute", left: 0, right: 0, bottom: 24, display: "flex", justifyContent: "center", px: 3, pointerEvents: "none" }}>
+              <Zoom in={introVisible} timeout={{ enter: 350, exit: 250 }} style={{ transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" }}>
+                <Stack
+                  direction="row"
+                  spacing={1.5}
                   sx={{
-                    position: "absolute",
-                    inset: 0,
-                    width: "100%",
-                    height: "100%",
-                    border: 0,
-                    bgcolor: "black",
+                    alignItems: "center",
+                    maxWidth: "90%",
+                    bgcolor: "rgba(20,20,20,0.85)",
+                    border: "2px solid",
+                    borderColor: "primary.main",
+                    borderRadius: 3,
+                    px: 2.5,
+                    py: 1.5,
+                    boxShadow: "0 4px 24px rgba(0,0,0,0.5)",
+                  }}
+                >
+                  <MusicNoteIcon color="primary" fontSize="large" />
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography variant="h6" noWrap sx={{ color: "white", fontWeight: 700, lineHeight: 1.25 }}>
+                      {introContent?.title ?? ""}
+                    </Typography>
+                    {introContent?.channelTitle && (
+                      <Typography variant="body2" noWrap sx={{ color: "grey.400" }}>
+                        {introContent.channelTitle}
+                      </Typography>
+                    )}
+                  </Box>
+                </Stack>
+              </Zoom>
+            </Box>
+
+            {/* Duration badge: shows DURATION_BADGE_VISIBLE_MS starting DURATION_BADGE_DELAY_MS after the video started. ~3x a normal small Chip. */}
+            <Box sx={{ position: "absolute", top: 16, right: 16, pointerEvents: "none" }}>
+              <Grow in={durationBadgeVisible} timeout={250}>
+                <Chip
+                  icon={<ScheduleIcon sx={{ color: "white !important", fontSize: "2.4rem !important" }} />}
+                  label={durationBadgeSeconds !== null ? formatDuration(durationBadgeSeconds) : ""}
+                  sx={{
+                    bgcolor: "rgba(0,0,0,0.7)",
+                    color: "white",
+                    fontWeight: 600,
+                    height: 72,
+                    borderRadius: 4,
+                    "& .MuiChip-label": { fontSize: "2.4rem", px: 2 },
                   }}
                 />
-              )}
-              {isFallbackPlaying && (
+              </Grow>
+            </Box>
+
+            {/* Vote-status badge: current cancel-vote/like tally for the playing request, shown on start (if non-zero) and again on every increase — see the effect watching `requests` above. ~6x a normal small Chip. */}
+            <Box sx={{ position: "absolute", top: 16, left: 16, pointerEvents: "none" }}>
+              <Grow in={voteStatusVisible} timeout={250}>
+                <Stack direction="row" spacing={1.5}>
+                  {voteStatusContent && voteStatusContent.cancelVotes > 0 && (
+                    <Chip
+                      label={`😨+${voteStatusContent.cancelVotes}`}
+                      sx={{
+                        bgcolor: "rgba(0,0,0,0.7)",
+                        color: "white",
+                        fontWeight: 700,
+                        height: 144,
+                        borderRadius: 6,
+                        "& .MuiChip-label": { fontSize: "4.8rem", px: 5 },
+                      }}
+                    />
+                  )}
+                  {voteStatusContent && voteStatusContent.likes > 0 && (
+                    <Chip
+                      label={`😊+${voteStatusContent.likes}`}
+                      sx={{
+                        bgcolor: "rgba(0,0,0,0.7)",
+                        color: "white",
+                        fontWeight: 700,
+                        height: 144,
+                        borderRadius: 6,
+                        "& .MuiChip-label": { fontSize: "4.8rem", px: 5 },
+                      }}
+                    />
+                  )}
+                </Stack>
+              </Grow>
+            </Box>
+
+            {/* New-request toast: fires once per request as it's added to the queue (see refresh/enqueue logic above). */}
+            <Box sx={{ position: "absolute", top: 16, left: 0, right: 0, display: "flex", justifyContent: "center", px: 3, pointerEvents: "none" }}>
+              <Slide in={newRequestNotice !== null} direction="down" timeout={{ enter: 300, exit: 200 }}>
                 <Chip
-                  label={
-                    playlistNowPlaying
-                      ? `リクエスト待ち・プレイリスト再生中: ${playlistNowPlaying.title}`
-                      : fallbackNowPlaying
-                        ? `リクエスト待ち・${fallbackNowPlaying.region === "japan" ? "日本" : "世界"}Top100自動再生中: ${fallbackNowPlaying.title}`
-                        : "リクエスト待ち・自動再生中"
-                  }
-                  size="small"
+                  color="primary"
+                  label={newRequestNotice ? `🎵 新しいリクエスト: ${newRequestNotice.title}` : ""}
                   sx={{
-                    position: "absolute",
-                    top: 16,
-                    left: 16,
-                    maxWidth: "calc(100% - 32px)",
-                    bgcolor: "rgba(0,0,0,0.6)",
-                    color: "white",
+                    maxWidth: "90%",
+                    fontWeight: 600,
                     "& .MuiChip-label": { overflow: "hidden", textOverflow: "ellipsis" },
                   }}
                 />
-              )}
-
-              {/* Music-program-style title card: pops in when a video starts, pops out after NOW_PLAYING_INTRO_MS. */}
-              <Box sx={{ position: "absolute", left: 0, right: 0, bottom: 24, display: "flex", justifyContent: "center", px: 3, pointerEvents: "none" }}>
-                <Zoom in={introVisible} timeout={{ enter: 350, exit: 250 }} style={{ transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" }}>
-                  <Stack
-                    direction="row"
-                    spacing={1.5}
-                    sx={{
-                      alignItems: "center",
-                      maxWidth: "90%",
-                      bgcolor: "rgba(20,20,20,0.85)",
-                      border: "2px solid",
-                      borderColor: "primary.main",
-                      borderRadius: 3,
-                      px: 2.5,
-                      py: 1.5,
-                      boxShadow: "0 4px 24px rgba(0,0,0,0.5)",
-                    }}
-                  >
-                    <MusicNoteIcon color="primary" fontSize="large" />
-                    <Box sx={{ minWidth: 0 }}>
-                      <Typography variant="h6" noWrap sx={{ color: "white", fontWeight: 700, lineHeight: 1.25 }}>
-                        {introContent?.title ?? ""}
-                      </Typography>
-                      {introContent?.channelTitle && (
-                        <Typography variant="body2" noWrap sx={{ color: "grey.400" }}>
-                          {introContent.channelTitle}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Stack>
-                </Zoom>
-              </Box>
-
-              {/* Duration badge: shows DURATION_BADGE_VISIBLE_MS starting DURATION_BADGE_DELAY_MS after the video started. ~3x a normal small Chip. */}
-              <Box sx={{ position: "absolute", top: 16, right: 16, pointerEvents: "none" }}>
-                <Grow in={durationBadgeVisible} timeout={250}>
-                  <Chip
-                    icon={<ScheduleIcon sx={{ color: "white !important", fontSize: "2.4rem !important" }} />}
-                    label={durationBadgeSeconds !== null ? formatDuration(durationBadgeSeconds) : ""}
-                    sx={{
-                      bgcolor: "rgba(0,0,0,0.7)",
-                      color: "white",
-                      fontWeight: 600,
-                      height: 72,
-                      borderRadius: 4,
-                      "& .MuiChip-label": { fontSize: "2.4rem", px: 2 },
-                    }}
-                  />
-                </Grow>
-              </Box>
-
-              {/* Vote-status badge: current cancel-vote/like tally for the playing request, shown on start (if non-zero) and again on every increase — see the effect watching `requests` above. ~6x a normal small Chip. */}
-              <Box sx={{ position: "absolute", top: 16, left: 16, pointerEvents: "none" }}>
-                <Grow in={voteStatusVisible} timeout={250}>
-                  <Stack direction="row" spacing={1.5}>
-                    {voteStatusContent && voteStatusContent.cancelVotes > 0 && (
-                      <Chip
-                        label={`😨+${voteStatusContent.cancelVotes}`}
-                        sx={{
-                          bgcolor: "rgba(0,0,0,0.7)",
-                          color: "white",
-                          fontWeight: 700,
-                          height: 144,
-                          borderRadius: 6,
-                          "& .MuiChip-label": { fontSize: "4.8rem", px: 5 },
-                        }}
-                      />
-                    )}
-                    {voteStatusContent && voteStatusContent.likes > 0 && (
-                      <Chip
-                        label={`😊+${voteStatusContent.likes}`}
-                        sx={{
-                          bgcolor: "rgba(0,0,0,0.7)",
-                          color: "white",
-                          fontWeight: 700,
-                          height: 144,
-                          borderRadius: 6,
-                          "& .MuiChip-label": { fontSize: "4.8rem", px: 5 },
-                        }}
-                      />
-                    )}
-                  </Stack>
-                </Grow>
-              </Box>
-
-              {/* New-request toast: fires once per request as it's added to the queue (see refresh/enqueue logic above). */}
-              <Box sx={{ position: "absolute", top: 16, left: 0, right: 0, display: "flex", justifyContent: "center", px: 3, pointerEvents: "none" }}>
-                <Slide in={newRequestNotice !== null} direction="down" timeout={{ enter: 300, exit: 200 }}>
-                  <Chip
-                    color="primary"
-                    label={newRequestNotice ? `🎵 新しいリクエスト: ${newRequestNotice.title}` : ""}
-                    sx={{
-                      maxWidth: "90%",
-                      fontWeight: 600,
-                      "& .MuiChip-label": { overflow: "hidden", textOverflow: "ellipsis" },
-                    }}
-                  />
-                </Slide>
-              </Box>
-            </>
-          )}
+              </Slide>
+            </Box>
+          </>
         </Box>
 
         {!solo && (
