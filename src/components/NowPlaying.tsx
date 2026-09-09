@@ -7,12 +7,28 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
 import { hasLiked, markLiked } from "../lib/likeStorage";
 import { isMyRequest } from "../lib/myRequestStorage";
 import type { VideoRequest } from "../types";
+
+// Watch-page URL for the request's original video, by platform. videoId is
+// the bare id the backend extracted from whatever URL the requester
+// submitted (see backend/internal/{niconico,vimeo}.ExtractVideoID) —
+// not the embed URL, which points at the player, not the watch page.
+function originalVideoUrl({ platform, videoId }: VideoRequest): string {
+  switch (platform) {
+    case "niconico":
+      return `https://www.nicovideo.jp/watch/${videoId}`;
+    case "vimeo":
+      return `https://vimeo.com/${videoId}`;
+    default:
+      return `https://www.youtube.com/watch?v=${videoId}`;
+  }
+}
 
 interface Props {
   nowPlaying: VideoRequest | null;
@@ -98,6 +114,18 @@ export function NowPlaying({
             </Typography>
           </Box>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ flexShrink: 0 }}>
+            <Button
+              variant="outlined"
+              color="inherit"
+              startIcon={<OpenInNewIcon />}
+              component="a"
+              href={originalVideoUrl(nowPlaying)}
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
+            >
+              元の動画に飛ぶ
+            </Button>
             <Button
               variant="outlined"
               color={liked ? "primary" : "inherit"}
