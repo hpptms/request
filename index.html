@@ -6,15 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>動画リクエストキュー</title>
 
-    <!-- Google tag (gtag.js) -->
+    <!-- Google tag (gtag.js)
+         Init code lives in /gtag-init.js (not inline) because the CSP's
+         script-src has no 'unsafe-inline'/nonce/hash, so an inline <script>
+         here would be silently blocked by the browser and gtag('config', ...)
+         would never fire. -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8L7G9DTTF8"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'G-8L7G9DTTF8');
-    </script>
+    <script src="/gtag-init.js"></script>
   </head>
   <body>
     <div id="root"></div>
