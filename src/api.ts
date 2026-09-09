@@ -3,6 +3,7 @@ import type {
   AppConfig,
   BannedIP,
   CancelVoteResult,
+  DurationLimit,
   FallbackTrack,
   FastForwardWindow,
   LikeResult,
@@ -140,5 +141,13 @@ export const api = {
     request<FastForwardWindow[]>("/admin/fastforward", {
       method: "PUT",
       body: JSON.stringify({ windows }),
+    }),
+
+  adminGetDurationLimit: () => request<DurationLimit>("/admin/durationlimit"),
+
+  adminSetDurationLimit: (thresholdSeconds: number) =>
+    request<DurationLimit>("/admin/durationlimit", {
+      method: "PUT",
+      body: JSON.stringify({ thresholdSeconds }),
     }),
 };
