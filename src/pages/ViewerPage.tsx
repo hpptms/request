@@ -208,6 +208,11 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // nonYouTubeEmbedUrl); cleared whenever the target changes for any
   // reason so a stale timer can't fire against whatever's playing next.
   const nonYouTubeTimerRef = useRef<number | null>(null);
+  // Wall-clock Date.now() when the current non-YouTube video started, used
+  // by the cap-checking effect below as its getCurrentTime() equivalent
+  // (niconico/vimeo's plain iframe has no real one). Null whenever
+  // nonYouTubeEmbedUrl is null.
+  const nonYouTubeStartRef = useRef<number | null>(null);
   // Which platform the current non-YouTube iframe is showing (set
   // alongside nonYouTubeEmbedUrl) and a handle to the iframe element
   // itself, so sendNiconicoPlayCommand knows when/where to postMessage.
@@ -417,6 +422,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
       window.clearTimeout(nonYouTubeTimerRef.current);
       nonYouTubeTimerRef.current = null;
     }
+    nonYouTubeStartRef.current = null;
   };
 
   const showVoteStatus = (cancelVotes: number, likes: number) => {
@@ -687,13 +693,15 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // applicable cap is smallest wins. Requests are never removed from the
   // queue outright; this cap is the only consequence. Runs off the same
   // poll that refreshes `requests`, so the cutoff lands within one
-  // POLL_INTERVAL_MS of the cap rather than exactly on it. YouTube-only:
-  // there's no getCurrentTime equivalent for the non-YouTube platforms (see
-  // nonYouTubeEmbedUrl), whose advance is a plain duration timer set when
-  // they start instead (see the target-loading effect below, which applies
-  // the same durationLimitThresholdSeconds check there).
+  // POLL_INTERVAL_MS of the cap rather than exactly on it. Same rules for
+  // every platform: YouTube uses playerRef.getCurrentTime() for elapsed
+  // time, while non-YouTube platforms (see nonYouTubeEmbedUrl) have no such
+  // API, so elapsed is instead wall-clock time since nonYouTubeStartRef —
+  // their normal (no-cap) advance still runs off the separate one-shot
+  // timer in the target-loading effect below; this effect only ever cuts
+  // that short.
   useEffect(() => {
-    if (!started || !playerReady || endedHandledRef.current || nonYouTubeEmbedUrl) return;
+    if (!started || !playerReady || endedHandledRef.current) return;
     const requestId = currentRequestIdRef.current;
     if (!requestId) return;
     const current = requests.find((r) => r.id === requestId);
@@ -713,7 +721,11 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     if (caps.length === 0) return;
     const capSeconds = Math.min(...caps);
 
-    const elapsed = playerRef.current?.getCurrentTime();
+    const elapsed = nonYouTubeEmbedUrl
+      ? nonYouTubeStartRef.current !== null
+        ? (Date.now() - nonYouTubeStartRef.current) / 1000
+        : null
+      : playerRef.current?.getCurrentTime();
     if (typeof elapsed !== "number" || elapsed < capSeconds) return;
 
     endedHandledRef.current = true;
@@ -722,12 +734,18 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
         loadedVideoIdRef.current = null;
         currentRequestIdRef.current = null;
         playerRef.current?.stopVideo();
+        setNonYouTubeEmbedUrl(null);
+        clearNonYouTubeTimer();
         refresh();
       })
       .catch(() => {
         // Floor not met yet — let it keep playing (rather than sitting
-        // stopped) and re-check on the next poll, by which point more
-        // real time will have elapsed toward that floor.
+        // stopped) and re-check on the next poll, by which point more real
+        // time will have elapsed toward that floor. Deliberately leaves
+        // nonYouTubeTimerRef/nonYouTubeStartRef alone (rather than clearing
+        // them, like the success path does) so a non-YouTube video's
+        // elapsed time keeps accruing toward this same recheck, and its
+        // fallback one-shot timer is still there as a backstop.
         endedHandledRef.current = false;
       });
   }, [
@@ -801,7 +819,9 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // A non-YouTube request (platform !== "youtube") is shown as a plain
   // iframe instead of driving the YouTube player, and its queue advance is
   // a one-shot duration timer rather than a real ended event — see
-  // nonYouTubeEmbedUrl.
+  // nonYouTubeEmbedUrl. That timer is only the backstop for normal
+  // completion; cancel votes and backlog fast-forward can still cut it
+  // short earlier, same as YouTube — see the cap-checking effect above.
   useEffect(() => {
     if (!started || !playerReady || !playerRef.current) return;
 
@@ -825,6 +845,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
         resetSeekGuard();
         nonYouTubePlatformRef.current = target.platform;
         setNonYouTubeEmbedUrl(target.embedUrl);
+        nonYouTubeStartRef.current = Date.now();
         const durationLimited =
           durationLimitThresholdSeconds > 0 && (target.durationSeconds ?? 0) >= durationLimitThresholdSeconds;
         const timerSeconds = durationLimited
