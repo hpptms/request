@@ -23,15 +23,22 @@ export interface VideoRequest {
   durationSeconds?: number;
 }
 
+// One rung of the cancel-vote escalation ladder: once a request collects at
+// least `votes` distinct cancel-voters, its playback is capped at
+// `capSeconds` instead of playing out normally. See ViewerPage's
+// playback-capping effect.
+export interface CancelVoteTier {
+  votes: number;
+  capSeconds: number;
+}
+
 export interface AppConfig {
   searchEnabled: boolean;
   cancelVoteThreshold: number;
   likePriorityThreshold: number;
-  // Reaching this many distinct cancel-voters drops the playback floor
-  // even further, to cancelVoteSevereCapSeconds — below the normal
-  // (cancelVoteThreshold) cap. See ViewerPage's playback-capping effect.
-  cancelVoteSevereThreshold: number;
-  cancelVoteSevereCapSeconds: number;
+  // Ordered by ascending votes with descending capSeconds — more votes only
+  // ever cuts playback shorter, never longer.
+  cancelVoteTiers: CancelVoteTier[];
   // True 4x/day for 1 hour (00:00/06:00/12:00/18:00 JST), but only once
   // the pending queue has backed up past the backend's threshold — see
   // ViewerPage's playback-capping effect.
