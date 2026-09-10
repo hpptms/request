@@ -104,11 +104,11 @@ export function NowPlaying({
             <Chip label="NOW PLAYING" color="primary" size="small" sx={{ mb: 1 }} />
             <Typography variant="h6" sx={{ lineHeight: 1.3 }}>
               {nowPlaying.title}
+              {nowPlaying.durationSeconds != null &&
+                `・ ${formatDuration(nowPlaying.durationSeconds)}`}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {nowPlaying.channelTitle}
-              {nowPlaying.durationSeconds != null &&
-                ` ・ ${formatDuration(nowPlaying.durationSeconds)}`}
               {nowPlaying.requesterName && ` ・ リクエスト: ${nowPlaying.requesterName}`}
             </Typography>
           </Box>
