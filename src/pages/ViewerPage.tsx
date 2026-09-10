@@ -674,13 +674,15 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   }, [requests]);
 
   // Caps the currently playing request's remaining runtime once any
-  // applicable condition is met, instead of letting it run to the end:
-  // enough cancel votes (the tightest reached rung of cancelVoteTiers — see
-  // AppConfig.CancelVoteTier), the queue being in a backlog fast-forward
-  // window (fastForwardCapSeconds — see AppConfig), or the video itself
-  // being at least
-  // durationLimitThresholdSeconds long (durationLimitCapSeconds — an admin
-  // opt-in for unusually long requests, see AdminFeaturesPage). Whichever
+  // applicable condition is met, instead of letting it run to the end.
+  // During a backlog fast-forward window (fastForwardCapSeconds — see
+  // AppConfig), every request is guaranteed that much playback regardless of
+  // cancel votes — cancel votes must not be able to cut it shorter than the
+  // fast-forward guarantee. Otherwise, enough cancel votes (the tightest
+  // reached rung of cancelVoteTiers — see AppConfig.CancelVoteTier) caps it
+  // instead. Either way, the video being at least durationLimitThresholdSeconds
+  // long (durationLimitCapSeconds — an admin opt-in for unusually long
+  // requests, see AdminFeaturesPage) can still cap it further; whichever
   // applicable cap is smallest wins. Requests are never removed from the
   // queue outright; this cap is the only consequence. Runs off the same
   // poll that refreshes `requests`, so the cutoff lands within one
@@ -697,9 +699,12 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     if (!current) return;
 
     const caps: number[] = [];
-    if (fastForwardActive) caps.push(fastForwardCapSeconds);
-    for (const tier of cancelVoteTiers) {
-      if (current.cancelVotes >= tier.votes) caps.push(tier.capSeconds);
+    if (fastForwardActive) {
+      caps.push(fastForwardCapSeconds);
+    } else {
+      for (const tier of cancelVoteTiers) {
+        if (current.cancelVotes >= tier.votes) caps.push(tier.capSeconds);
+      }
     }
     if (durationLimitThresholdSeconds > 0 && (current.durationSeconds ?? 0) >= durationLimitThresholdSeconds) {
       caps.push(durationLimitCapSeconds);
