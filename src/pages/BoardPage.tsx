@@ -15,6 +15,7 @@ import { api } from "../api";
 import { NowPlaying } from "../components/NowPlaying";
 import { QueueList } from "../components/QueueList";
 import { RequestForm } from "../components/RequestForm";
+import { trackEvent } from "../lib/analytics";
 import { markMyRequest } from "../lib/myRequestStorage";
 import type { CancelVoteTier, VideoRequest } from "../types";
 
@@ -64,12 +65,18 @@ function BoardPage() {
   const handleCreate = async (url: string) => {
     const created = await api.createRequest(url, "");
     markMyRequest(created.id);
+    trackEvent("video_request_submit", {
+      request_id: created.id,
+      platform: created.platform,
+      source: "board",
+    });
     await refresh();
   };
 
   const handleCancelMine = async (id: string) => {
     try {
       await api.cancelMyRequest(id);
+      trackEvent("video_request_cancel_mine", { request_id: id, source: "board" });
       await refresh();
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "キャンセルに失敗しました");
@@ -79,6 +86,7 @@ function BoardPage() {
   const handlePlay = async (id: string) => {
     try {
       await api.playRequest(id);
+      trackEvent("video_request_admin_play", { request_id: id });
       await refresh();
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "操作に失敗しました");
@@ -88,6 +96,7 @@ function BoardPage() {
   const handleDone = async (id: string) => {
     try {
       await api.doneRequest(id);
+      trackEvent("video_request_admin_done", { request_id: id });
       await refresh();
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "操作に失敗しました");
@@ -97,6 +106,7 @@ function BoardPage() {
   const handleDelete = async (id: string) => {
     try {
       await api.deleteRequest(id);
+      trackEvent("video_request_admin_delete", { request_id: id });
       await refresh();
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "操作に失敗しました");
@@ -105,7 +115,12 @@ function BoardPage() {
 
   const handleVoteCancel = async (id: string) => {
     try {
-      await api.voteCancel(id);
+      const result = await api.voteCancel(id);
+      trackEvent("video_request_bad_vote", {
+        request_id: id,
+        vote_count: result.voteCount,
+        source: "board",
+      });
       await refresh();
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "投票に失敗しました");
@@ -114,7 +129,12 @@ function BoardPage() {
 
   const handleLike = async (id: string) => {
     try {
-      await api.likeRequest(id);
+      const result = await api.likeRequest(id);
+      trackEvent("video_request_like", {
+        request_id: id,
+        like_count: result.likeCount,
+        source: "board",
+      });
       await refresh();
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "いいねに失敗しました");

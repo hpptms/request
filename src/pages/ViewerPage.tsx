@@ -15,6 +15,7 @@ import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import { api } from "../api";
 import { AdminLoginForm } from "../components/AdminLoginForm";
+import { trackEvent } from "../lib/analytics";
 import { FALLBACK_VIDEO_IDS, pickRandomFallbackVideoId } from "../lib/fallbackPlaylist";
 import { formatDuration } from "../lib/formatDuration";
 import { loadYouTubeIframeApi } from "../lib/loadYouTubeIframeApi";
@@ -857,7 +858,12 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   const fallbackNowPlaying = fallbackTracks.find((t) => t.videoId === fallbackNowPlayingId) ?? null;
 
   const handleCreateRequest = async (url: string) => {
-    await api.createRequest(url, "");
+    const created = await api.createRequest(url, "");
+    trackEvent("video_request_submit", {
+      request_id: created.id,
+      platform: created.platform,
+      source: "viewer",
+    });
     await refresh();
   };
 
