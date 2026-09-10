@@ -18,13 +18,18 @@ import { AdminLoginForm } from "../components/AdminLoginForm";
 import { FALLBACK_VIDEO_IDS, pickRandomFallbackVideoId } from "../lib/fallbackPlaylist";
 import { formatDuration } from "../lib/formatDuration";
 import { loadYouTubeIframeApi } from "../lib/loadYouTubeIframeApi";
-import type { FallbackTrack, PlaylistTrack, VideoRequest } from "../types";
+import type { CancelVoteTier, FallbackTrack, PlaylistTrack, VideoRequest } from "../types";
 
 const POLL_INTERVAL_MS = 3000;
 const PLAYER_ELEMENT_ID = "yt-viewer-player";
-const DEFAULT_CANCEL_VOTE_THRESHOLD = 5;
-const DEFAULT_CANCEL_VOTE_SEVERE_THRESHOLD = 10;
-const DEFAULT_CANCEL_VOTE_SEVERE_CAP_SECONDS = 60;
+// Mirrors the backend's default store.CancelVoteTiers (internal/store/store.go)
+// until the real config loads.
+const DEFAULT_CANCEL_VOTE_TIERS: CancelVoteTier[] = [
+  { votes: 5, capSeconds: 120 },
+  { votes: 10, capSeconds: 90 },
+  { votes: 15, capSeconds: 60 },
+  { votes: 20, capSeconds: 30 },
+];
 const SHORTENED_PLAYBACK_SECONDS = 60; // 1:00
 // Non-YouTube platforms (niconico/vimeo) have no ended/error event this
 // screen can listen for, so their queue advance is a plain timer instead:
@@ -119,9 +124,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // フルサイズ — 下のvideo Boxのflexとキュー表示の削除を参照)。
   const solo = searchParams.get("solo") === "1";
   const [requests, setRequests] = useState<VideoRequest[]>([]);
-  const [cancelVoteThreshold, setCancelVoteThreshold] = useState(DEFAULT_CANCEL_VOTE_THRESHOLD);
-  const [cancelVoteSevereThreshold, setCancelVoteSevereThreshold] = useState(DEFAULT_CANCEL_VOTE_SEVERE_THRESHOLD);
-  const [cancelVoteSevereCapSeconds, setCancelVoteSevereCapSeconds] = useState(DEFAULT_CANCEL_VOTE_SEVERE_CAP_SECONDS);
+  const [cancelVoteTiers, setCancelVoteTiers] = useState<CancelVoteTier[]>(DEFAULT_CANCEL_VOTE_TIERS);
   // Backlog fast-forward mode (see AppConfig.fastForwardActive): re-polled
   // periodically, not just fetched once, since it's expected to flip on/off
   // while this screen stays open for hours at a time.
@@ -261,9 +264,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
       api
         .getConfig()
         .then((config) => {
-          setCancelVoteThreshold(config.cancelVoteThreshold);
-          setCancelVoteSevereThreshold(config.cancelVoteSevereThreshold);
-          setCancelVoteSevereCapSeconds(config.cancelVoteSevereCapSeconds);
+          setCancelVoteTiers(config.cancelVoteTiers);
           setFastForwardActive(config.fastForwardActive);
           setFastForwardCapSeconds(config.fastForwardCapSeconds);
           setDurationLimitThresholdSeconds(config.durationLimitThresholdSeconds);
@@ -674,10 +675,10 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
 
   // Caps the currently playing request's remaining runtime once any
   // applicable condition is met, instead of letting it run to the end:
-  // enough cancel votes (SHORTENED_PLAYBACK_SECONDS at cancelVoteThreshold,
-  // or the shorter cancelVoteSevereCapSeconds at cancelVoteSevereThreshold),
-  // the queue being in a backlog fast-forward window (fastForwardCapSeconds
-  // — see AppConfig), or the video itself being at least
+  // enough cancel votes (the tightest reached rung of cancelVoteTiers — see
+  // AppConfig.CancelVoteTier), the queue being in a backlog fast-forward
+  // window (fastForwardCapSeconds — see AppConfig), or the video itself
+  // being at least
   // durationLimitThresholdSeconds long (durationLimitCapSeconds — an admin
   // opt-in for unusually long requests, see AdminFeaturesPage). Whichever
   // applicable cap is smallest wins. Requests are never removed from the
@@ -697,8 +698,9 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
 
     const caps: number[] = [];
     if (fastForwardActive) caps.push(fastForwardCapSeconds);
-    if (current.cancelVotes >= cancelVoteSevereThreshold) caps.push(cancelVoteSevereCapSeconds);
-    if (current.cancelVotes >= cancelVoteThreshold) caps.push(SHORTENED_PLAYBACK_SECONDS);
+    for (const tier of cancelVoteTiers) {
+      if (current.cancelVotes >= tier.votes) caps.push(tier.capSeconds);
+    }
     if (durationLimitThresholdSeconds > 0 && (current.durationSeconds ?? 0) >= durationLimitThresholdSeconds) {
       caps.push(durationLimitCapSeconds);
     }
@@ -726,9 +728,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     started,
     playerReady,
     requests,
-    cancelVoteThreshold,
-    cancelVoteSevereThreshold,
-    cancelVoteSevereCapSeconds,
+    cancelVoteTiers,
     fastForwardActive,
     fastForwardCapSeconds,
     durationLimitThresholdSeconds,

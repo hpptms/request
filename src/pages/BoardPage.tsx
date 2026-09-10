@@ -16,15 +16,20 @@ import { NowPlaying } from "../components/NowPlaying";
 import { QueueList } from "../components/QueueList";
 import { RequestForm } from "../components/RequestForm";
 import { markMyRequest } from "../lib/myRequestStorage";
-import type { VideoRequest } from "../types";
+import type { CancelVoteTier, VideoRequest } from "../types";
 
 const POLL_INTERVAL_MS = 4000;
 const DEFAULT_CANCEL_VOTE_THRESHOLD = 5;
 const DEFAULT_LIKE_PRIORITY_THRESHOLD = 2;
+// Mirrors the backend's default store.CancelVoteTiers (internal/store/store.go)
+// until the real config loads. Only the first tier's capSeconds is actually
+// shown here (see NowPlaying's vote button).
+const DEFAULT_CANCEL_VOTE_TIERS: CancelVoteTier[] = [{ votes: 5, capSeconds: 120 }];
 
 function BoardPage() {
   const [requests, setRequests] = useState<VideoRequest[]>([]);
   const [cancelVoteThreshold, setCancelVoteThreshold] = useState(DEFAULT_CANCEL_VOTE_THRESHOLD);
+  const [cancelVoteTiers, setCancelVoteTiers] = useState<CancelVoteTier[]>(DEFAULT_CANCEL_VOTE_TIERS);
   const [likePriorityThreshold, setLikePriorityThreshold] = useState(DEFAULT_LIKE_PRIORITY_THRESHOLD);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -43,6 +48,7 @@ function BoardPage() {
       .getConfig()
       .then((config) => {
         setCancelVoteThreshold(config.cancelVoteThreshold);
+        setCancelVoteTiers(config.cancelVoteTiers);
         setLikePriorityThreshold(config.likePriorityThreshold);
       })
       .catch(() => {});
@@ -163,6 +169,7 @@ function BoardPage() {
           <NowPlaying
             nowPlaying={nowPlaying}
             cancelVoteThreshold={cancelVoteThreshold}
+            firstTierCapSeconds={cancelVoteTiers[0]?.capSeconds ?? DEFAULT_CANCEL_VOTE_TIERS[0].capSeconds}
             likePriorityThreshold={likePriorityThreshold}
             isAdmin={isAdmin}
             onMarkDone={handleDone}

@@ -34,6 +34,10 @@ function originalVideoUrl({ platform, videoId }: VideoRequest): string {
 interface Props {
   nowPlaying: VideoRequest | null;
   cancelVoteThreshold: number;
+  // The first (loosest) rung of the cancel-vote escalation ladder — see
+  // AppConfig.cancelVoteTiers — is what reaching cancelVoteThreshold votes
+  // actually does, so the vote button's label is derived from it.
+  firstTierCapSeconds: number;
   likePriorityThreshold: number;
   isAdmin: boolean;
   onMarkDone: (id: string) => void;
@@ -45,6 +49,7 @@ interface Props {
 export function NowPlaying({
   nowPlaying,
   cancelVoteThreshold,
+  firstTierCapSeconds,
   likePriorityThreshold,
   isAdmin,
   onMarkDone,
@@ -148,7 +153,8 @@ export function NowPlaying({
               disabled={voting || voted}
               sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
             >
-              {voted ? "投票済み" : "1:30に短縮へ投票"} ({nowPlaying.cancelVotes}/{cancelVoteThreshold})
+              {voted ? "投票済み" : `${formatDuration(firstTierCapSeconds)}に短縮へ投票`} (
+              {nowPlaying.cancelVotes}/{cancelVoteThreshold})
             </Button>
             {isMyRequest(nowPlaying.id) && (
               <Button
