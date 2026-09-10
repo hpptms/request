@@ -11,6 +11,7 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
+import { formatDuration } from "../lib/formatDuration";
 import { hasLiked, markLiked } from "../lib/likeStorage";
 import { isMyRequest } from "../lib/myRequestStorage";
 import type { VideoRequest } from "../types";
@@ -106,6 +107,8 @@ export function NowPlaying({
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {nowPlaying.channelTitle}
+              {nowPlaying.durationSeconds != null &&
+                ` ・ ${formatDuration(nowPlaying.durationSeconds)}`}
               {nowPlaying.requesterName && ` ・ リクエスト: ${nowPlaying.requesterName}`}
             </Typography>
           </Box>

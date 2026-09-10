@@ -16,6 +16,7 @@ import ScheduleIcon from "@mui/icons-material/Schedule";
 import { api } from "../api";
 import { AdminLoginForm } from "../components/AdminLoginForm";
 import { FALLBACK_VIDEO_IDS, pickRandomFallbackVideoId } from "../lib/fallbackPlaylist";
+import { formatDuration } from "../lib/formatDuration";
 import { loadYouTubeIframeApi } from "../lib/loadYouTubeIframeApi";
 import type { FallbackTrack, PlaylistTrack, VideoRequest } from "../types";
 
@@ -61,13 +62,6 @@ const NICONICO_PLAYER_ID = "recest-viewer";
 // attempt isn't reliable; sending "play" to an already-playing video is a
 // harmless no-op.
 const NICONICO_COMMAND_RETRY_DELAYS_MS = [300, 1000, 2000];
-
-function formatDuration(totalSeconds: number): string {
-  const s = Math.max(0, Math.round(totalSeconds));
-  const m = Math.floor(s / 60);
-  const sec = s % 60;
-  return `${m}:${sec.toString().padStart(2, "0")}`;
-}
 
 // Gatekeeper for /viewer: the actual YouTube playback only ever loads inside
 // an authenticated admin session (see the OBS setup note in AuthenticatedViewerPage's
