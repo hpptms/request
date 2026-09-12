@@ -147,9 +147,10 @@ export interface PlaylistImportResult {
   urls: string[];
 }
 
-// One video's lifetime counters (backend/internal/analytics.VideoStat):
-// tallied across every time it's ever been requested, including requests
-// long since finished and dropped from the live queue.
+// One video's counters (backend/internal/analytics.VideoStat) over whatever
+// date range produced them (a day, a week, or all time), tallied across
+// every request for it in that range, including requests long since
+// finished and dropped from the live queue.
 export interface VideoStat {
   platform: string;
   videoId: string;
@@ -160,17 +161,26 @@ export interface VideoStat {
   totalCancelVotes: number;
 }
 
-// One channel/artist's lifetime request count, summed across every video
-// seen under that exact channel title.
+// One channel/artist's request count over the same range, summed across
+// every video seen under that exact channel title.
 export interface ChannelStat {
   channelTitle: string;
   requestCount: number;
 }
 
-// backend/internal/analytics.Summary — the admin stats screen's one-shot
-// view of every ranking, each already sorted highest-first and capped at
-// the backend's topN.
+export type StatsPeriod = "day" | "week" | "all";
+
+// backend/internal/api.statsResponse — the admin stats screen's view of
+// every ranking for one period, each already sorted highest-first and
+// capped at the backend's topN. rangeStart/rangeEnd (both YYYY-MM-DD) are
+// omitted for period "all" and otherwise echo back exactly what the server
+// computed (e.g. today's date, or the Monday-Sunday week containing it),
+// so the admin UI's prev/next navigation stays in sync with the server
+// rather than re-deriving "today" itself.
 export interface StatsSummary {
+  period: StatsPeriod;
+  rangeStart?: string;
+  rangeEnd?: string;
   topChannelsByRequests: ChannelStat[];
   topVideosByRequests: VideoStat[];
   topVideosByLikes: VideoStat[];

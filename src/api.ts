@@ -155,7 +155,11 @@ export const api = {
 
   adminGetDurationLimit: () => request<DurationLimit>("/admin/durationlimit"),
 
-  adminGetStats: () => request<StatsSummary>("/admin/stats"),
+  adminGetStats: (period: "day" | "week" | "all", date?: string) => {
+    const params = new URLSearchParams({ period });
+    if (date) params.set("date", date);
+    return request<StatsSummary>(`/admin/stats?${params}`);
+  },
 
   adminSetDurationLimit: (thresholdSeconds: number) =>
     request<DurationLimit>("/admin/durationlimit", {
