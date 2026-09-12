@@ -6,6 +6,7 @@ import AdminKeywordLimitsPage from "./pages/AdminKeywordLimitsPage";
 import AdminKeywordsPage from "./pages/AdminKeywordsPage";
 import AdminPage from "./pages/AdminPage";
 import AdminPlaylistPage from "./pages/AdminPlaylistPage";
+import AdminStatsPage from "./pages/AdminStatsPage";
 import BoardPage from "./pages/BoardPage";
 import ReportPage from "./pages/ReportPage";
 import ViewerPage from "./pages/ViewerPage";
@@ -26,6 +27,7 @@ function AppRoutes() {
         <Route path="keywordlimits" element={<AdminKeywordLimitsPage />} />
         <Route path="fastforward" element={<AdminFastForwardPage />} />
         <Route path="features" element={<AdminFeaturesPage />} />
+        <Route path="stats" element={<AdminStatsPage />} />
       </Route>
     </Routes>
   );

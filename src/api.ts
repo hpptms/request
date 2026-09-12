@@ -12,6 +12,7 @@ import type {
   PlaylistTrack,
   PlaylistUpdateResult,
   SearchResult,
+  StatsSummary,
   VideoRequest,
 } from "./types";
 
@@ -153,6 +154,8 @@ export const api = {
     }),
 
   adminGetDurationLimit: () => request<DurationLimit>("/admin/durationlimit"),
+
+  adminGetStats: () => request<StatsSummary>("/admin/stats"),
 
   adminSetDurationLimit: (thresholdSeconds: number) =>
     request<DurationLimit>("/admin/durationlimit", {
