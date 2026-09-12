@@ -8,6 +8,7 @@ import Snackbar from "@mui/material/Snackbar";
 import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
+import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import ShieldIcon from "@mui/icons-material/Shield";
@@ -168,6 +169,15 @@ function BoardPage() {
               sx={{ whiteSpace: "nowrap" }}
             >
               レポート
+            </Button>
+            <Button
+              component={RouterLink}
+              to="/stats"
+              size="small"
+              startIcon={<LeaderboardIcon />}
+              sx={{ whiteSpace: "nowrap" }}
+            >
+              集計
             </Button>
             <Button
               component="a"

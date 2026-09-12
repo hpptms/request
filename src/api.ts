@@ -41,6 +41,15 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const api = {
   getConfig: () => request<AppConfig>("/config"),
 
+  // Public request/like/bad-vote rankings (backend/internal/analytics) for
+  // one day, one week, or all recorded history — shown on both the public
+  // board page and the admin panel's stats screen.
+  getStats: (period: "day" | "week" | "all", date?: string) => {
+    const params = new URLSearchParams({ period });
+    if (date) params.set("date", date);
+    return request<StatsSummary>(`/stats?${params}`);
+  },
+
   listRequests: () => request<VideoRequest[]>("/requests"),
 
   createRequest: (url: string, requesterName: string) =>
@@ -154,12 +163,6 @@ export const api = {
     }),
 
   adminGetDurationLimit: () => request<DurationLimit>("/admin/durationlimit"),
-
-  adminGetStats: (period: "day" | "week" | "all", date?: string) => {
-    const params = new URLSearchParams({ period });
-    if (date) params.set("date", date);
-    return request<StatsSummary>(`/admin/stats?${params}`);
-  },
 
   adminSetDurationLimit: (thresholdSeconds: number) =>
     request<DurationLimit>("/admin/durationlimit", {
