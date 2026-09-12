@@ -47,7 +47,8 @@ const NON_YOUTUBE_MAX_DURATION_SECONDS = 600; // 10 min
 // starts, and how long after that the duration badge shows.
 const NOW_PLAYING_INTRO_MS = 20000;
 const DURATION_BADGE_DELAY_MS = 5000;
-const DURATION_BADGE_VISIBLE_MS = 18000; // 2x the previous 9s (6x the original 3s)
+// Kept equal to the title card's own visible time, per that request.
+const DURATION_BADGE_VISIBLE_MS = NOW_PLAYING_INTRO_MS;
 const NEW_REQUEST_NOTICE_MS = 4000;
 const VOTE_STATUS_VISIBLE_MS = 4000;
 
