@@ -14,7 +14,7 @@ import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
 import { formatDuration } from "../lib/formatDuration";
 import { hasLiked, markLiked } from "../lib/likeStorage";
 import { isMyRequest } from "../lib/myRequestStorage";
-import type { VideoRequest } from "../types";
+import type { CancelVoteTier, VideoRequest } from "../types";
 
 // Watch-page URL for the request's original video, by platform. videoId is
 // the bare id the backend extracted from whatever URL the requester
@@ -33,11 +33,10 @@ function originalVideoUrl({ platform, videoId }: VideoRequest): string {
 
 interface Props {
   nowPlaying: VideoRequest | null;
-  cancelVoteThreshold: number;
-  // The first (loosest) rung of the cancel-vote escalation ladder — see
-  // AppConfig.cancelVoteTiers — is what reaching cancelVoteThreshold votes
-  // actually does, so the vote button's label is derived from it.
-  firstTierCapSeconds: number;
+  // Ordered by ascending votes (see AppConfig.cancelVoteTiers). The vote
+  // button's label/progress tracks whichever rung hasn't been reached yet,
+  // so it advances as votes come in instead of only ever showing the first.
+  cancelVoteTiers: CancelVoteTier[];
   likePriorityThreshold: number;
   isAdmin: boolean;
   onMarkDone: (id: string) => void;
@@ -48,8 +47,7 @@ interface Props {
 
 export function NowPlaying({
   nowPlaying,
-  cancelVoteThreshold,
-  firstTierCapSeconds,
+  cancelVoteTiers,
   likePriorityThreshold,
   isAdmin,
   onMarkDone,
@@ -71,6 +69,13 @@ export function NowPlaying({
 
   const voted = hasVoted(nowPlaying.id);
   const liked = hasLiked(nowPlaying.id);
+
+  // The next not-yet-reached rung, so the button counts up through 2:00 →
+  // 1:30 → 1:00 → 0:30 as votes come in instead of freezing on the first
+  // one; once every rung is reached, keep showing the last (tightest) one.
+  const nextTier =
+    cancelVoteTiers.find((tier) => nowPlaying.cancelVotes < tier.votes) ??
+    cancelVoteTiers[cancelVoteTiers.length - 1];
 
   const handleVote = async () => {
     setVoting(true);
@@ -153,8 +158,8 @@ export function NowPlaying({
               disabled={voting || voted}
               sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
             >
-              {voted ? "投票済み" : `${formatDuration(firstTierCapSeconds)}に短縮へ投票`} (
-              {nowPlaying.cancelVotes}/{cancelVoteThreshold})
+              {voted ? "投票済み" : `${formatDuration(nextTier.capSeconds)}に短縮へ投票`} (
+              {nowPlaying.cancelVotes}/{nextTier.votes})
             </Button>
             {isMyRequest(nowPlaying.id) && (
               <Button

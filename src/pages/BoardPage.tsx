@@ -26,9 +26,13 @@ const POLL_INTERVAL_MS = 4000;
 const DEFAULT_CANCEL_VOTE_THRESHOLD = 5;
 const DEFAULT_LIKE_PRIORITY_THRESHOLD = 2;
 // Mirrors the backend's default store.CancelVoteTiers (internal/store/store.go)
-// until the real config loads. Only the first tier's capSeconds is actually
-// shown here (see NowPlaying's vote button).
-const DEFAULT_CANCEL_VOTE_TIERS: CancelVoteTier[] = [{ votes: 5, capSeconds: 120 }];
+// until the real config loads.
+const DEFAULT_CANCEL_VOTE_TIERS: CancelVoteTier[] = [
+  { votes: 5, capSeconds: 120 },
+  { votes: 10, capSeconds: 90 },
+  { votes: 15, capSeconds: 60 },
+  { votes: 20, capSeconds: 30 },
+];
 
 function BoardPage() {
   useSeo(
@@ -206,8 +210,7 @@ function BoardPage() {
           <RequestForm onSubmit={handleCreate} />
           <NowPlaying
             nowPlaying={nowPlaying}
-            cancelVoteThreshold={cancelVoteThreshold}
-            firstTierCapSeconds={cancelVoteTiers[0]?.capSeconds ?? DEFAULT_CANCEL_VOTE_TIERS[0].capSeconds}
+            cancelVoteTiers={cancelVoteTiers.length > 0 ? cancelVoteTiers : DEFAULT_CANCEL_VOTE_TIERS}
             likePriorityThreshold={likePriorityThreshold}
             isAdmin={isAdmin}
             onMarkDone={handleDone}
