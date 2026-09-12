@@ -7,6 +7,7 @@ import AdminKeywordsPage from "./pages/AdminKeywordsPage";
 import AdminPage from "./pages/AdminPage";
 import AdminPlaylistPage from "./pages/AdminPlaylistPage";
 import BoardPage from "./pages/BoardPage";
+import ReportPage from "./pages/ReportPage";
 import ViewerPage from "./pages/ViewerPage";
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<BoardPage />} />
+        <Route path="/report" element={<ReportPage />} />
         <Route path="/viewer" element={<ViewerPage />} />
         <Route path="/admin" element={<AdminPage />}>
           <Route index element={<AdminBansPage />} />
