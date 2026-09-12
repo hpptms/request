@@ -8,11 +8,18 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import { Link as RouterLink } from "react-router-dom";
 import { StatsView } from "../components/StatsView";
+import { useSeo } from "../lib/useSeo";
 
 // 公開の集計画面 (/stats): backend/internal/analytics の日別/週別/累計
 // ランキング(GET /api/stats、認証不要)を誰でも見られる形で表示する。
 // 中身は管理画面の集計タブ(AdminStatsPage)と共通の StatsView。
 function StatsPage() {
+  useSeo(
+    "集計 | 動画リクエストキュー",
+    "動画リクエストキューのリクエストの多いアーティスト・動画、いいね・bad(キャンセル投票)の多い動画を日別・週別・累計で集計したランキングです。",
+    "/stats",
+  );
+
   return (
     <Box sx={{ minHeight: "100%", bgcolor: "background.default" }}>
       <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: 1, borderColor: "divider" }}>

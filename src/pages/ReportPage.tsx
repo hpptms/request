@@ -18,6 +18,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import { Link as RouterLink } from "react-router-dom";
 import gaReportData from "../data/gaReportData.json";
+import { useSeo } from "../lib/useSeo";
 
 // Public read-only view of a hand-transcribed GA4 snapshot (see
 // data/ga_report_data.{json,md} at the repo root for the source and the
@@ -118,6 +119,12 @@ function DataTable<T extends object>({ columns, rows }: { columns: Column<T>[]; 
 const pct = (v: unknown) => `${v}%`;
 
 function ReportPage() {
+  useSeo(
+    "アクセスレポート | 動画リクエストキュー",
+    "動画リクエストキューのGoogleアナリティクス(GA4)アクセスレポートのスナップショットです。",
+    "/report",
+  );
+
   return (
     <Box sx={{ minHeight: "100%", bgcolor: "background.default" }}>
       <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: 1, borderColor: "divider" }}>
