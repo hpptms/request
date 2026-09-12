@@ -1,0 +1,134 @@
+{
+  "property": {
+    "account": "hpptms",
+    "propertyUrl": "https://request.tokyo/",
+    "propertyId": "552441690",
+    "accountId": "57073157",
+    "dataSnapshotDate": "2026-09-12",
+    "notes": [
+      "サイトは計測開始直後と見られ、9/09以降に急激なトラフィック増加あり。母数が小さいため変化率(%)は参考値。",
+      "年齢・性別のデモグラフィックデータは未収集（Google Signals 未有効化の可能性）。",
+      "指標により集計期間が異なる（ホーム画面カード=過去7日間、ユーザー属性/テクノロジー詳細=過去28日間）。",
+      "本データはGA4 UIから手動転記したスナップショット。継続更新する場合はGA4 Data APIの利用を推奨。"
+    ]
+  },
+  "kpis_last7days": {
+    "dateRange": "2026-09-05 to 2026-09-11",
+    "activeUsers": { "value": 117, "changePct": 1362.5 },
+    "events": { "value": 7667, "changePct": 23133.3 },
+    "keyEvents": { "value": 0, "changePct": null },
+    "newUsers": { "value": 112, "changePct": 1300.0 }
+  },
+  "realtime": {
+    "activeUsersLast30Min": 10,
+    "byCountry": [{ "country": "Japan", "activeUsers": 10 }]
+  },
+  "snapshot_last28days": {
+    "dateRange": "2026-08-15 to 2026-09-11",
+    "activeUsers": 125,
+    "newUsers": 120,
+    "avgEngagementTimePerUser": "30m26s",
+    "events": 7700
+  },
+  "topPages": [
+    {
+      "pageTitle": "動画リクエストキュー",
+      "views7d": 865,
+      "views7dChangePct": 10712.5,
+      "views28d": 873,
+      "activeUsers28d": 125,
+      "events28d": 7700,
+      "bounceRate28d": 72.8
+    }
+  ],
+  "geo": {
+    "byCountry_last28days": [
+      { "country": "Japan", "activeUsers": 112, "activeUsersPct": 89.6, "newUsers": 107, "engagedSessions": 160, "engagementRate": 27.83, "avgEngagementTime": "33m58s", "events": 7647, "eventsPct": 99.31 },
+      { "country": "United States", "activeUsers": 10, "activeUsersPct": 8.0, "newUsers": 10, "engagedSessions": 0, "engagementRate": 0, "avgEngagementTime": "0s", "events": 41, "eventsPct": 0.53 },
+      { "country": "France", "activeUsers": 2, "activeUsersPct": 1.6, "newUsers": 2, "engagedSessions": 0, "engagementRate": 0, "avgEngagementTime": "0s", "events": 7, "eventsPct": 0.09 },
+      { "country": "(not set)", "activeUsers": 1, "activeUsersPct": 0.8, "newUsers": 1, "engagedSessions": 0, "engagementRate": 0, "avgEngagementTime": "7s", "events": 5, "eventsPct": 0.06 }
+    ],
+    "byRegion_last28days_top10Of39": [
+      { "region": "Tokyo", "activeUsers": 19, "activeUsersPct": 15.2, "newUsers": 11, "engagementRate": 39.29, "avgEngagementTime": "10m05s", "events": 579, "eventsPct": 7.52 },
+      { "region": "Ibaraki", "activeUsers": 17, "activeUsersPct": 13.6, "newUsers": 16, "engagementRate": 30.3, "avgEngagementTime": "10m41s", "events": 247, "eventsPct": 3.21 },
+      { "region": "Osaka", "activeUsers": 14, "activeUsersPct": 11.2, "newUsers": 11, "engagementRate": 26.58, "avgEngagementTime": "13m59s", "events": 418, "eventsPct": 5.43 },
+      { "region": "Kanagawa", "activeUsers": 9, "activeUsersPct": 7.2, "newUsers": 8, "engagementRate": 19.57, "avgEngagementTime": "3m26s", "events": 434, "eventsPct": 5.64 },
+      { "region": "Aichi", "activeUsers": 8, "activeUsersPct": 6.4, "newUsers": 6, "engagementRate": 36.0, "avgEngagementTime": "2m02s", "events": 229, "eventsPct": 2.97 },
+      { "region": "Saitama", "activeUsers": 7, "activeUsersPct": 5.6, "newUsers": 5, "engagementRate": 31.58, "avgEngagementTime": "4m12s", "events": 102, "eventsPct": 1.32 },
+      { "region": "Chiba", "activeUsers": 6, "activeUsersPct": 4.8, "newUsers": 6, "engagementRate": 40.54, "avgEngagementTime": "5h07m", "events": 3686, "eventsPct": 47.87 },
+      { "region": "Hokkaido", "activeUsers": 6, "activeUsersPct": 4.8, "newUsers": 5, "engagementRate": 33.33, "avgEngagementTime": "2h16m", "events": 463, "eventsPct": 6.01 },
+      { "region": "Hyogo", "activeUsers": 6, "activeUsersPct": 4.8, "newUsers": 4, "engagementRate": 20.69, "avgEngagementTime": "3m25s", "events": 119, "eventsPct": 1.55 },
+      { "region": "Fukuoka", "activeUsers": 5, "activeUsersPct": 4.0, "newUsers": 5, "engagementRate": 24.32, "avgEngagementTime": "23m08s", "events": 230, "eventsPct": 2.99 }
+    ],
+    "byCity_last28days_top10Of75": [
+      { "city": "Sakuragawa", "activeUsers": 17, "activeUsersPct": 13.6, "newUsers": 16, "engagementRate": 30.3, "avgEngagementTime": "10m41s", "events": 247, "eventsPct": 3.21 },
+      { "city": "Osaka", "activeUsers": 11, "activeUsersPct": 8.8, "newUsers": 8, "engagementRate": 27.69, "avgEngagementTime": "13m28s", "events": 327, "eventsPct": 4.25 },
+      { "city": "Shinjuku City", "activeUsers": 10, "activeUsersPct": 8.0, "newUsers": 6, "engagementRate": 43.48, "avgEngagementTime": "4m40s", "events": 152, "eventsPct": 1.97 },
+      { "city": "(not set)", "activeUsers": 8, "activeUsersPct": 6.4, "newUsers": 5, "engagementRate": 70.0, "avgEngagementTime": "1m38s", "events": 70, "eventsPct": 0.91 },
+      { "city": "Yokohama", "activeUsers": 7, "activeUsersPct": 5.6, "newUsers": 7, "engagementRate": 15.38, "avgEngagementTime": "3m02s", "events": 382, "eventsPct": 4.96 },
+      { "city": "Kobe", "activeUsers": 6, "activeUsersPct": 4.8, "newUsers": 4, "engagementRate": 20.69, "avgEngagementTime": "3m25s", "events": 119, "eventsPct": 1.55 },
+      { "city": "Nagoya", "activeUsers": 6, "activeUsersPct": 4.8, "newUsers": 4, "engagementRate": 33.33, "avgEngagementTime": "2m01s", "events": 194, "eventsPct": 2.52 },
+      { "city": "(unlabeled)", "activeUsers": 5, "activeUsersPct": 4.0, "newUsers": 1, "engagementRate": 5.0, "avgEngagementTime": "10m13s", "events": 164, "eventsPct": 2.13 },
+      { "city": "Shibuya", "activeUsers": 5, "activeUsersPct": 4.0, "newUsers": 2, "engagementRate": 53.85, "avgEngagementTime": "14m29s", "events": 99, "eventsPct": 1.29 },
+      { "city": "Asahikawa", "activeUsers": 4, "activeUsersPct": 3.2, "newUsers": 4, "engagementRate": 29.03, "avgEngagementTime": "3h24m", "events": 456, "eventsPct": 5.92 }
+    ]
+  },
+  "demographics": {
+    "age": { "available": false, "reason": "データがありません（未収集）" },
+    "gender": { "available": false, "reason": "データがありません（未収集）" }
+  },
+  "technology": {
+    "byBrowser_last28days": [
+      { "browser": "Chrome", "activeUsers": 62, "activeUsersPct": 49.6, "newUsers": 59, "engagementRate": 25.89, "avgEngagementTime": "46m20s", "events": 6033, "eventsPct": 78.35 },
+      { "browser": "Edge", "activeUsers": 27, "activeUsersPct": 21.6, "newUsers": 26, "engagementRate": 28.13, "avgEngagementTime": "9m01s", "events": 654, "eventsPct": 8.49 },
+      { "browser": "Firefox", "activeUsers": 26, "activeUsersPct": 20.8, "newUsers": 25, "engagementRate": 30.88, "avgEngagementTime": "8m22s", "events": 488, "eventsPct": 6.34 },
+      { "browser": "Safari", "activeUsers": 9, "activeUsersPct": 7.2, "newUsers": 8, "engagementRate": 32.61, "avgEngagementTime": "10m30s", "events": 395, "eventsPct": 5.13 },
+      { "browser": "Samsung Internet", "activeUsers": 2, "activeUsersPct": 1.6, "newUsers": 2, "engagementRate": 8.33, "avgEngagementTime": "3h07m", "events": 130, "eventsPct": 1.69 }
+    ],
+    "byOS_last28days": [
+      { "os": "Windows", "activeUsers": 97, "activeUsersPct": 77.6, "newUsers": 94, "engagementRate": 27.48, "avgEngagementTime": "14m11s" },
+      { "os": "Android", "activeUsers": 15, "activeUsersPct": 12.0, "newUsers": 14, "engagementRate": 22.86, "avgEngagementTime": "37m36s" },
+      { "os": "iOS", "activeUsers": 9, "activeUsersPct": 7.2, "newUsers": 8, "engagementRate": 32.61, "avgEngagementTime": "10m30s" },
+      { "os": "Linux", "activeUsers": 4, "activeUsersPct": 3.2, "newUsers": 3, "engagementRate": 0, "avgEngagementTime": "2s" },
+      { "os": "Macintosh", "activeUsers": 2, "activeUsersPct": 1.6, "newUsers": 1, "engagementRate": 100.0, "avgEngagementTime": "14h44m" }
+    ],
+    "byDeviceCategory_last28days": [
+      { "category": "desktop", "activeUsers": 102, "activeUsersPct": 81.6, "newUsers": 98, "engagementRate": 27.79, "events": 6113, "eventsPct": 79.39 },
+      { "category": "mobile", "activeUsers": 22, "activeUsersPct": 17.6, "newUsers": 20, "engagementRate": 25.0, "events": 1567, "eventsPct": 20.35 },
+      { "category": "tablet", "activeUsers": 2, "activeUsersPct": 1.6, "newUsers": 2, "engagementRate": 66.67, "events": 20, "eventsPct": 0.26 }
+    ]
+  },
+  "acquisition_last7days": {
+    "byDefaultChannelGroup": [
+      { "channel": "Unassigned", "sessions": 381, "changePct": null },
+      { "channel": "Direct", "sessions": 244, "changePct": 3385.7 },
+      { "channel": "Organic Search", "sessions": 11, "changePct": 1000.0 }
+    ],
+    "bySessionSourceMedium": [
+      { "sourceMedium": "(direct) / (none)", "sessions": 244, "changePct": 3385.7 },
+      { "sourceMedium": "board / (unspecified)", "sessions": 229, "changePct": null },
+      { "sourceMedium": "board / (none)", "sessions": 89, "changePct": null },
+      { "sourceMedium": "board / (not set)", "sessions": 52, "changePct": null },
+      { "sourceMedium": "google / organic", "sessions": 5, "changePct": null },
+      { "sourceMedium": "ntp.msn.com / referral", "sessions": 5, "changePct": null },
+      { "sourceMedium": "bing / organic", "sessions": 0, "changePct": -100.0 }
+    ],
+    "byFirstUserSourceMedium": [
+      { "sourceMedium": "(direct) / (none)", "activeUsers": 108, "changePct": 1442.9 },
+      { "sourceMedium": "(data not available)", "activeUsers": 1, "changePct": null },
+      { "sourceMedium": "google / organic", "activeUsers": 1, "changePct": null },
+      { "sourceMedium": "ntp.msn.com / referral", "activeUsers": 1, "changePct": null },
+      { "sourceMedium": "yahoo / organic", "activeUsers": 1, "changePct": null },
+      { "sourceMedium": "bing / organic", "activeUsers": 0, "changePct": -100.0 }
+    ]
+  },
+  "events_last7days": [
+    { "eventName": "video_progress", "count": 2344, "changePct": null },
+    { "eventName": "page_view", "count": 865, "changePct": 10712.5 },
+    { "eventName": "scroll", "count": 823, "changePct": 11657.1 },
+    { "eventName": "video_start", "count": 693, "changePct": null },
+    { "eventName": "session_start", "count": 549, "changePct": 6762.5 },
+    { "eventName": "video_request_like", "count": 505, "changePct": null },
+    { "eventName": "video_request_bad_vote", "count": 430, "changePct": null }
+  ]
+}

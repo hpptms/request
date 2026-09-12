@@ -9,8 +9,10 @@ import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import ShieldIcon from "@mui/icons-material/Shield";
 import YouTubeIcon from "@mui/icons-material/YouTube";
+import { Link as RouterLink } from "react-router-dom";
 import { api } from "../api";
 import { NowPlaying } from "../components/NowPlaying";
 import { QueueList } from "../components/QueueList";
@@ -158,6 +160,15 @@ function BoardPage() {
             動画リクエストキュー
           </Typography>
           <Stack direction="row" spacing={0.5}>
+            <Button
+              component={RouterLink}
+              to="/report"
+              size="small"
+              startIcon={<QueryStatsIcon />}
+              sx={{ whiteSpace: "nowrap" }}
+            >
+              レポート
+            </Button>
             <Button
               component="a"
               href="/admin"
