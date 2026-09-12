@@ -146,3 +146,33 @@ export interface PlaylistUpdateResult {
 export interface PlaylistImportResult {
   urls: string[];
 }
+
+// One video's lifetime counters (backend/internal/analytics.VideoStat):
+// tallied across every time it's ever been requested, including requests
+// long since finished and dropped from the live queue.
+export interface VideoStat {
+  platform: string;
+  videoId: string;
+  title: string;
+  channelTitle: string;
+  requestCount: number;
+  totalLikes: number;
+  totalCancelVotes: number;
+}
+
+// One channel/artist's lifetime request count, summed across every video
+// seen under that exact channel title.
+export interface ChannelStat {
+  channelTitle: string;
+  requestCount: number;
+}
+
+// backend/internal/analytics.Summary — the admin stats screen's one-shot
+// view of every ranking, each already sorted highest-first and capped at
+// the backend's topN.
+export interface StatsSummary {
+  topChannelsByRequests: ChannelStat[];
+  topVideosByRequests: VideoStat[];
+  topVideosByLikes: VideoStat[];
+  topVideosByCancelVotes: VideoStat[];
+}

@@ -16,6 +16,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import PlaylistPlayIcon from "@mui/icons-material/PlaylistPlay";
+import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ShieldIcon from "@mui/icons-material/Shield";
 import { api } from "../api";
@@ -83,6 +84,7 @@ const adminTabs = [
     icon: <FastForwardIcon fontSize="small" />,
   },
   { value: "features", path: "/admin/features", label: "機能", icon: <SettingsIcon fontSize="small" /> },
+  { value: "stats", path: "/admin/stats", label: "集計", icon: <QueryStatsIcon fontSize="small" /> },
 ] as const;
 
 // Shared header for every authenticated /admin/* screen: title, logout, and
