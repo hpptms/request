@@ -8,7 +8,6 @@ import AdminPage from "./pages/AdminPage";
 import AdminPlaylistPage from "./pages/AdminPlaylistPage";
 import AdminStatsPage from "./pages/AdminStatsPage";
 import BoardPage from "./pages/BoardPage";
-import ReportPage from "./pages/ReportPage";
 import StatsPage from "./pages/StatsPage";
 import ViewerPage from "./pages/ViewerPage";
 import { usePageViewTracking } from "./lib/usePageViewTracking";
@@ -19,7 +18,6 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<BoardPage />} />
-      <Route path="/report" element={<ReportPage />} />
       <Route path="/stats" element={<StatsPage />} />
       <Route path="/viewer" element={<ViewerPage />} />
       <Route path="/admin" element={<AdminPage />}>
