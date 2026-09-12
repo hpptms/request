@@ -25,7 +25,7 @@ function setCanonical(href: string) {
 // This app is a client-rendered SPA with no server-side rendering, so
 // index.html's <title>/description/canonical/og:* only ever describe one
 // (the home page's) URL — every other route needs to overwrite them once it
-// mounts, or a crawler indexing e.g. /report would see the board page's
+// mounts, or a crawler indexing e.g. /stats would see the board page's
 // metadata and Google would likely fold it into the home page as a
 // duplicate. This hook is that per-route override; restoring the previous
 // title on unmount keeps a page without its own useSeo call (ViewerPage,
