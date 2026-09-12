@@ -75,13 +75,14 @@ function BoardPage() {
     return () => clearInterval(interval);
   }, [refresh]);
 
-  const handleCreate = async (url: string) => {
-    const created = await api.createRequest(url, "");
+  const handleCreate = async (url: string, twoMinuteRequest: boolean) => {
+    const created = await api.createRequest(url, "", twoMinuteRequest);
     markMyRequest(created.id);
     trackEvent("video_request_submit", {
       request_id: created.id,
       platform: created.platform,
       source: "board",
+      two_minute_request: twoMinuteRequest,
     });
     await refresh();
   };

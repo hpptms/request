@@ -52,10 +52,10 @@ export const api = {
 
   listRequests: () => request<VideoRequest[]>("/requests"),
 
-  createRequest: (url: string, requesterName: string) =>
+  createRequest: (url: string, requesterName: string, twoMinuteRequest = false) =>
     request<VideoRequest>("/requests", {
       method: "POST",
-      body: JSON.stringify({ url, requesterName }),
+      body: JSON.stringify({ url, requesterName, twoMinuteRequest }),
     }),
 
   playRequest: (id: string) =>
