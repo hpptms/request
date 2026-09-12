@@ -47,7 +47,7 @@ const NON_YOUTUBE_MAX_DURATION_SECONDS = 600; // 10 min
 // starts, and how long after that the duration badge shows.
 const NOW_PLAYING_INTRO_MS = 20000;
 const DURATION_BADGE_DELAY_MS = 5000;
-const DURATION_BADGE_VISIBLE_MS = 9000; // 3x the original 3s
+const DURATION_BADGE_VISIBLE_MS = 18000; // 2x the previous 9s (6x the original 3s)
 const NEW_REQUEST_NOTICE_MS = 4000;
 const VOTE_STATUS_VISIBLE_MS = 4000;
 
@@ -975,7 +975,11 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
                 >
                   <MusicNoteIcon color="primary" fontSize="large" />
                   <Box sx={{ minWidth: 0 }}>
-                    <Typography variant="h6" noWrap sx={{ color: "white", fontWeight: 700, lineHeight: 1.25 }}>
+                    <Typography
+                      variant="h6"
+                      noWrap
+                      sx={{ color: "white", fontWeight: 700, lineHeight: 1.25, fontSize: "2.5rem" }}
+                    >
                       {introContent?.title ?? ""}
                     </Typography>
                     {introContent?.channelTitle && (
