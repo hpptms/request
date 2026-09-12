@@ -7,9 +7,10 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
+import TimerIcon from "@mui/icons-material/Timer";
 
 interface Props {
-  onSubmit: (url: string) => Promise<void>;
+  onSubmit: (url: string, twoMinuteRequest: boolean) => Promise<void>;
 }
 
 export function RequestForm({ onSubmit }: Props) {
@@ -17,20 +18,24 @@ export function RequestForm({ onSubmit }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submit = async (twoMinuteRequest: boolean) => {
     if (!url.trim()) return;
 
     setSubmitting(true);
     setError(null);
     try {
-      await onSubmit(url.trim());
+      await onSubmit(url.trim(), twoMinuteRequest);
       setUrl("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "リクエストの追加に失敗しました");
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    submit(false);
   };
 
   return (
@@ -53,15 +58,27 @@ export function RequestForm({ onSubmit }: Props) {
             required
             size="small"
           />
-          <Button
-            type="submit"
-            variant="contained"
-            startIcon={<AddCircleIcon />}
-            disabled={submitting || !url.trim()}
-            sx={{ whiteSpace: "nowrap", width: { xs: "100%", sm: "auto" } }}
-          >
-            リクエスト
-          </Button>
+          <Stack direction="row" spacing={1} sx={{ width: { xs: "100%", sm: "auto" } }}>
+            <Button
+              type="submit"
+              variant="contained"
+              startIcon={<AddCircleIcon />}
+              disabled={submitting || !url.trim()}
+              sx={{ whiteSpace: "nowrap", flex: { xs: 1, sm: "initial" } }}
+            >
+              リクエスト
+            </Button>
+            <Button
+              type="button"
+              variant="outlined"
+              startIcon={<TimerIcon />}
+              disabled={submitting || !url.trim()}
+              onClick={() => submit(true)}
+              sx={{ whiteSpace: "nowrap", flex: { xs: 1, sm: "initial" } }}
+            >
+              2分でリクエスト
+            </Button>
+          </Stack>
         </Stack>
       </Box>
       {error && (

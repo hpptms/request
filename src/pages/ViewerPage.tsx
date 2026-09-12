@@ -134,6 +134,8 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // 長い動画の短縮(see AppConfig.durationLimitThresholdSeconds): 0はオフ。
   const [durationLimitThresholdSeconds, setDurationLimitThresholdSeconds] = useState(0);
   const [durationLimitCapSeconds, setDurationLimitCapSeconds] = useState(30);
+  // "2分でリクエスト" cap (see AppConfig.twoMinuteRequestCapSeconds).
+  const [twoMinuteRequestCapSeconds, setTwoMinuteRequestCapSeconds] = useState(120);
   // Always true: this screen auto-starts as soon as it's opened, no click
   // needed (see the player-creation effect below for the autoplay-with-sound
   // caveat that implies). Kept as a named constant (rather than removing it
@@ -275,6 +277,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
           setFastForwardCapSeconds(config.fastForwardCapSeconds);
           setDurationLimitThresholdSeconds(config.durationLimitThresholdSeconds);
           setDurationLimitCapSeconds(config.durationLimitCapSeconds);
+          setTwoMinuteRequestCapSeconds(config.twoMinuteRequestCapSeconds);
         })
         .catch(() => {});
     };
@@ -686,8 +689,11 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // AppConfig), every request is guaranteed that much playback regardless of
   // cancel votes — cancel votes must not be able to cut it shorter than the
   // fast-forward guarantee. Otherwise, enough cancel votes (the tightest
-  // reached rung of cancelVoteTiers — see AppConfig.CancelVoteTier) caps it
-  // instead. Either way, the video being at least durationLimitThresholdSeconds
+  // reached rung of cancelVoteTiers — see AppConfig.CancelVoteTier) caps it,
+  // and a request made with the "2分でリクエスト" button
+  // (twoMinuteRequestCapSeconds) caps it too — cancel votes can still cut a
+  // twoMinuteRequest shorter than that, same as any other request. Either
+  // way, the video being at least durationLimitThresholdSeconds
   // long (durationLimitCapSeconds — an admin opt-in for unusually long
   // requests, see AdminFeaturesPage) can still cap it further; whichever
   // applicable cap is smallest wins. Requests are never removed from the
@@ -713,6 +719,9 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     } else {
       for (const tier of cancelVoteTiers) {
         if (current.cancelVotes >= tier.votes) caps.push(tier.capSeconds);
+      }
+      if (current.twoMinuteRequest) {
+        caps.push(twoMinuteRequestCapSeconds);
       }
     }
     if (durationLimitThresholdSeconds > 0 && (current.durationSeconds ?? 0) >= durationLimitThresholdSeconds) {
@@ -757,6 +766,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     fastForwardCapSeconds,
     durationLimitThresholdSeconds,
     durationLimitCapSeconds,
+    twoMinuteRequestCapSeconds,
     nonYouTubeEmbedUrl,
     refresh,
   ]);
@@ -848,12 +858,19 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
         nonYouTubeStartRef.current = Date.now();
         const durationLimited =
           durationLimitThresholdSeconds > 0 && (target.durationSeconds ?? 0) >= durationLimitThresholdSeconds;
+        // twoMinuteRequest relaxes the usual SHORTENED_PLAYBACK_SECONDS floor
+        // down to the video's own length when it's shorter, matching the
+        // backend's relaxed floor (see store.playbackFloorLocked) — otherwise
+        // a short two-minute-request video would sit for the normal minimum
+        // instead of ending right away.
         const timerSeconds = durationLimited
           ? durationLimitCapSeconds
-          : Math.min(
-              Math.max(target.durationSeconds || NON_YOUTUBE_DEFAULT_DURATION_SECONDS, SHORTENED_PLAYBACK_SECONDS),
-              NON_YOUTUBE_MAX_DURATION_SECONDS,
-            );
+          : target.twoMinuteRequest
+            ? Math.min(target.durationSeconds || twoMinuteRequestCapSeconds, twoMinuteRequestCapSeconds)
+            : Math.min(
+                Math.max(target.durationSeconds || NON_YOUTUBE_DEFAULT_DURATION_SECONDS, SHORTENED_PLAYBACK_SECONDS),
+                NON_YOUTUBE_MAX_DURATION_SECONDS,
+              );
         nonYouTubeTimerRef.current = window.setTimeout(() => {
           advanceQueue(api.finishRequest);
         }, timerSeconds * 1000);

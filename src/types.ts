@@ -21,6 +21,10 @@ export interface VideoRequest {
   platform: string;
   embedUrl?: string;
   durationSeconds?: number;
+  // Set when the requester used the "2分でリクエスト" button — see
+  // AppConfig.twoMinuteRequestCapSeconds and ViewerPage's
+  // playback-capping effect.
+  twoMinuteRequest?: boolean;
 }
 
 // One rung of the cancel-vote escalation ladder: once a request collects at
@@ -50,6 +54,10 @@ export interface AppConfig {
   // admin has turned this off ("短縮しない").
   durationLimitThresholdSeconds: number;
   durationLimitCapSeconds: number;
+  // A request made with the "2分でリクエスト" button (VideoRequest's
+  // twoMinuteRequest) is capped at this many seconds — see ViewerPage's
+  // playback-capping effect.
+  twoMinuteRequestCapSeconds: number;
 }
 
 export interface CancelVoteResult {
