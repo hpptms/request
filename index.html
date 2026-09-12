@@ -6,6 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>動画リクエストキュー</title>
 
+    <!-- Sitewide defaults for crawlers and link previews. Each public page
+         (BoardPage/ReportPage/StatsPage) overwrites description/canonical/
+         og:* for its own route once it mounts, via src/lib/useSeo.ts — this
+         is a client-rendered SPA with no server-side rendering, so these
+         tags are what's present before/without JS, and also what a page
+         without its own useSeo call (ViewerPage, AdminPage) keeps. -->
+    <meta name="description" content="動画リクエストキューは、YouTube・ニコニコ動画・Vimeoの動画をみんなでリクエストして再生できる視聴者参加型のキューサービスです。いいね・bad投票でリクエストの再生順が変わります。" />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="https://request.tokyo/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="動画リクエストキュー" />
+    <meta property="og:locale" content="ja_JP" />
+    <meta property="og:title" content="動画リクエストキュー" />
+    <meta property="og:description" content="YouTube・ニコニコ動画・Vimeoの動画をみんなでリクエストして再生できる視聴者参加型のキューサービス。" />
+    <meta property="og:url" content="https://request.tokyo/" />
+    <meta name="twitter:card" content="summary" />
+
     <!-- Google tag (gtag.js)
          Init code lives in /gtag-init.js (not inline) because the CSP's
          script-src has no 'unsafe-inline'/nonce/hash, so an inline <script>

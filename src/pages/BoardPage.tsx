@@ -20,6 +20,7 @@ import { QueueList } from "../components/QueueList";
 import { RequestForm } from "../components/RequestForm";
 import { trackEvent } from "../lib/analytics";
 import { markMyRequest } from "../lib/myRequestStorage";
+import { useSeo } from "../lib/useSeo";
 import type { CancelVoteTier, VideoRequest } from "../types";
 
 const POLL_INTERVAL_MS = 4000;
@@ -31,6 +32,12 @@ const DEFAULT_LIKE_PRIORITY_THRESHOLD = 2;
 const DEFAULT_CANCEL_VOTE_TIERS: CancelVoteTier[] = [{ votes: 5, capSeconds: 120 }];
 
 function BoardPage() {
+  useSeo(
+    "動画リクエストキュー",
+    "YouTube・ニコニコ動画・Vimeoの動画をみんなでリクエストして再生できる視聴者参加型のキューサービス。いいね・bad投票でリクエストの再生順が変わります。",
+    "/",
+  );
+
   const [requests, setRequests] = useState<VideoRequest[]>([]);
   const [cancelVoteThreshold, setCancelVoteThreshold] = useState(DEFAULT_CANCEL_VOTE_THRESHOLD);
   const [cancelVoteTiers, setCancelVoteTiers] = useState<CancelVoteTier[]>(DEFAULT_CANCEL_VOTE_TIERS);
