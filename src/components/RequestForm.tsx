@@ -44,11 +44,7 @@ export function RequestForm({ onSubmit }: Props) {
         動画をリクエストする
       </Typography>
       <Box component="form" onSubmit={handleSubmit}>
-        <Stack
-          spacing={2}
-          direction={{ xs: "column", sm: "row" }}
-          sx={{ alignItems: "flex-start" }}
-        >
+        <Stack spacing={2}>
           <TextField
             label="動画のURL"
             placeholder="YouTube・ニコニコ動画・Vimeo のURL"
@@ -58,13 +54,13 @@ export function RequestForm({ onSubmit }: Props) {
             required
             size="small"
           />
-          <Stack direction="row" spacing={1} sx={{ width: { xs: "100%", sm: "auto" } }}>
+          <Stack direction="row" spacing={1}>
             <Button
               type="submit"
               variant="contained"
               startIcon={<AddCircleIcon />}
               disabled={submitting || !url.trim()}
-              sx={{ whiteSpace: "nowrap", flex: { xs: 1, sm: "initial" } }}
+              sx={{ whiteSpace: "nowrap", flex: 1 }}
             >
               リクエスト
             </Button>
@@ -74,7 +70,7 @@ export function RequestForm({ onSubmit }: Props) {
               startIcon={<TimerIcon />}
               disabled={submitting || !url.trim()}
               onClick={() => submit(true)}
-              sx={{ whiteSpace: "nowrap", flex: { xs: 1, sm: "initial" } }}
+              sx={{ whiteSpace: "nowrap", flex: 1 }}
             >
               2分でリクエスト
             </Button>
