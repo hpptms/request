@@ -247,11 +247,15 @@ export function RequestSidePlayer({ requests, likePriorityThreshold, cancelVoteT
       {nowPlaying && (
         <Stack
           direction="column"
-          spacing={1.5}
-          sx={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", zIndex: 1 }}
+          spacing={{ xs: 1, sm: 1.5 }}
+          sx={{ position: "absolute", right: { xs: 8, sm: 12 }, top: "50%", transform: "translateY(-50%)", zIndex: 1 }}
         >
           <Tooltip title={liked ? "いいね済み" : `いいね (${nowPlaying.likes}/${likePriorityThreshold}で優先再生)`}>
             <span>
+              {/* minHeight/minWidth keep this at (or above) the ~44px touch
+                  target Apple/Google guidelines recommend, even though the
+                  visual size stays compact — MUI's own "small" padding
+                  alone falls short of that on a phone. */}
               <Button
                 variant="contained"
                 size="small"
@@ -259,6 +263,9 @@ export function RequestSidePlayer({ requests, likePriorityThreshold, cancelVoteT
                 onClick={handleLikeClick}
                 disabled={liking || liked}
                 sx={{
+                  minWidth: 44,
+                  minHeight: 44,
+                  px: 1.5,
                   bgcolor: liked ? "primary.main" : "rgba(0,0,0,0.6)",
                   color: "white",
                   "&:hover": { bgcolor: liked ? "primary.main" : "rgba(0,0,0,0.75)" },
@@ -285,6 +292,9 @@ export function RequestSidePlayer({ requests, likePriorityThreshold, cancelVoteT
                 onClick={handleVoteClick}
                 disabled={voting || voted}
                 sx={{
+                  minWidth: 44,
+                  minHeight: 44,
+                  px: 1.5,
                   bgcolor: voted ? "rgba(255,255,255,0.2)" : undefined,
                   color: "white",
                   "&.Mui-disabled": { color: "white", opacity: voted ? 1 : 0.5 },

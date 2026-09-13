@@ -52,7 +52,18 @@ function PlayPage() {
 
   return (
     <>
-      <Box sx={{ height: "100dvh", display: "flex", flexDirection: "column", bgcolor: "background.default" }}>
+      <Box
+        sx={{
+          height: "100dvh",
+          display: "flex",
+          flexDirection: "column",
+          bgcolor: "background.default",
+          // Landscape on a notched phone puts the notch to one side instead
+          // of the top — pad it out of the way of the AppBar/video/form.
+          pl: "env(safe-area-inset-left)",
+          pr: "env(safe-area-inset-right)",
+        }}
+      >
         <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: 1, borderColor: "divider", flexShrink: 0 }}>
           <Toolbar sx={{ px: { xs: 2, sm: 3 }, gap: 1 }}>
             <PlayCircleIcon color="primary" sx={{ mr: 1.5 }} fontSize="large" />
@@ -147,8 +158,20 @@ function PlayPage() {
           </Box>
         </Box>
 
-        {/* Request form, pinned to the bottom of the screen. */}
-        <Box sx={{ flexShrink: 0, borderTop: 1, borderColor: "divider", bgcolor: "background.paper", p: { xs: 1.5, sm: 2 } }}>
+        {/* Request form, pinned to the bottom of the screen. The extra
+            safe-area padding keeps it clear of an iPhone's home indicator,
+            which otherwise overlaps content sitting flush with the true
+            bottom edge of a 100dvh layout. */}
+        <Box
+          sx={{
+            flexShrink: 0,
+            borderTop: 1,
+            borderColor: "divider",
+            bgcolor: "background.paper",
+            p: { xs: 1.5, sm: 2 },
+            pb: { xs: "calc(12px + env(safe-area-inset-bottom))", sm: 2 },
+          }}
+        >
           <RequestForm onSubmit={handleCreate} />
         </Box>
 
