@@ -2,10 +2,12 @@ import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
+import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
+import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { Link as RouterLink } from "react-router-dom";
 import { StatsView } from "../components/StatsView";
 import { useSeo } from "../lib/useSeo";
@@ -28,15 +30,26 @@ function StatsPage() {
           <Typography variant="h6" component="h1" noWrap sx={{ flexGrow: 1, minWidth: 0 }}>
             集計
           </Typography>
-          <Button
-            component={RouterLink}
-            to="/"
-            size="small"
-            startIcon={<ArrowBackIcon />}
-            sx={{ whiteSpace: "nowrap" }}
-          >
-            トップに戻る
-          </Button>
+          <Stack direction="row" spacing={0.5}>
+            <Button
+              component={RouterLink}
+              to="/play"
+              size="small"
+              startIcon={<PlayCircleIcon />}
+              sx={{ whiteSpace: "nowrap" }}
+            >
+              再生
+            </Button>
+            <Button
+              component={RouterLink}
+              to="/"
+              size="small"
+              startIcon={<ArrowBackIcon />}
+              sx={{ whiteSpace: "nowrap" }}
+            >
+              トップに戻る
+            </Button>
+          </Stack>
         </Toolbar>
       </AppBar>
 

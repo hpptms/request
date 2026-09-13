@@ -7,26 +7,33 @@ import Snackbar from "@mui/material/Snackbar";
 import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import ShieldIcon from "@mui/icons-material/Shield";
-import YouTubeIcon from "@mui/icons-material/YouTube";
 import { Link as RouterLink } from "react-router-dom";
 import { NowPlaying } from "../components/NowPlaying";
 import { QueueList } from "../components/QueueList";
 import { RequestForm } from "../components/RequestForm";
+import { RequestSidePlayer } from "../components/RequestSidePlayer";
 import { useRequestQueue } from "../lib/useRequestQueue";
 import { useSeo } from "../lib/useSeo";
 
-function BoardPage() {
+// 公開の再生画面 (/play): キュー制御(シークガード・投票による短縮・終了時の
+// 自動送りなど)には一切関与しない閲覧用プレイヤー(RequestSidePlayer)に、
+// リクエストフォームといいね/bad投票を添えた画面。中身のデータ・操作は
+// BoardPage(/)と同じ useRequestQueue を共有している。
+function PlayPage() {
   useSeo(
-    "動画リクエストキュー",
-    "YouTube・ニコニコ動画・Vimeoの動画をみんなでリクエストして再生できる視聴者参加型のキューサービス。いいね・bad投票でリクエストの再生順が変わります。",
-    "/",
+    "再生 | 動画リクエストキュー",
+    "現在再生中の動画をその場で見ながら、いいね・bad投票やリクエストができる再生画面です。",
+    "/play",
   );
 
   const {
+    requests,
+    requestsLoaded,
     cancelVoteThreshold,
     cancelVoteTiers,
     likePriorityThreshold,
@@ -42,30 +49,25 @@ function BoardPage() {
     handleDelete,
     handleVoteCancel,
     handleLike,
-  } = useRequestQueue("board");
+  } = useRequestQueue("play");
 
   return (
     <Box sx={{ minHeight: "100%", bgcolor: "background.default" }}>
       <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Toolbar sx={{ px: { xs: 2, sm: 3 }, gap: 1 }}>
-          <YouTubeIcon color="primary" sx={{ mr: 1.5 }} fontSize="large" />
-          <Typography
-            variant="h6"
-            component="h1"
-            noWrap
-            sx={{ fontSize: { xs: "1.05rem", sm: "1.25rem" }, flexGrow: 1, minWidth: 0 }}
-          >
-            動画リクエストキュー
+          <PlayCircleIcon color="primary" sx={{ mr: 1.5 }} fontSize="large" />
+          <Typography variant="h6" component="h1" noWrap sx={{ flexGrow: 1, minWidth: 0 }}>
+            再生
           </Typography>
           <Stack direction="row" spacing={0.5}>
             <Button
               component={RouterLink}
-              to="/play"
+              to="/"
               size="small"
-              startIcon={<PlayCircleIcon />}
+              startIcon={<ArrowBackIcon />}
               sx={{ whiteSpace: "nowrap" }}
             >
-              再生
+              トップ
             </Button>
             <Button
               component={RouterLink}
@@ -94,16 +96,8 @@ function BoardPage() {
 
       <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1.5, sm: 3 } }}>
         <Stack spacing={3}>
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ whiteSpace: "pre-line" }}
-          >
-            {"0,6,9,12,15,18,21時は1時間半リクエスト早送りタイムです。\n" +
-              "荒し対策のため操作が頻繁な場合自動BANされます。BANされるとリクエストが削除されます。\n" +
-              "自動BANは特定のタイミングで解除されます。"}
-          </Typography>
           <RequestForm onSubmit={handleCreate} />
+          {requestsLoaded && <RequestSidePlayer requests={requests} />}
           <NowPlaying
             nowPlaying={nowPlaying}
             cancelVoteTiers={cancelVoteTiers}
@@ -148,4 +142,4 @@ function BoardPage() {
   );
 }
 
-export default BoardPage;
+export default PlayPage;
