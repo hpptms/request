@@ -32,6 +32,18 @@ const DEFAULT_CANCEL_VOTE_TIERS: CancelVoteTier[] = [
   { votes: 20, capSeconds: 30 },
 ];
 const SHORTENED_PLAYBACK_SECONDS = 60; // 1:00
+// finishRequest's ErrTooSoon after a *natural* end is usually just a hair's
+// breadth short of the floor — most visibly during backlog fast-forward,
+// where store.playbackFloorLocked relaxes the floor down to the video's own
+// DurationSeconds specifically so it's accepted on this first natural end;
+// a few seconds of client/server clock or network skew can still land just
+// under that exact line. Retrying quietly a few times first (player left
+// alone, nothing visibly restarts) absorbs that without the viewer ever
+// seeing a replay; only once these are exhausted does advanceQueue fall
+// back to actually looping the video to fill a floor that's genuinely much
+// longer than it (see advanceQueue's own comment).
+const ENDED_RETRY_DELAY_MS = 400;
+const ENDED_MAX_QUICK_RETRIES = 5;
 // Non-YouTube platforms (niconico/vimeo) have no ended/error event this
 // screen can listen for, so their queue advance is a plain timer instead:
 // NON_YOUTUBE_DEFAULT_DURATION_SECONDS when the platform didn't report a
@@ -578,19 +590,26 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
 
     const finishedRequestId = currentRequestIdRef.current;
     if (finishedRequestId) {
-      finishRequest(finishedRequestId)
-        .then(() => {
-          loadedVideoIdRef.current = null;
-          currentRequestIdRef.current = null;
-          playerRef.current?.stopVideo();
-          refresh();
-        })
-        .catch(() => {
-          endedHandledRef.current = false;
-          resetSeekGuard();
-          playerRef.current?.seekTo(0, true);
-          playerRef.current?.playVideo();
-        });
+      const attemptFinish = (attempt: number) => {
+        finishRequest(finishedRequestId)
+          .then(() => {
+            loadedVideoIdRef.current = null;
+            currentRequestIdRef.current = null;
+            playerRef.current?.stopVideo();
+            refresh();
+          })
+          .catch(() => {
+            if (attempt < ENDED_MAX_QUICK_RETRIES) {
+              window.setTimeout(() => attemptFinish(attempt + 1), ENDED_RETRY_DELAY_MS);
+              return;
+            }
+            endedHandledRef.current = false;
+            resetSeekGuard();
+            playerRef.current?.seekTo(0, true);
+            playerRef.current?.playVideo();
+          });
+      };
+      attemptFinish(0);
       return;
     }
 
