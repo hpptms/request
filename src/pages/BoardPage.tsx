@@ -17,6 +17,7 @@ import { api } from "../api";
 import { NowPlaying } from "../components/NowPlaying";
 import { QueueList } from "../components/QueueList";
 import { RequestForm } from "../components/RequestForm";
+import { RequestSidePlayer } from "../components/RequestSidePlayer";
 import { trackEvent } from "../lib/analytics";
 import { markMyRequest } from "../lib/myRequestStorage";
 import { useSeo } from "../lib/useSeo";
@@ -42,6 +43,11 @@ function BoardPage() {
   );
 
   const [requests, setRequests] = useState<VideoRequest[]>([]);
+  // Distinct from requests.length === 0: RequestSidePlayer only mounts once
+  // this is true, so its own "seed on first poll" new-request-toast logic
+  // (see that component) sees the real initial backlog instead of the
+  // transient [] this state starts life as.
+  const [requestsLoaded, setRequestsLoaded] = useState(false);
   const [cancelVoteThreshold, setCancelVoteThreshold] = useState(DEFAULT_CANCEL_VOTE_THRESHOLD);
   const [cancelVoteTiers, setCancelVoteTiers] = useState<CancelVoteTier[]>(DEFAULT_CANCEL_VOTE_TIERS);
   const [likePriorityThreshold, setLikePriorityThreshold] = useState(DEFAULT_LIKE_PRIORITY_THRESHOLD);
@@ -52,6 +58,7 @@ function BoardPage() {
     try {
       const data = await api.listRequests();
       setRequests(data);
+      setRequestsLoaded(true);
     } catch {
       // Silently keep the last known state; the next poll will retry.
     }
@@ -209,6 +216,7 @@ function BoardPage() {
               "自動BANは特定のタイミングで解除されます。"}
           </Typography>
           <RequestForm onSubmit={handleCreate} />
+          {requestsLoaded && <RequestSidePlayer requests={requests} />}
           <NowPlaying
             nowPlaying={nowPlaying}
             cancelVoteTiers={cancelVoteTiers.length > 0 ? cancelVoteTiers : DEFAULT_CANCEL_VOTE_TIERS}
