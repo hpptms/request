@@ -20,9 +20,10 @@ import BlockIcon from "@mui/icons-material/Block";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
+import VpnLockIcon from "@mui/icons-material/VpnLock";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { api } from "../api";
-import type { AdminVideoRequest, BannedIP } from "../types";
+import type { AdminVideoRequest, BannedIP, SuspiciousFingerprint } from "../types";
 
 // この件数以上のキャンセル投票(BAD投票)がその送信元IPのリクエスト全体で
 // 累積していたら「要注意ユーザー」として警告表示する。CancelVoteThreshold
@@ -42,6 +43,7 @@ const STATUS_LABELS: Record<string, string> = {
 function AdminBansPage() {
   const [requests, setRequests] = useState<AdminVideoRequest[]>([]);
   const [bans, setBans] = useState<BannedIP[]>([]);
+  const [suspiciousFingerprints, setSuspiciousFingerprints] = useState<SuspiciousFingerprint[]>([]);
   const [manualIP, setManualIP] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   // Which flagged IP's request history is currently expanded (see
@@ -50,9 +52,14 @@ function AdminBansPage() {
 
   const refresh = useCallback(async () => {
     try {
-      const [requestsData, bansData] = await Promise.all([api.adminListRequests(), api.adminListBans()]);
+      const [requestsData, bansData, fingerprintsData] = await Promise.all([
+        api.adminListRequests(),
+        api.adminListBans(),
+        api.adminListSuspiciousFingerprints(),
+      ]);
       setRequests(requestsData);
       setBans(bansData);
+      setSuspiciousFingerprints(fingerprintsData);
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "取得に失敗しました");
     }
@@ -268,6 +275,56 @@ function AdminBansPage() {
                   </Collapse>
                   {expandedIP === u.ip && i < suspiciousUsers.length - 1 && <Divider />}
                 </Box>
+              ))}
+            </List>
+          </Paper>
+        </Box>
+      )}
+
+      {suspiciousFingerprints.length > 0 && (
+        <Box>
+          <Typography variant="h6" sx={{ mb: 1.5 }}>
+            プロクシっぽいユーザー ({suspiciousFingerprints.length})
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            同じ端末の特徴を持ちながら、短時間に複数の異なるIPアドレスからアクセスしています。プロクシ/VPNでIPを切り替えながら多重にリクエストしている可能性があります。ネットワークの切り替え(Wi-Fi/モバイル回線など)で誤検知することもあるため、内容を確認した上で手動でBANしてください。
+          </Typography>
+          <Paper elevation={2}>
+            <List disablePadding>
+              {suspiciousFingerprints.map((f, i) => (
+                <ListItem key={f.fingerprint} divider={i < suspiciousFingerprints.length - 1} sx={{ alignItems: "flex-start" }}>
+                  <ListItemText
+                    primary={
+                      <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                        <VpnLockIcon color="warning" fontSize="small" />
+                        <span>疑わしい端末 (IP {f.ips.length}件)</span>
+                      </Stack>
+                    }
+                    secondary={
+                      <Stack spacing={1} sx={{ mt: 1 }}>
+                        <Typography variant="caption" color="text.secondary">
+                          最終検知: {new Date(f.lastSeen).toLocaleString("ja-JP")}
+                        </Typography>
+                        <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
+                          {f.ips.map((ip) =>
+                            bannedIPs.has(ip) ? (
+                              <Chip key={ip} label={`${ip} (BAN中)`} color="error" size="small" />
+                            ) : (
+                              <Chip
+                                key={ip}
+                                label={ip}
+                                size="small"
+                                icon={<BlockIcon fontSize="small" />}
+                                onClick={() => handleBan(ip)}
+                                clickable
+                              />
+                            ),
+                          )}
+                        </Stack>
+                      </Stack>
+                    }
+                  />
+                </ListItem>
               ))}
             </List>
           </Paper>

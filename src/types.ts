@@ -97,6 +97,18 @@ export interface BannedIP {
   reason: string;
 }
 
+// A device fingerprint (backend/internal/fingerprint) currently sighted
+// from several distinct IPs in a short span — a heuristic for one device
+// rotating through a proxy/VPN pool to look like many visitors. Shown on
+// the admin BAN page's プロクシっぽいユーザー section for the admin to
+// review and ban some or all of `ips` by hand; nothing here is ever banned
+// automatically.
+export interface SuspiciousFingerprint {
+  fingerprint: string;
+  ips: string[];
+  lastSeen: string;
+}
+
 // A "semi-banned" keyword (see backend/internal/keywordlimit): unlike
 // BannedKeyword-style outright bans, a title/channel-title match here is
 // perfectly allowed content — it just can't have more than limit requests
