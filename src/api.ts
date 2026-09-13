@@ -13,8 +13,10 @@ import type {
   PlaylistUpdateResult,
   SearchResult,
   StatsSummary,
+  SuspiciousFingerprint,
   VideoRequest,
 } from "./types";
+import { getDeviceFingerprint } from "./lib/deviceFingerprint";
 
 // Relative by default: works both behind the Docker/nginx reverse proxy and
 // with the Vite dev server proxy configured in vite.config.ts. Override via
@@ -23,7 +25,13 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      // See deviceFingerprint.ts / backend/internal/fingerprint: a
+      // heuristic signal only, read solely by the admin BAN page — sent on
+      // every call for simplicity, harmless on endpoints that ignore it.
+      "X-Device-Fingerprint": getDeviceFingerprint(),
+    },
     // Needed so the admin session cookie is sent/stored now that the API is
     // a separate origin (api.request.tokyo) from the frontend; harmless
     // no-op for same-origin dev (npm run dev / Docker preview).
@@ -134,6 +142,12 @@ export const api = {
 
   adminUnbanIP: (ip: string) =>
     request<void>(`/admin/bans/${encodeURIComponent(ip)}`, { method: "DELETE" }),
+
+  // Device fingerprints currently sighted from several distinct IPs in a
+  // short span — a heuristic for someone rotating through a proxy/VPN pool
+  // (see backend/internal/fingerprint). Never banned automatically.
+  adminListSuspiciousFingerprints: () =>
+    request<SuspiciousFingerprint[]>("/admin/suspicious-fingerprints"),
 
   adminListKeywords: () => request<string[]>("/admin/keywords"),
 
