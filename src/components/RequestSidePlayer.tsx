@@ -1,7 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Stack from "@mui/material/Stack";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
+import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { PlayerOverlays } from "./PlayerOverlays";
+import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
+import { formatDuration } from "../lib/formatDuration";
+import { hasLiked, markLiked } from "../lib/likeStorage";
 import {
   DURATION_BADGE_DELAY_MS,
   DURATION_BADGE_VISIBLE_MS,
@@ -9,7 +17,16 @@ import {
   NOW_PLAYING_INTRO_MS,
   VOTE_STATUS_VISIBLE_MS,
 } from "../lib/playerOverlayTiming";
-import type { VideoRequest } from "../types";
+import type { CancelVoteTier, VideoRequest } from "../types";
+
+interface Props {
+  requests: VideoRequest[];
+  likePriorityThreshold: number;
+  // Ordered by ascending votes — see NowPlaying's identical use.
+  cancelVoteTiers: CancelVoteTier[];
+  onLike: (id: string) => Promise<void>;
+  onVoteCancel: (id: string) => Promise<void>;
+}
 
 // The public request board's own video screen: shows the same title/duration
 // card, new-request toast and like/bad badges as the admin ViewerPage
@@ -21,7 +38,7 @@ import type { VideoRequest } from "../types";
 // ViewerPage's OBS/admin screen) since this loads on every visitor's own
 // device — forcing sound-on video for everyone who opens the board page
 // would be intrusive, and most browsers would just block it anyway.
-export function RequestSidePlayer({ requests }: { requests: VideoRequest[] }) {
+export function RequestSidePlayer({ requests, likePriorityThreshold, cancelVoteTiers, onLike, onVoteCancel }: Props) {
   const [introVisible, setIntroVisible] = useState(false);
   const [introContent, setIntroContent] = useState<{ title: string; channelTitle: string } | null>(null);
   const [durationBadgeVisible, setDurationBadgeVisible] = useState(false);
@@ -45,6 +62,38 @@ export function RequestSidePlayer({ requests }: { requests: VideoRequest[] }) {
   const voteStatusHideTimerRef = useRef<number | null>(null);
 
   const nowPlaying = requests.find((r) => r.status === "playing") ?? null;
+
+  // Like/bad buttons overlaid on the video itself — same storage-backed
+  // "already voted" tracking as NowPlaying/QueueList's buttons.
+  const [liking, setLiking] = useState(false);
+  const [voting, setVoting] = useState(false);
+  const liked = nowPlaying !== null && hasLiked(nowPlaying.id);
+  const voted = nowPlaying !== null && hasVoted(nowPlaying.id);
+  const nextTier = nowPlaying
+    ? (cancelVoteTiers.find((tier) => nowPlaying.cancelVotes < tier.votes) ?? cancelVoteTiers[cancelVoteTiers.length - 1])
+    : null;
+
+  const handleLikeClick = async () => {
+    if (!nowPlaying) return;
+    setLiking(true);
+    try {
+      await onLike(nowPlaying.id);
+      markLiked(nowPlaying.id);
+    } finally {
+      setLiking(false);
+    }
+  };
+
+  const handleVoteClick = async () => {
+    if (!nowPlaying) return;
+    setVoting(true);
+    try {
+      await onVoteCancel(nowPlaying.id);
+      markVoted(nowPlaying.id);
+    } finally {
+      setVoting(false);
+    }
+  };
 
   const showVoteStatus = (cancelVotes: number, likes: number) => {
     if (voteStatusHideTimerRef.current !== null) window.clearTimeout(voteStatusHideTimerRef.current);
@@ -157,9 +206,11 @@ export function RequestSidePlayer({ requests }: { requests: VideoRequest[] }) {
       sx={{
         position: "relative",
         width: "100%",
-        aspectRatio: "16 / 9",
+        // Fills whatever the parent layout gives it (PlayPage sizes this to
+        // dominate the screen) instead of a fixed aspect ratio, matching how
+        // ViewerPage's own OBS video box is sized.
+        height: { xs: "56vh", md: "100%" },
         bgcolor: "black",
-        borderRadius: 2,
         overflow: "hidden",
       }}
     >
@@ -187,6 +238,64 @@ export function RequestSidePlayer({ requests }: { requests: VideoRequest[] }) {
         voteStatusVisible={voteStatusVisible}
         voteStatusContent={voteStatusContent}
       />
+
+      {/* Vertically centered on the right edge (Shorts/Reels-style reaction
+          rail) so these permanent controls never collide with the title
+          card (bottom-center) or the toast/vote-status popups (top-center) —
+          both of which can grow fairly wide/tall on top of a phone-sized
+          video. */}
+      {nowPlaying && (
+        <Stack
+          direction="column"
+          spacing={1.5}
+          sx={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", zIndex: 1 }}
+        >
+          <Tooltip title={liked ? "いいね済み" : `いいね (${nowPlaying.likes}/${likePriorityThreshold}で優先再生)`}>
+            <span>
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<ThumbUpAltIcon />}
+                onClick={handleLikeClick}
+                disabled={liking || liked}
+                sx={{
+                  bgcolor: liked ? "primary.main" : "rgba(0,0,0,0.6)",
+                  color: "white",
+                  "&:hover": { bgcolor: liked ? "primary.main" : "rgba(0,0,0,0.75)" },
+                  "&.Mui-disabled": { color: "white", opacity: liked ? 1 : 0.5 },
+                }}
+              >
+                {nowPlaying.likes}
+              </Button>
+            </span>
+          </Tooltip>
+          <Tooltip
+            title={
+              voted
+                ? "投票済み"
+                : `${nextTier ? formatDuration(nextTier.capSeconds) : ""}に短縮へ投票 (${nowPlaying.cancelVotes}/${nextTier?.votes ?? 0})`
+            }
+          >
+            <span>
+              <Button
+                variant="contained"
+                size="small"
+                color="error"
+                startIcon={<ThumbDownAltIcon />}
+                onClick={handleVoteClick}
+                disabled={voting || voted}
+                sx={{
+                  bgcolor: voted ? "rgba(255,255,255,0.2)" : undefined,
+                  color: "white",
+                  "&.Mui-disabled": { color: "white", opacity: voted ? 1 : 0.5 },
+                }}
+              >
+                {nowPlaying.cancelVotes}
+              </Button>
+            </span>
+          </Tooltip>
+        </Stack>
+      )}
     </Box>
   );
 }

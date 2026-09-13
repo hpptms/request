@@ -2,7 +2,6 @@ import AppBar from "@mui/material/AppBar";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Container from "@mui/material/Container";
 import Snackbar from "@mui/material/Snackbar";
 import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
@@ -13,7 +12,6 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import ShieldIcon from "@mui/icons-material/Shield";
 import { Link as RouterLink } from "react-router-dom";
-import { NowPlaying } from "../components/NowPlaying";
 import { QueueList } from "../components/QueueList";
 import { RequestForm } from "../components/RequestForm";
 import { RequestSidePlayer } from "../components/RequestSidePlayer";
@@ -21,9 +19,11 @@ import { useRequestQueue } from "../lib/useRequestQueue";
 import { useSeo } from "../lib/useSeo";
 
 // 公開の再生画面 (/play): キュー制御(シークガード・投票による短縮・終了時の
-// 自動送りなど)には一切関与しない閲覧用プレイヤー(RequestSidePlayer)に、
-// リクエストフォームといいね/bad投票を添えた画面。中身のデータ・操作は
-// BoardPage(/)と同じ useRequestQueue を共有している。
+// 自動送りなど)には一切関与しない閲覧用プレイヤー(RequestSidePlayer)を
+// 画面の主役として最大限大きく表示し、右(狭い画面では下)に待機中の
+// キュー、下部にリクエスト投稿欄を置く。いいね/bad投票は動画の上に
+// 直接重ねたボタンから行う。中身のデータ・操作はBoardPage(/)と同じ
+// useRequestQueue を共有している。
 function PlayPage() {
   useSeo(
     "再生 | 動画リクエストキュー",
@@ -40,20 +40,18 @@ function PlayPage() {
     errorMessage,
     setErrorMessage,
     isAdmin,
-    nowPlaying,
     pending,
     handleCreate,
     handleCancelMine,
     handlePlay,
-    handleDone,
     handleDelete,
     handleVoteCancel,
     handleLike,
   } = useRequestQueue("play");
 
   return (
-    <Box sx={{ minHeight: "100%", bgcolor: "background.default" }}>
-      <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: 1, borderColor: "divider" }}>
+    <Box sx={{ height: "100dvh", display: "flex", flexDirection: "column", bgcolor: "background.default" }}>
+      <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: 1, borderColor: "divider", flexShrink: 0 }}>
         <Toolbar sx={{ px: { xs: 2, sm: 3 }, gap: 1 }}>
           <PlayCircleIcon color="primary" sx={{ mr: 1.5 }} fontSize="large" />
           <Typography variant="h6" component="h1" noWrap sx={{ flexGrow: 1, minWidth: 0 }}>
@@ -74,7 +72,7 @@ function PlayPage() {
               to="/stats"
               size="small"
               startIcon={<LeaderboardIcon />}
-              sx={{ whiteSpace: "nowrap" }}
+              sx={{ whiteSpace: "nowrap", display: { xs: "none", sm: "inline-flex" } }}
             >
               集計
             </Button>
@@ -86,7 +84,7 @@ function PlayPage() {
               size="small"
               startIcon={<ShieldIcon />}
               endIcon={<OpenInNewIcon />}
-              sx={{ whiteSpace: "nowrap" }}
+              sx={{ whiteSpace: "nowrap", display: { xs: "none", sm: "inline-flex" } }}
             >
               管理者
             </Button>
@@ -94,39 +92,63 @@ function PlayPage() {
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1.5, sm: 3 } }}>
-        <Stack spacing={3}>
-          <RequestForm onSubmit={handleCreate} />
-          {requestsLoaded && <RequestSidePlayer requests={requests} />}
-          <NowPlaying
-            nowPlaying={nowPlaying}
-            cancelVoteTiers={cancelVoteTiers}
+      {/* Video (maximized) + queue: side by side from md up, stacked (video
+          on top, queue scrolling below it) on narrower screens where there's
+          no room for a real sidebar. */}
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
+          overflowY: { xs: "auto", md: "hidden" },
+        }}
+      >
+        <Box sx={{ flex: { md: "3 1 0%" }, minWidth: 0, flexShrink: 0 }}>
+          {requestsLoaded && (
+            <RequestSidePlayer
+              requests={requests}
+              likePriorityThreshold={likePriorityThreshold}
+              cancelVoteTiers={cancelVoteTiers}
+              onLike={handleLike}
+              onVoteCancel={handleVoteCancel}
+            />
+          )}
+        </Box>
+
+        <Box
+          sx={{
+            flex: { md: "1 1 340px" },
+            width: { md: 340 },
+            flexShrink: 0,
+            minHeight: 0,
+            display: "flex",
+            flexDirection: "column",
+            overflowY: { md: "auto" },
+            p: { xs: 1.5, sm: 2 },
+          }}
+        >
+          <Typography variant="subtitle1" sx={{ mb: 1 }}>
+            待機中のリクエスト {pending.length > 0 && `(${pending.length})`}
+          </Typography>
+          <QueueList
+            requests={pending}
+            cancelVoteThreshold={cancelVoteThreshold}
             likePriorityThreshold={likePriorityThreshold}
             isAdmin={isAdmin}
-            onMarkDone={handleDone}
+            onPlay={handlePlay}
+            onDelete={handleDelete}
             onVoteCancel={handleVoteCancel}
             onLike={handleLike}
             onCancelMine={handleCancelMine}
           />
+        </Box>
+      </Box>
 
-          <Box>
-            <Typography variant="h6" sx={{ mb: 1.5 }}>
-              待機中のリクエスト {pending.length > 0 && `(${pending.length})`}
-            </Typography>
-            <QueueList
-              requests={pending}
-              cancelVoteThreshold={cancelVoteThreshold}
-              likePriorityThreshold={likePriorityThreshold}
-              isAdmin={isAdmin}
-              onPlay={handlePlay}
-              onDelete={handleDelete}
-              onVoteCancel={handleVoteCancel}
-              onLike={handleLike}
-              onCancelMine={handleCancelMine}
-            />
-          </Box>
-        </Stack>
-      </Container>
+      {/* Request form, pinned to the bottom of the screen. */}
+      <Box sx={{ flexShrink: 0, borderTop: 1, borderColor: "divider", bgcolor: "background.paper", p: { xs: 1.5, sm: 2 } }}>
+        <RequestForm onSubmit={handleCreate} />
+      </Box>
 
       <Snackbar
         open={errorMessage !== null}
