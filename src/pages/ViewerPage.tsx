@@ -1058,8 +1058,14 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
                   label={newRequestNotice ? `🎵 新しいリクエスト: ${newRequestNotice.title}` : ""}
                   sx={{
                     maxWidth: "90%",
+                    height: 64,
+                    fontSize: "1.625rem",
                     fontWeight: 600,
-                    "& .MuiChip-label": { overflow: "hidden", textOverflow: "ellipsis" },
+                    "& .MuiChip-label": {
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      px: 2,
+                    },
                   }}
                 />
               </Slide>
