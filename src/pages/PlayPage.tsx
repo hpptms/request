@@ -2,6 +2,7 @@ import AppBar from "@mui/material/AppBar";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Container from "@mui/material/Container";
 import Snackbar from "@mui/material/Snackbar";
 import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
@@ -50,117 +51,130 @@ function PlayPage() {
   } = useRequestQueue("play");
 
   return (
-    <Box sx={{ height: "100dvh", display: "flex", flexDirection: "column", bgcolor: "background.default" }}>
-      <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: 1, borderColor: "divider", flexShrink: 0 }}>
-        <Toolbar sx={{ px: { xs: 2, sm: 3 }, gap: 1 }}>
-          <PlayCircleIcon color="primary" sx={{ mr: 1.5 }} fontSize="large" />
-          <Typography variant="h6" component="h1" noWrap sx={{ flexGrow: 1, minWidth: 0 }}>
-            再生
-          </Typography>
-          <Stack direction="row" spacing={0.5}>
-            <Button
-              component={RouterLink}
-              to="/"
-              size="small"
-              startIcon={<ArrowBackIcon />}
-              sx={{ whiteSpace: "nowrap" }}
-            >
-              トップ
-            </Button>
-            <Button
-              component={RouterLink}
-              to="/stats"
-              size="small"
-              startIcon={<LeaderboardIcon />}
-              sx={{ whiteSpace: "nowrap", display: { xs: "none", sm: "inline-flex" } }}
-            >
-              集計
-            </Button>
-            <Button
-              component="a"
-              href="/admin"
-              target="_blank"
-              rel="noopener"
-              size="small"
-              startIcon={<ShieldIcon />}
-              endIcon={<OpenInNewIcon />}
-              sx={{ whiteSpace: "nowrap", display: { xs: "none", sm: "inline-flex" } }}
-            >
-              管理者
-            </Button>
-          </Stack>
-        </Toolbar>
-      </AppBar>
+    <>
+      <Box sx={{ height: "100dvh", display: "flex", flexDirection: "column", bgcolor: "background.default" }}>
+        <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: 1, borderColor: "divider", flexShrink: 0 }}>
+          <Toolbar sx={{ px: { xs: 2, sm: 3 }, gap: 1 }}>
+            <PlayCircleIcon color="primary" sx={{ mr: 1.5 }} fontSize="large" />
+            <Typography variant="h6" component="h1" noWrap sx={{ flexGrow: 1, minWidth: 0 }}>
+              再生
+            </Typography>
+            <Stack direction="row" spacing={0.5}>
+              <Button
+                component={RouterLink}
+                to="/"
+                size="small"
+                startIcon={<ArrowBackIcon />}
+                sx={{ whiteSpace: "nowrap" }}
+              >
+                トップ
+              </Button>
+              <Button
+                component={RouterLink}
+                to="/stats"
+                size="small"
+                startIcon={<LeaderboardIcon />}
+                sx={{ whiteSpace: "nowrap", display: { xs: "none", sm: "inline-flex" } }}
+              >
+                集計
+              </Button>
+              <Button
+                component="a"
+                href="/admin"
+                target="_blank"
+                rel="noopener"
+                size="small"
+                startIcon={<ShieldIcon />}
+                endIcon={<OpenInNewIcon />}
+                sx={{ whiteSpace: "nowrap", display: { xs: "none", sm: "inline-flex" } }}
+              >
+                管理者
+              </Button>
+            </Stack>
+          </Toolbar>
+        </AppBar>
 
-      {/* Video (maximized) + queue: side by side from md up, stacked (video
-          on top, queue scrolling below it) on narrower screens where there's
-          no room for a real sidebar. */}
-      <Box
-        sx={{
-          flex: 1,
-          minHeight: 0,
-          display: "flex",
-          flexDirection: { xs: "column", md: "row" },
-          overflowY: { xs: "auto", md: "hidden" },
-        }}
-      >
-        <Box sx={{ flex: { md: "3 1 0%" }, minWidth: 0, flexShrink: 0 }}>
-          {requestsLoaded && (
-            <RequestSidePlayer
-              requests={requests}
-              likePriorityThreshold={likePriorityThreshold}
-              cancelVoteTiers={cancelVoteTiers}
-              onLike={handleLike}
-              onVoteCancel={handleVoteCancel}
-            />
-          )}
-        </Box>
-
+        {/* Video (maximized) + queue: side by side from md up, stacked (video
+            on top, queue scrolling below it) on narrower screens where there's
+            no room for a real sidebar. */}
         <Box
           sx={{
-            flex: { md: "1 1 340px" },
-            width: { md: 340 },
-            flexShrink: 0,
+            flex: 1,
             minHeight: 0,
             display: "flex",
-            flexDirection: "column",
-            overflowY: { md: "auto" },
-            p: { xs: 1.5, sm: 2 },
+            flexDirection: { xs: "column", md: "row" },
+            overflowY: { xs: "auto", md: "hidden" },
           }}
         >
-          <Typography variant="subtitle1" sx={{ mb: 1 }}>
-            待機中のリクエスト {pending.length > 0 && `(${pending.length})`}
-          </Typography>
-          <QueueList
-            requests={pending}
-            cancelVoteThreshold={cancelVoteThreshold}
-            likePriorityThreshold={likePriorityThreshold}
-            isAdmin={isAdmin}
-            onPlay={handlePlay}
-            onDelete={handleDelete}
-            onVoteCancel={handleVoteCancel}
-            onLike={handleLike}
-            onCancelMine={handleCancelMine}
-          />
+          <Box sx={{ flex: { md: "3 1 0%" }, minWidth: 0, flexShrink: 0 }}>
+            {requestsLoaded && (
+              <RequestSidePlayer
+                requests={requests}
+                likePriorityThreshold={likePriorityThreshold}
+                cancelVoteTiers={cancelVoteTiers}
+                onLike={handleLike}
+                onVoteCancel={handleVoteCancel}
+              />
+            )}
+          </Box>
+
+          <Box
+            sx={{
+              flex: { md: "1 1 340px" },
+              width: { md: 340 },
+              flexShrink: 0,
+              minHeight: 0,
+              display: "flex",
+              flexDirection: "column",
+              overflowY: { md: "auto" },
+              p: { xs: 1.5, sm: 2 },
+            }}
+          >
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
+              待機中のリクエスト {pending.length > 0 && `(${pending.length})`}
+            </Typography>
+            <QueueList
+              requests={pending}
+              cancelVoteThreshold={cancelVoteThreshold}
+              likePriorityThreshold={likePriorityThreshold}
+              isAdmin={isAdmin}
+              onPlay={handlePlay}
+              onDelete={handleDelete}
+              onVoteCancel={handleVoteCancel}
+              onLike={handleLike}
+              onCancelMine={handleCancelMine}
+            />
+          </Box>
         </Box>
+
+        {/* Request form, pinned to the bottom of the screen. */}
+        <Box sx={{ flexShrink: 0, borderTop: 1, borderColor: "divider", bgcolor: "background.paper", p: { xs: 1.5, sm: 2 } }}>
+          <RequestForm onSubmit={handleCreate} />
+        </Box>
+
+        <Snackbar
+          open={errorMessage !== null}
+          autoHideDuration={4000}
+          onClose={() => setErrorMessage(null)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        >
+          <Alert severity="error" onClose={() => setErrorMessage(null)}>
+            {errorMessage}
+          </Alert>
+        </Snackbar>
       </Box>
 
-      {/* Request form, pinned to the bottom of the screen. */}
-      <Box sx={{ flexShrink: 0, borderTop: 1, borderColor: "divider", bgcolor: "background.paper", p: { xs: 1.5, sm: 2 } }}>
-        <RequestForm onSubmit={handleCreate} />
-      </Box>
-
-      <Snackbar
-        open={errorMessage !== null}
-        autoHideDuration={4000}
-        onClose={() => setErrorMessage(null)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert severity="error" onClose={() => setErrorMessage(null)}>
-          {errorMessage}
-        </Alert>
-      </Snackbar>
-    </Box>
+      {/* Below the fold of the fixed-height screen above: not needed to use
+          the page, but gives crawlers (and anyone who scrolls) real on-page
+          text describing what this screen does, matching useSeo's
+          description instead of leaving this page's only text content as
+          nav labels and dynamically-loaded queue titles. */}
+      <Container maxWidth="sm" sx={{ py: { xs: 3, sm: 4 }, px: { xs: 2, sm: 3 } }}>
+        <Typography variant="body2" color="text.secondary">
+          今まさに再生中の動画をその場で見ながら、いいね・bad投票で再生順に反映したり、新しい動画をリクエストできます。待機中のリクエストもここから確認・投票できます。
+        </Typography>
+      </Container>
+    </>
   );
 }
 
