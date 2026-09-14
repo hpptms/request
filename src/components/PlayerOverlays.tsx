@@ -19,6 +19,11 @@ interface Props {
   durationBadgeVisible: boolean;
   durationBadgeSeconds: number | null;
   // New-request toast: fires once per request as it's added to the queue.
+  // newRequestNotice only ever updates when showing a new one (see
+  // introContent above) — newRequestVisible alone drives the Slide in/out,
+  // so the exit animation keeps the title/color it just displayed instead
+  // of flashing back to the default color as content goes null mid-fade.
+  newRequestVisible: boolean;
   newRequestNotice: { id: string; title: string; videoId: string } | null;
   // Vote-status badge (😨 cancel votes / 😊 likes) for whatever's playing.
   voteStatusVisible: boolean;
@@ -36,6 +41,7 @@ export function PlayerOverlays({
   introContent,
   durationBadgeVisible,
   durationBadgeSeconds,
+  newRequestVisible,
   newRequestNotice,
   voteStatusVisible,
   voteStatusContent,
@@ -118,7 +124,7 @@ export function PlayerOverlays({
         }}
       >
         <Slide
-          in={newRequestNotice !== null}
+          in={newRequestVisible}
           direction="down"
           timeout={{ enter: 300, exit: 200 }}
           style={{ pointerEvents: "none" }}
