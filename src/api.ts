@@ -15,6 +15,7 @@ import type {
   StatsSummary,
   SuspiciousFingerprint,
   VideoRequest,
+  VoteOnlyVoter,
 } from "./types";
 import { getDeviceFingerprint } from "./lib/deviceFingerprint";
 
@@ -148,6 +149,10 @@ export const api = {
   // (see backend/internal/fingerprint). Never banned automatically.
   adminListSuspiciousFingerprints: () =>
     request<SuspiciousFingerprint[]>("/admin/suspicious-fingerprints"),
+
+  // IPs that have cast a cancel vote (BAD投票) but never submitted a
+  // request themselves. Never banned automatically.
+  adminListVoteOnlyVoters: () => request<VoteOnlyVoter[]>("/admin/vote-only-voters"),
 
   adminListKeywords: () => request<string[]>("/admin/keywords"),
 
