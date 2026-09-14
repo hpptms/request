@@ -92,23 +92,40 @@ function AdminBansPage() {
   const [expandedIP, setExpandedIP] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    try {
-      const [requestsData, bansData, fingerprintsData, voteOnlyVotersData, recentBadVotersData] =
-        await Promise.all([
-          api.adminListRequests(),
-          api.adminListBans(),
-          api.adminListSuspiciousFingerprints(),
-          api.adminListVoteOnlyVoters(),
-          api.adminListRecentBadVoters(),
-        ]);
-      setRequests(requestsData);
-      setBans(bansData);
-      setSuspiciousFingerprints(fingerprintsData);
-      setVoteOnlyVoters(voteOnlyVotersData);
-      setRecentBadVoters(recentBadVotersData);
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : "取得に失敗しました");
-    }
+    // Promise.allSettled rather than Promise.all: these calls are independent,
+    // and the backend (a separately-deployed, manually-updated service — see
+    // CLAUDE.md) can briefly lag behind the frontend after a deploy, e.g.
+    // missing a just-added endpoint like recent-bad-voters. One 404 shouldn't
+    // blank out lists (BAN中のIP, 最近のリクエスト送信元, ...) that the
+    // backend can serve just fine.
+    const [requestsResult, bansResult, fingerprintsResult, voteOnlyVotersResult, recentBadVotersResult] =
+      await Promise.allSettled([
+        api.adminListRequests(),
+        api.adminListBans(),
+        api.adminListSuspiciousFingerprints(),
+        api.adminListVoteOnlyVoters(),
+        api.adminListRecentBadVoters(),
+      ]);
+    if (requestsResult.status === "fulfilled") setRequests(requestsResult.value);
+    if (bansResult.status === "fulfilled") setBans(bansResult.value);
+    if (fingerprintsResult.status === "fulfilled") setSuspiciousFingerprints(fingerprintsResult.value);
+    if (voteOnlyVotersResult.status === "fulfilled") setVoteOnlyVoters(voteOnlyVotersResult.value);
+    if (recentBadVotersResult.status === "fulfilled") setRecentBadVoters(recentBadVotersResult.value);
+
+    const firstFailure = [
+      requestsResult,
+      bansResult,
+      fingerprintsResult,
+      voteOnlyVotersResult,
+      recentBadVotersResult,
+    ].find((r): r is PromiseRejectedResult => r.status === "rejected");
+    setErrorMessage(
+      firstFailure
+        ? firstFailure.reason instanceof Error
+          ? firstFailure.reason.message
+          : "取得に失敗しました"
+        : null,
+    );
   }, []);
 
   useEffect(() => {
