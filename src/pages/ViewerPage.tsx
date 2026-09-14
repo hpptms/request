@@ -159,7 +159,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // when showing a new one — introVisible drives the Zoom pop in/out so the
   // exit animation still has the right title to fade away with.
   const [introVisible, setIntroVisible] = useState(false);
-  const [introContent, setIntroContent] = useState<{ title: string; channelTitle: string } | null>(null);
+  const [introContent, setIntroContent] = useState<{ title: string; channelTitle: string; videoId: string } | null>(null);
   // Duration badge, shown DURATION_BADGE_VISIBLE_MS starting
   // DURATION_BADGE_DELAY_MS after a video starts (same lagging-content
   // pattern as the intro card above).
@@ -167,7 +167,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   const [durationBadgeSeconds, setDurationBadgeSeconds] = useState<number | null>(null);
   // New-request toast (feature: notify every time someone adds a request).
   // One at a time, oldest first — see enqueueNewRequestNotice.
-  const [newRequestNotice, setNewRequestNotice] = useState<{ id: string; title: string } | null>(null);
+  const [newRequestNotice, setNewRequestNotice] = useState<{ id: string; title: string; videoId: string } | null>(null);
   // Vote-status badge (😨 cancel votes / 😊 likes) for the currently
   // playing real request: shown as soon as it starts if it already has any
   // votes, and again every time either count goes up while it's still
@@ -235,7 +235,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // enqueueNewRequestNotice). null after the very first poll seeds it, so
   // the existing backlog on page load doesn't fire a notice per request.
   const knownRequestIdsRef = useRef<Set<string> | null>(null);
-  const newRequestQueueRef = useRef<{ id: string; title: string }[]>([]);
+  const newRequestQueueRef = useRef<{ id: string; title: string; videoId: string }[]>([]);
   const newRequestTimerRef = useRef<number | null>(null);
   // Vote-status badge bookkeeping: the last counts shown for whichever
   // request this refers to, so the watcher effect can tell "just started
@@ -260,7 +260,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
         const known = knownRequestIdsRef.current;
         for (const r of data) {
           if (!known.has(r.id)) {
-            newRequestQueueRef.current.push({ id: r.id, title: r.title });
+            newRequestQueueRef.current.push({ id: r.id, title: r.title, videoId: r.videoId });
           }
         }
         knownRequestIdsRef.current = currentIds;
@@ -470,13 +470,13 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // the YouTube path can read playerRef.current.getDuration() at the
   // moment the badge is about to show — right after loadVideoById, the
   // player hasn't buffered enough to report it yet.
-  const startNowPlayingIntro = (title: string, channelTitle: string, getDurationSeconds: () => number | null) => {
+  const startNowPlayingIntro = (title: string, channelTitle: string, videoId: string, getDurationSeconds: () => number | null) => {
     if (introHideTimerRef.current !== null) window.clearTimeout(introHideTimerRef.current);
     if (durationBadgeShowTimerRef.current !== null) window.clearTimeout(durationBadgeShowTimerRef.current);
     if (durationBadgeHideTimerRef.current !== null) window.clearTimeout(durationBadgeHideTimerRef.current);
     setDurationBadgeVisible(false);
 
-    setIntroContent({ title, channelTitle });
+    setIntroContent({ title, channelTitle, videoId });
     setIntroVisible(true);
     introHideTimerRef.current = window.setTimeout(() => {
       setIntroVisible(false);
@@ -529,7 +529,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
       setFallbackNowPlayingId(track.videoId);
       resetSeekGuard(playlistPositionRef.current);
       playerRef.current?.loadVideoById({ videoId: track.videoId, startSeconds: playlistPositionRef.current });
-      startNowPlayingIntro(track.title, track.channelTitle, () => playerRef.current?.getDuration() ?? null);
+      startNowPlayingIntro(track.title, track.channelTitle, track.videoId, () => playerRef.current?.getDuration() ?? null);
       return;
     }
 
@@ -546,6 +546,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     startNowPlayingIntro(
       fallbackInfo?.title ?? "自動再生",
       fallbackInfo?.channelTitle ?? "",
+      videoId,
       () => playerRef.current?.getDuration() ?? null,
     );
   };
@@ -617,7 +618,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
         setFallbackNowPlayingId(track.videoId);
         resetSeekGuard();
         playerRef.current?.loadVideoById(track.videoId);
-        startNowPlayingIntro(track.title, track.channelTitle, () => playerRef.current?.getDuration() ?? null);
+        startNowPlayingIntro(track.title, track.channelTitle, track.videoId, () => playerRef.current?.getDuration() ?? null);
         return;
       }
       isPlaylistActiveRef.current = false;
@@ -633,6 +634,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     startNowPlayingIntro(
       fallbackInfo?.title ?? "自動再生",
       fallbackInfo?.channelTitle ?? "",
+      nextVideoId,
       () => playerRef.current?.getDuration() ?? null,
     );
   };
@@ -887,14 +889,14 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
         nonYouTubeTimerRef.current = window.setTimeout(() => {
           advanceQueue(api.finishRequest);
         }, timerSeconds * 1000);
-        startNowPlayingIntro(target.title, target.channelTitle, () => target.durationSeconds ?? null);
+        startNowPlayingIntro(target.title, target.channelTitle, target.videoId, () => target.durationSeconds ?? null);
         return;
       }
 
       setNonYouTubeEmbedUrl(null);
       resetSeekGuard();
       playerRef.current.loadVideoById(target.videoId);
-      startNowPlayingIntro(target.title, target.channelTitle, () => playerRef.current?.getDuration() ?? null);
+      startNowPlayingIntro(target.title, target.channelTitle, target.videoId, () => playerRef.current?.getDuration() ?? null);
       return;
     }
 
