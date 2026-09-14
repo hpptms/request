@@ -21,6 +21,7 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
+import TimerIcon from "@mui/icons-material/Timer";
 import VpnLockIcon from "@mui/icons-material/VpnLock";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { api } from "../api";
@@ -44,6 +45,37 @@ const STATUS_LABELS: Record<string, string> = {
   playing: "再生中",
   done: "再生済み",
 };
+
+// Two ban actions shown side by side wherever the admin can ban an IP from
+// this page: a permanent ban (解除するまで継続) and a 1-hour ban that
+// backend/internal/banlist.List.StartExpirySweep lifts automatically.
+// Rendered as a fragment (not wrapped in its own Stack) so callers can drop
+// it straight into their existing action Stack alongside other buttons
+// (expand, etc.).
+function BanButtons({
+  ip,
+  onBan,
+  size = "medium",
+}: {
+  ip: string;
+  onBan: (ip: string, temporary: boolean) => void;
+  size?: "small" | "medium";
+}) {
+  return (
+    <>
+      <Tooltip title="手動BAN(解除するまで継続)">
+        <IconButton edge="end" color="error" size={size} onClick={() => onBan(ip, false)}>
+          <BlockIcon fontSize={size} />
+        </IconButton>
+      </Tooltip>
+      <Tooltip title="1時間BAN(自動解除)">
+        <IconButton edge="end" color="warning" size={size} onClick={() => onBan(ip, true)}>
+          <TimerIcon fontSize={size} />
+        </IconButton>
+      </Tooltip>
+    </>
+  );
+}
 
 // BAN management screen (/admin, index route): ban/unban IPs by hand, and
 // ban directly from a recent requester's history.
@@ -87,9 +119,9 @@ function AdminBansPage() {
 
   const bannedIPs = new Set(bans.map((b) => b.ip));
 
-  const handleBan = async (ip: string) => {
+  const handleBan = async (ip: string, temporary = false) => {
     try {
-      await api.adminBanIP(ip);
+      await api.adminBanIP(ip, temporary);
       await refresh();
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "BANに失敗しました");
@@ -105,11 +137,10 @@ function AdminBansPage() {
     }
   };
 
-  const handleManualBan = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleManualBan = async (temporary: boolean) => {
     const ip = manualIP.trim();
     if (!ip) return;
-    await handleBan(ip);
+    await handleBan(ip, temporary);
     setManualIP("");
   };
 
@@ -174,7 +205,13 @@ function AdminBansPage() {
         <Typography variant="h6" gutterBottom>
           IPを指定してBAN
         </Typography>
-        <Box component="form" onSubmit={handleManualBan}>
+        <Box
+          component="form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleManualBan(false);
+          }}
+        >
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
             <TextField
               label="IPアドレス"
@@ -184,9 +221,20 @@ function AdminBansPage() {
               size="small"
               fullWidth
             />
-            <Button type="submit" variant="contained" color="error" startIcon={<BlockIcon />}>
-              BAN
-            </Button>
+            <Stack direction="row" spacing={1}>
+              <Button type="submit" variant="contained" color="error" startIcon={<BlockIcon />}>
+                手動BAN
+              </Button>
+              <Button
+                type="button"
+                variant="outlined"
+                color="warning"
+                startIcon={<TimerIcon />}
+                onClick={() => handleManualBan(true)}
+              >
+                1時間BAN
+              </Button>
+            </Stack>
           </Stack>
         </Box>
       </Paper>
@@ -219,14 +267,24 @@ function AdminBansPage() {
                     primary={
                       <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                         <span>{b.ip}</span>
-                        {b.reason && b.reason !== "manual" && (
-                          <Chip label="自動BAN" color="warning" size="small" sx={{ height: 18, fontSize: "0.65rem" }} />
+                        {b.expiresAt ? (
+                          <Chip label="1時間BAN" color="info" size="small" sx={{ height: 18, fontSize: "0.65rem" }} />
+                        ) : (
+                          b.reason &&
+                          b.reason !== "manual" && (
+                            <Chip label="自動BAN" color="warning" size="small" sx={{ height: 18, fontSize: "0.65rem" }} />
+                          )
                         )}
                       </Stack>
                     }
                     secondary={
                       `BAN日時: ${new Date(b.bannedAt).toLocaleString("ja-JP")}` +
-                      (b.reason && b.reason !== "manual" ? ` (理由: ${b.reason})` : "")
+                      (b.expiresAt
+                        ? ` / 自動解除: ${new Date(b.expiresAt).toLocaleString("ja-JP")}`
+                        : "") +
+                      (b.reason && b.reason !== "manual" && b.reason !== "manual-1h"
+                        ? ` (理由: ${b.reason})`
+                        : "")
                     }
                   />
                 </ListItem>
@@ -251,15 +309,13 @@ function AdminBansPage() {
                   key={v.ip}
                   divider={i < recentBadVoteUsers.length - 1}
                   secondaryAction={
-                    <Tooltip title="このIPをBAN">
-                      <IconButton edge="end" color="error" onClick={() => handleBan(v.ip)}>
-                        <BlockIcon />
-                      </IconButton>
-                    </Tooltip>
+                    <Stack direction="row" spacing={0.5}>
+                      <BanButtons ip={v.ip} onBan={handleBan} />
+                    </Stack>
                   }
                 >
                   <ListItemText
-                    sx={{ pr: 6 }}
+                    sx={{ pr: 11 }}
                     primary={
                       <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                         <ThumbDownAltIcon color="warning" fontSize="small" />
@@ -301,16 +357,12 @@ function AdminBansPage() {
                             {expandedIP === u.ip ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title="このIPをBAN">
-                          <IconButton edge="end" color="error" onClick={() => handleBan(u.ip)}>
-                            <BlockIcon />
-                          </IconButton>
-                        </Tooltip>
+                        <BanButtons ip={u.ip} onBan={handleBan} />
                       </Stack>
                     }
                   >
                     <ListItemText
-                      sx={{ pr: 12 }}
+                      sx={{ pr: 17 }}
                       primary={
                         <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                           <WarningAmberIcon color="warning" fontSize="small" />
@@ -376,14 +428,10 @@ function AdminBansPage() {
                             bannedIPs.has(ip) ? (
                               <Chip key={ip} label={`${ip} (BAN中)`} color="error" size="small" />
                             ) : (
-                              <Chip
-                                key={ip}
-                                label={ip}
-                                size="small"
-                                icon={<BlockIcon fontSize="small" />}
-                                onClick={() => handleBan(ip)}
-                                clickable
-                              />
+                              <Stack key={ip} direction="row" spacing={0.25} sx={{ alignItems: "center" }}>
+                                <Chip label={ip} size="small" variant="outlined" />
+                                <BanButtons ip={ip} onBan={handleBan} size="small" />
+                              </Stack>
                             ),
                           )}
                         </Stack>
@@ -412,15 +460,13 @@ function AdminBansPage() {
                   key={v.ip}
                   divider={i < voteOnlyUsers.length - 1}
                   secondaryAction={
-                    <Tooltip title="このIPをBAN">
-                      <IconButton edge="end" color="error" onClick={() => handleBan(v.ip)}>
-                        <BlockIcon />
-                      </IconButton>
-                    </Tooltip>
+                    <Stack direction="row" spacing={0.5}>
+                      <BanButtons ip={v.ip} onBan={handleBan} />
+                    </Stack>
                   }
                 >
                   <ListItemText
-                    sx={{ pr: 6 }}
+                    sx={{ pr: 11 }}
                     primary={
                       <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                         <ThumbDownAltIcon color="warning" fontSize="small" />
@@ -457,11 +503,9 @@ function AdminBansPage() {
                     bannedIPs.has(ip) ? (
                       <Chip label="BAN中" color="error" size="small" />
                     ) : (
-                      <Tooltip title="このIPをBAN">
-                        <IconButton edge="end" color="error" onClick={() => handleBan(ip)}>
-                          <BlockIcon />
-                        </IconButton>
-                      </Tooltip>
+                      <Stack direction="row" spacing={0.5}>
+                        <BanButtons ip={ip} onBan={handleBan} />
+                      </Stack>
                     )
                   }
                 >
@@ -469,7 +513,7 @@ function AdminBansPage() {
                     <Avatar variant="rounded" src={r.thumbnailUrl} sx={{ width: 48, height: 36, mr: 1 }} />
                   </ListItemAvatar>
                   <ListItemText
-                    sx={{ pr: 6 }}
+                    sx={{ pr: 11 }}
                     primary={ip}
                     secondary={r.title}
                     slotProps={{ secondary: { noWrap: true } }}

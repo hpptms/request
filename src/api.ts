@@ -138,10 +138,12 @@ export const api = {
 
   adminListBans: () => request<BannedIP[]>("/admin/bans"),
 
-  adminBanIP: (ip: string) =>
+  // temporary: true bans for 1 hour (auto-lifted); omitted/false bans
+  // permanently until an admin manually unbans.
+  adminBanIP: (ip: string, temporary?: boolean) =>
     request<{ ok: boolean }>("/admin/bans", {
       method: "POST",
-      body: JSON.stringify({ ip }),
+      body: JSON.stringify({ ip, temporary: !!temporary }),
     }),
 
   adminUnbanIP: (ip: string) =>
