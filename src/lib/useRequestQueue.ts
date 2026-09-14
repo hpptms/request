@@ -6,7 +6,7 @@ import { markMyRequest } from "./myRequestStorage";
 
 const POLL_INTERVAL_MS = 4000;
 const DEFAULT_CANCEL_VOTE_THRESHOLD = 5;
-const DEFAULT_LIKE_PRIORITY_THRESHOLD = 2;
+const DEFAULT_LIKE_PRIORITY_THRESHOLD = 5;
 // Mirrors the backend's default store.CancelVoteTiers (internal/store/store.go)
 // until the real config loads.
 const DEFAULT_CANCEL_VOTE_TIERS: CancelVoteTier[] = [
