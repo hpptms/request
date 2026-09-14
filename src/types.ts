@@ -200,17 +200,25 @@ export interface ChannelStat {
 
 export type StatsPeriod = "day" | "week" | "all";
 
+// backend/internal/analytics.TimeSlot — a broad part of the JST day
+// (morning 05-10, daytime 11-16, evening 17-21, midnight 22-04) a stats
+// query can restrict itself to, on top of period/date. "" (omitted) means
+// every time of day, matching the pre-existing (unfiltered) behavior.
+export type TimeSlot = "" | "morning" | "daytime" | "evening" | "midnight";
+
 // backend/internal/api.statsResponse — the admin stats screen's view of
-// every ranking for one period, each already sorted highest-first and
-// capped at the backend's topN. rangeStart/rangeEnd (both YYYY-MM-DD) are
-// omitted for period "all" and otherwise echo back exactly what the server
-// computed (e.g. today's date, or the Monday-Sunday week containing it),
-// so the admin UI's prev/next navigation stays in sync with the server
-// rather than re-deriving "today" itself.
+// every ranking for one period (and, if any, time-of-day slot), each
+// already sorted highest-first and capped at the backend's topN.
+// rangeStart/rangeEnd (both YYYY-MM-DD) are omitted for period "all" and
+// otherwise echo back exactly what the server computed (e.g. today's date,
+// or the Monday-Sunday week containing it), so the admin UI's prev/next
+// navigation stays in sync with the server rather than re-deriving "today"
+// itself.
 export interface StatsSummary {
   period: StatsPeriod;
   rangeStart?: string;
   rangeEnd?: string;
+  timeOfDay?: TimeSlot;
   topChannelsByRequests: ChannelStat[];
   topVideosByRequests: VideoStat[];
   topVideosByLikes: VideoStat[];
