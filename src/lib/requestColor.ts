@@ -3,23 +3,18 @@
 // instead of always the same theme red — while the same video still always
 // gets the same color, so a toast and the title card that follows it match.
 
-// A small fixed categorical palette, picked to stay legible as both a
-// border against the title card's near-black background and a filled chip
-// background (with contrast-aware text — see PlayerOverlays.tsx).
-const REQUEST_ACCENT_COLORS = [
-  "#ef5350", // red
-  "#ff9800", // orange
-  "#fbc02d", // amber
-  "#43a047", // green
-  "#00acc1", // teal
-  "#1e88e5", // blue
-  "#8e24aa", // purple
-  "#d81b60", // pink
-];
+// 256 evenly spaced hues around the color wheel, at a fixed
+// saturation/lightness tuned to stay legible both as a border against the
+// title card's near-black background and as a filled chip background (text
+// color there is chosen per-color via theme.palette.getContrastText, which
+// accepts hsl() strings directly).
+const PALETTE_SIZE = 256;
+const SATURATION = 70;
+const LIGHTNESS = 55;
 
 // FNV-1a: same small non-cryptographic hash as deviceFingerprint.ts, good
-// enough here since it only has to spread videoIds across a handful of
-// colors, not resist collisions.
+// enough here since it only has to spread videoIds across PALETTE_SIZE
+// buckets, not resist collisions.
 function fnv1a(input: string): number {
   let hash = 0x811c9dc5;
   for (let i = 0; i < input.length; i++) {
@@ -30,6 +25,6 @@ function fnv1a(input: string): number {
 }
 
 export function requestAccentColor(videoId: string): string {
-  if (!videoId) return REQUEST_ACCENT_COLORS[0];
-  return REQUEST_ACCENT_COLORS[fnv1a(videoId) % REQUEST_ACCENT_COLORS.length];
+  const hue = videoId ? (fnv1a(videoId) % PALETTE_SIZE) * (360 / PALETTE_SIZE) : 0;
+  return `hsl(${hue.toFixed(1)}, ${SATURATION}%, ${LIGHTNESS}%)`;
 }
