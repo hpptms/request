@@ -95,6 +95,10 @@ export interface BannedIP {
   ip: string;
   bannedAt: string;
   reason: string;
+  // Present only for a temporary ban (admin panel's 1時間BAN button) — the
+  // time it will be automatically lifted. Absent for a permanent (手動BAN)
+  // or automatic ban.
+  expiresAt?: string;
 }
 
 // A device fingerprint (backend/internal/fingerprint) currently sighted
