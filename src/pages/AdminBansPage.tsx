@@ -212,7 +212,7 @@ function AdminBansPage() {
             handleManualBan(false);
           }}
         >
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+          <Stack spacing={2}>
             <TextField
               label="IPアドレス"
               placeholder="例: 192.168.1.23"
@@ -222,7 +222,13 @@ function AdminBansPage() {
               fullWidth
             />
             <Stack direction="row" spacing={1}>
-              <Button type="submit" variant="contained" color="error" startIcon={<BlockIcon />}>
+              <Button
+                type="submit"
+                variant="contained"
+                color="error"
+                startIcon={<BlockIcon />}
+                sx={{ whiteSpace: "nowrap" }}
+              >
                 手動BAN
               </Button>
               <Button
@@ -231,6 +237,7 @@ function AdminBansPage() {
                 color="warning"
                 startIcon={<TimerIcon />}
                 onClick={() => handleManualBan(true)}
+                sx={{ whiteSpace: "nowrap" }}
               >
                 1時間BAN
               </Button>
