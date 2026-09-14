@@ -40,10 +40,10 @@ interface Props {
 // would be intrusive, and most browsers would just block it anyway.
 export function RequestSidePlayer({ requests, likePriorityThreshold, cancelVoteTiers, onLike, onVoteCancel }: Props) {
   const [introVisible, setIntroVisible] = useState(false);
-  const [introContent, setIntroContent] = useState<{ title: string; channelTitle: string } | null>(null);
+  const [introContent, setIntroContent] = useState<{ title: string; channelTitle: string; videoId: string } | null>(null);
   const [durationBadgeVisible, setDurationBadgeVisible] = useState(false);
   const [durationBadgeSeconds, setDurationBadgeSeconds] = useState<number | null>(null);
-  const [newRequestNotice, setNewRequestNotice] = useState<{ id: string; title: string } | null>(null);
+  const [newRequestNotice, setNewRequestNotice] = useState<{ id: string; title: string; videoId: string } | null>(null);
   const [voteStatusVisible, setVoteStatusVisible] = useState(false);
   const [voteStatusContent, setVoteStatusContent] = useState<{ cancelVotes: number; likes: number } | null>(null);
 
@@ -56,7 +56,7 @@ export function RequestSidePlayer({ requests, likePriorityThreshold, cancelVoteT
   // Seeded on the first poll only, so the pre-existing backlog on page load
   // doesn't fire a notice per request — see ViewerPage's identical pattern.
   const knownRequestIdsRef = useRef<Set<string> | null>(null);
-  const newRequestQueueRef = useRef<{ id: string; title: string }[]>([]);
+  const newRequestQueueRef = useRef<{ id: string; title: string; videoId: string }[]>([]);
   const newRequestTimerRef = useRef<number | null>(null);
   const lastShownVoteCountsRef = useRef<{ id: string; cancelVotes: number; likes: number } | null>(null);
   const voteStatusHideTimerRef = useRef<number | null>(null);
@@ -127,7 +127,7 @@ export function RequestSidePlayer({ requests, likePriorityThreshold, cancelVoteT
     const known = knownRequestIdsRef.current;
     for (const r of requests) {
       if (!known.has(r.id)) {
-        newRequestQueueRef.current.push({ id: r.id, title: r.title });
+        newRequestQueueRef.current.push({ id: r.id, title: r.title, videoId: r.videoId });
       }
     }
     knownRequestIdsRef.current = currentIds;
@@ -151,7 +151,7 @@ export function RequestSidePlayer({ requests, likePriorityThreshold, cancelVoteT
     if (durationBadgeHideTimerRef.current !== null) window.clearTimeout(durationBadgeHideTimerRef.current);
     setDurationBadgeVisible(false);
 
-    setIntroContent({ title: nowPlaying.title, channelTitle: nowPlaying.channelTitle });
+    setIntroContent({ title: nowPlaying.title, channelTitle: nowPlaying.channelTitle, videoId: nowPlaying.videoId });
     setIntroVisible(true);
     introHideTimerRef.current = window.setTimeout(() => {
       setIntroVisible(false);

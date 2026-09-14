@@ -5,19 +5,21 @@ import Slide from "@mui/material/Slide";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Zoom from "@mui/material/Zoom";
+import { useTheme } from "@mui/material/styles";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import { formatDuration } from "../lib/formatDuration";
+import { requestAccentColor } from "../lib/requestColor";
 
 interface Props {
   // Music-program-style title card, shown while a video starts.
   introVisible: boolean;
-  introContent: { title: string; channelTitle: string } | null;
+  introContent: { title: string; channelTitle: string; videoId: string } | null;
   // Duration badge, shown a few seconds after the title card.
   durationBadgeVisible: boolean;
   durationBadgeSeconds: number | null;
   // New-request toast: fires once per request as it's added to the queue.
-  newRequestNotice: { id: string; title: string } | null;
+  newRequestNotice: { id: string; title: string; videoId: string } | null;
   // Vote-status badge (😨 cancel votes / 😊 likes) for whatever's playing.
   voteStatusVisible: boolean;
   voteStatusContent: { cancelVotes: number; likes: number } | null;
@@ -38,9 +40,13 @@ export function PlayerOverlays({
   voteStatusVisible,
   voteStatusContent,
 }: Props) {
+  const theme = useTheme();
+  const introAccent = introContent ? requestAccentColor(introContent.videoId) : theme.palette.primary.main;
+  const noticeAccent = newRequestNotice ? requestAccentColor(newRequestNotice.videoId) : theme.palette.primary.main;
+
   return (
     <>
-      {/* Music-program-style title card: pops in when a video starts, pops out after NOW_PLAYING_INTRO_MS. */}
+      {/* Music-program-style title card: pops in when a video starts, pops out after NOW_PLAYING_INTRO_MS. Border color varies per video (requestAccentColor) instead of always the theme red. */}
       <Box sx={{ position: "absolute", left: 0, right: 0, bottom: { xs: 8, sm: 16, md: 24 }, display: "flex", justifyContent: "center", px: { xs: 1.5, sm: 3 }, pointerEvents: "none" }}>
         <Zoom in={introVisible} timeout={{ enter: 350, exit: 250 }} style={{ transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" }}>
           <Stack
@@ -51,14 +57,14 @@ export function PlayerOverlays({
               maxWidth: "90%",
               bgcolor: "rgba(20,20,20,0.85)",
               border: "2px solid",
-              borderColor: "primary.main",
+              borderColor: introAccent,
               borderRadius: { xs: 2, sm: 3 },
               px: { xs: 1.25, sm: 2, md: 2.5 },
               py: { xs: 0.75, sm: 1.25, md: 1.5 },
               boxShadow: "0 4px 24px rgba(0,0,0,0.5)",
             }}
           >
-            <MusicNoteIcon color="primary" sx={{ fontSize: { xs: "1.3rem", sm: "1.8rem", md: "2.2rem" } }} />
+            <MusicNoteIcon sx={{ color: introAccent, fontSize: { xs: "1.3rem", sm: "1.8rem", md: "2.2rem" } }} />
             <Box sx={{ minWidth: 0 }}>
               <Typography
                 variant="h6"
@@ -118,13 +124,14 @@ export function PlayerOverlays({
           style={{ pointerEvents: "none" }}
         >
           <Chip
-            color="primary"
             label={newRequestNotice ? `🎵 新しいリクエスト: ${newRequestNotice.title}` : ""}
             sx={{
               maxWidth: "90%",
               height: { xs: 28, sm: 44, md: 64 },
               fontSize: { xs: "0.75rem", sm: "1.1rem", md: "1.625rem" },
               fontWeight: 600,
+              bgcolor: noticeAccent,
+              color: theme.palette.getContrastText(noticeAccent),
               "& .MuiChip-label": {
                 overflow: "hidden",
                 textOverflow: "ellipsis",
