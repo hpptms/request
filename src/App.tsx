@@ -11,10 +11,12 @@ import BoardPage from "./pages/BoardPage";
 import PlayPage from "./pages/PlayPage";
 import StatsPage from "./pages/StatsPage";
 import ViewerPage from "./pages/ViewerPage";
+import { useHeartbeat } from "./lib/useHeartbeat";
 import { usePageViewTracking } from "./lib/usePageViewTracking";
 
 function AppRoutes() {
   usePageViewTracking();
+  useHeartbeat();
 
   return (
     <Routes>
