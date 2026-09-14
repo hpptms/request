@@ -119,6 +119,19 @@ export interface VoteOnlyVoter {
   lastVoteAt: string;
 }
 
+// An IP that has cast at least one cancel vote (BAD投票) within the last
+// few minutes (backend/internal/store.Store.RecentBadVoters). Unlike
+// VoteOnlyVoter, this includes IPs that have also submitted requests
+// themselves — it's about who's actively pressing "bad" right now.
+// Time-boxed on the backend so the list stays a manageable size. Shown on
+// the admin BAN page for the admin to review and ban by hand; nothing here
+// is ever banned automatically.
+export interface RecentBadVoter {
+  ip: string;
+  voteCount: number;
+  lastVoteAt: string;
+}
+
 // A "semi-banned" keyword (see backend/internal/keywordlimit): unlike
 // BannedKeyword-style outright bans, a title/channel-title match here is
 // perfectly allowed content — it just can't have more than limit requests
