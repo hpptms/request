@@ -24,7 +24,13 @@ import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import VpnLockIcon from "@mui/icons-material/VpnLock";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { api } from "../api";
-import type { AdminVideoRequest, BannedIP, SuspiciousFingerprint, VoteOnlyVoter } from "../types";
+import type {
+  AdminVideoRequest,
+  BannedIP,
+  RecentBadVoter,
+  SuspiciousFingerprint,
+  VoteOnlyVoter,
+} from "../types";
 
 // この件数以上のキャンセル投票(BAD投票)がその送信元IPのリクエスト全体で
 // 累積していたら「要注意ユーザー」として警告表示する。CancelVoteThreshold
@@ -46,6 +52,7 @@ function AdminBansPage() {
   const [bans, setBans] = useState<BannedIP[]>([]);
   const [suspiciousFingerprints, setSuspiciousFingerprints] = useState<SuspiciousFingerprint[]>([]);
   const [voteOnlyVoters, setVoteOnlyVoters] = useState<VoteOnlyVoter[]>([]);
+  const [recentBadVoters, setRecentBadVoters] = useState<RecentBadVoter[]>([]);
   const [manualIP, setManualIP] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   // Which flagged IP's request history is currently expanded (see
@@ -54,16 +61,19 @@ function AdminBansPage() {
 
   const refresh = useCallback(async () => {
     try {
-      const [requestsData, bansData, fingerprintsData, voteOnlyVotersData] = await Promise.all([
-        api.adminListRequests(),
-        api.adminListBans(),
-        api.adminListSuspiciousFingerprints(),
-        api.adminListVoteOnlyVoters(),
-      ]);
+      const [requestsData, bansData, fingerprintsData, voteOnlyVotersData, recentBadVotersData] =
+        await Promise.all([
+          api.adminListRequests(),
+          api.adminListBans(),
+          api.adminListSuspiciousFingerprints(),
+          api.adminListVoteOnlyVoters(),
+          api.adminListRecentBadVoters(),
+        ]);
       setRequests(requestsData);
       setBans(bansData);
       setSuspiciousFingerprints(fingerprintsData);
       setVoteOnlyVoters(voteOnlyVotersData);
+      setRecentBadVoters(recentBadVotersData);
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "取得に失敗しました");
     }
@@ -150,6 +160,12 @@ function AdminBansPage() {
   // in the BAN中のIP list above.
   const voteOnlyUsers = voteOnlyVoters.filter((v) => !bannedIPs.has(v.ip));
 
+  // IPs that have cast a cancel vote (BAD投票) within the last few minutes
+  // (server-side windowed — see RecentBadVoteWindow), including IPs that
+  // have also submitted requests themselves — already-banned IPs excluded
+  // since they're already handled in the BAN中のIP list above.
+  const recentBadVoteUsers = recentBadVoters.filter((v) => !bannedIPs.has(v.ip));
+
   return (
     <Stack spacing={3}>
       {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
@@ -219,6 +235,47 @@ function AdminBansPage() {
           </Paper>
         )}
       </Box>
+
+      {recentBadVoteUsers.length > 0 && (
+        <Box>
+          <Typography variant="h6" sx={{ mb: 1.5 }}>
+            直近10分以内にBADを押したIP ({recentBadVoteUsers.length})
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            過去10分以内にキャンセル投票(BAD投票)を行ったIPです。BANはこの一覧からは行われず、内容を確認した上で手動で行ってください。
+          </Typography>
+          <Paper elevation={2}>
+            <List disablePadding>
+              {recentBadVoteUsers.map((v, i) => (
+                <ListItem
+                  key={v.ip}
+                  divider={i < recentBadVoteUsers.length - 1}
+                  secondaryAction={
+                    <Tooltip title="このIPをBAN">
+                      <IconButton edge="end" color="error" onClick={() => handleBan(v.ip)}>
+                        <BlockIcon />
+                      </IconButton>
+                    </Tooltip>
+                  }
+                >
+                  <ListItemText
+                    sx={{ pr: 6 }}
+                    primary={
+                      <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                        <ThumbDownAltIcon color="warning" fontSize="small" />
+                        <span>{v.ip}</span>
+                      </Stack>
+                    }
+                    secondary={
+                      `BAD投票: ${v.voteCount}件 / 最終投票: ${new Date(v.lastVoteAt).toLocaleString("ja-JP")}`
+                    }
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </Paper>
+        </Box>
+      )}
 
       {suspiciousUsers.length > 0 && (
         <Box>

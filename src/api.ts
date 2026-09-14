@@ -11,6 +11,7 @@ import type {
   PlaylistImportResult,
   PlaylistTrack,
   PlaylistUpdateResult,
+  RecentBadVoter,
   SearchResult,
   StatsSummary,
   SuspiciousFingerprint,
@@ -155,6 +156,11 @@ export const api = {
   // IPs that have cast a cancel vote (BAD投票) but never submitted a
   // request themselves. Never banned automatically.
   adminListVoteOnlyVoters: () => request<VoteOnlyVoter[]>("/admin/vote-only-voters"),
+
+  // IPs that have cast a cancel vote (BAD投票) within the last few minutes
+  // (see backend's RecentBadVoteWindow), including IPs that have also
+  // submitted requests themselves. Never banned automatically.
+  adminListRecentBadVoters: () => request<RecentBadVoter[]>("/admin/recent-bad-voters"),
 
   adminListKeywords: () => request<string[]>("/admin/keywords"),
 
