@@ -167,6 +167,12 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   const [durationBadgeSeconds, setDurationBadgeSeconds] = useState<number | null>(null);
   // New-request toast (feature: notify every time someone adds a request).
   // One at a time, oldest first — see enqueueNewRequestNotice.
+  // newRequestNotice only ever updates when showing a new one (same
+  // pattern as introContent/introVisible above) — newRequestVisible alone
+  // drives the Slide in/out, so the exit animation still shows the same
+  // title/color it just displayed instead of flashing back to the default
+  // color as content briefly went null mid-animation.
+  const [newRequestVisible, setNewRequestVisible] = useState(false);
   const [newRequestNotice, setNewRequestNotice] = useState<{ id: string; title: string; videoId: string } | null>(null);
   // Vote-status badge (😨 cancel votes / 😊 likes) for the currently
   // playing real request: shown as soon as it starts if it already has any
@@ -504,8 +510,9 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     const next = newRequestQueueRef.current.shift();
     if (!next) return;
     setNewRequestNotice(next);
+    setNewRequestVisible(true);
     newRequestTimerRef.current = window.setTimeout(() => {
-      setNewRequestNotice(null);
+      setNewRequestVisible(false);
       newRequestTimerRef.current = null;
       showNextNewRequestNotice();
     }, NEW_REQUEST_NOTICE_MS);
@@ -975,6 +982,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
               introContent={introContent}
               durationBadgeVisible={durationBadgeVisible}
               durationBadgeSeconds={durationBadgeSeconds}
+              newRequestVisible={newRequestVisible}
               newRequestNotice={newRequestNotice}
               voteStatusVisible={voteStatusVisible}
               voteStatusContent={voteStatusContent}
