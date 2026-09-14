@@ -20,7 +20,14 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { api } from "../api";
-import type { ChannelStat, StatsPeriod, StatsSummary, VideoStat } from "../types";
+import type { ChannelStat, StatsPeriod, StatsSummary, TimeSlot, VideoStat } from "../types";
+
+const TIME_SLOT_LABELS: Record<Exclude<TimeSlot, "">, string> = {
+  morning: "朝",
+  daytime: "昼",
+  evening: "夜",
+  midnight: "深夜",
+};
 
 // addDays/formatDateLabel treat a YYYY-MM-DD string as a plain calendar
 // date (via Date.UTC), deliberately avoiding the browser's local timezone —
@@ -49,6 +56,8 @@ function formatDateLabel(dateStr: string): string {
 // 公開のトップページ(StatsPage)の両方からこのコンポーネントを使う。
 export function StatsView() {
   const [periodTab, setPeriodTab] = useState<StatsPeriod>("day");
+  // "" means every time of day (no filter) — the pre-existing behavior.
+  const [timeSlot, setTimeSlot] = useState<TimeSlot>("");
   // The date (YYYY-MM-DD) driving prev/next navigation for "day"/"week";
   // null means "let the server pick today" (see load below). Kept in sync
   // with whatever rangeStart the server actually returns.
@@ -57,11 +66,11 @@ export function StatsView() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const load = useCallback((period: StatsPeriod, date: string | null) => {
+  const load = useCallback((period: StatsPeriod, date: string | null, slot: TimeSlot) => {
     setLoading(true);
     setErrorMessage(null);
     api
-      .getStats(period, date ?? undefined)
+      .getStats(period, date ?? undefined, slot || undefined)
       .then((result) => {
         setStats(result);
         if (result.rangeStart) setRefDate(result.rangeStart);
@@ -71,18 +80,23 @@ export function StatsView() {
   }, []);
 
   useEffect(() => {
-    load("day", null);
+    load("day", null, "");
   }, [load]);
 
   const handlePeriodChange = (_: unknown, value: StatsPeriod) => {
     setPeriodTab(value);
-    load(value, refDate);
+    load(value, refDate, timeSlot);
+  };
+
+  const handleTimeSlotChange = (_: unknown, value: TimeSlot) => {
+    setTimeSlot(value);
+    load(periodTab, refDate, value);
   };
 
   const step = periodTab === "week" ? 7 : 1;
-  const handlePrev = () => refDate && load(periodTab, addDays(refDate, -step));
-  const handleNext = () => refDate && load(periodTab, addDays(refDate, step));
-  const handleJumpToToday = () => load(periodTab, null);
+  const handlePrev = () => refDate && load(periodTab, addDays(refDate, -step), timeSlot);
+  const handleNext = () => refDate && load(periodTab, addDays(refDate, step), timeSlot);
+  const handleJumpToToday = () => load(periodTab, null, timeSlot);
 
   let rangeLabel = "";
   if (stats?.period === "day" && stats.rangeStart) {
@@ -98,6 +112,15 @@ export function StatsView() {
           <Tab value="day" label="日別" />
           <Tab value="week" label="週別" />
           <Tab value="all" label="累計" />
+        </Tabs>
+      </Paper>
+
+      <Paper elevation={2} sx={{ p: { xs: 1, sm: 1.5 } }}>
+        <Tabs value={timeSlot} onChange={handleTimeSlotChange} variant="fullWidth">
+          <Tab value="" label="すべての時間帯" />
+          {Object.entries(TIME_SLOT_LABELS).map(([slot, label]) => (
+            <Tab key={slot} value={slot} label={label} />
+          ))}
         </Tabs>
       </Paper>
 
@@ -122,7 +145,7 @@ export function StatsView() {
         <Typography variant="body2" color="text.secondary">
           プレイリスト再生・フォールバック再生分は含まれません。
         </Typography>
-        <Button size="small" startIcon={<RefreshIcon />} onClick={() => load(periodTab, refDate)} disabled={loading}>
+        <Button size="small" startIcon={<RefreshIcon />} onClick={() => load(periodTab, refDate, timeSlot)} disabled={loading}>
           更新
         </Button>
       </Stack>
