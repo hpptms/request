@@ -37,6 +37,10 @@ interface Props {
   // button's label/progress tracks whichever rung hasn't been reached yet,
   // so it advances as votes come in instead of only ever showing the first.
   cancelVoteTiers: CancelVoteTier[];
+  // Used instead of cancelVoteTiers while fastForwardActive is true — see
+  // AppConfig.fastForwardCancelVoteTiers.
+  fastForwardActive: boolean;
+  fastForwardCancelVoteTiers: CancelVoteTier[];
   likePriorityThreshold: number;
   isAdmin: boolean;
   onMarkDone: (id: string) => void;
@@ -48,6 +52,8 @@ interface Props {
 export function NowPlaying({
   nowPlaying,
   cancelVoteTiers,
+  fastForwardActive,
+  fastForwardCancelVoteTiers,
   likePriorityThreshold,
   isAdmin,
   onMarkDone,
@@ -73,9 +79,11 @@ export function NowPlaying({
   // The next not-yet-reached rung, so the button counts up through 2:00 →
   // 1:30 → 1:00 → 0:30 as votes come in instead of freezing on the first
   // one; once every rung is reached, keep showing the last (tightest) one.
+  // During fast-forward mode, the tighter fastForwardCancelVoteTiers ladder
+  // applies instead (see store.playbackFloorLocked).
+  const activeTiers = fastForwardActive ? fastForwardCancelVoteTiers : cancelVoteTiers;
   const nextTier =
-    cancelVoteTiers.find((tier) => nowPlaying.cancelVotes < tier.votes) ??
-    cancelVoteTiers[cancelVoteTiers.length - 1];
+    activeTiers.find((tier) => nowPlaying.cancelVotes < tier.votes) ?? activeTiers[activeTiers.length - 1];
 
   const handleVote = async () => {
     setVoting(true);

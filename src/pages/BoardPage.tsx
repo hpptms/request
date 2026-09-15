@@ -29,6 +29,8 @@ function BoardPage() {
   const {
     cancelVoteThreshold,
     cancelVoteTiers,
+    fastForwardActive,
+    fastForwardCancelVoteTiers,
     likePriorityThreshold,
     errorMessage,
     setErrorMessage,
@@ -107,6 +109,8 @@ function BoardPage() {
           <NowPlaying
             nowPlaying={nowPlaying}
             cancelVoteTiers={cancelVoteTiers}
+            fastForwardActive={fastForwardActive}
+            fastForwardCancelVoteTiers={fastForwardCancelVoteTiers}
             likePriorityThreshold={likePriorityThreshold}
             isAdmin={isAdmin}
             onMarkDone={handleDone}

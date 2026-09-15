@@ -33,6 +33,12 @@ const DEFAULT_CANCEL_VOTE_TIERS: CancelVoteTier[] = [
   { votes: 15, capSeconds: 60 },
   { votes: 20, capSeconds: 30 },
 ];
+// Mirrors the backend's default store.FastForwardCancelVoteTiers
+// (internal/store/store.go) until the real config loads.
+const DEFAULT_FAST_FORWARD_CANCEL_VOTE_TIERS: CancelVoteTier[] = [
+  { votes: 5, capSeconds: 60 },
+  { votes: 10, capSeconds: 30 },
+];
 const SHORTENED_PLAYBACK_SECONDS = 60; // 1:00
 // finishRequest's ErrTooSoon after a *natural* end is usually just a hair's
 // breadth short of the floor — most visibly during backlog fast-forward,
@@ -137,6 +143,11 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // while this screen stays open for hours at a time.
   const [fastForwardActive, setFastForwardActive] = useState(false);
   const [fastForwardCapSeconds, setFastForwardCapSeconds] = useState(60);
+  // Used instead of cancelVoteTiers while fastForwardActive is true — see
+  // AppConfig.fastForwardCancelVoteTiers.
+  const [fastForwardCancelVoteTiers, setFastForwardCancelVoteTiers] = useState<CancelVoteTier[]>(
+    DEFAULT_FAST_FORWARD_CANCEL_VOTE_TIERS,
+  );
   // 長い動画の短縮(see AppConfig.durationLimitThresholdSeconds): 0はオフ。
   const [durationLimitThresholdSeconds, setDurationLimitThresholdSeconds] = useState(0);
   const [durationLimitCapSeconds, setDurationLimitCapSeconds] = useState(30);
@@ -287,6 +298,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
           setCancelVoteTiers(config.cancelVoteTiers);
           setFastForwardActive(config.fastForwardActive);
           setFastForwardCapSeconds(config.fastForwardCapSeconds);
+          setFastForwardCancelVoteTiers(config.fastForwardCancelVoteTiers);
           setDurationLimitThresholdSeconds(config.durationLimitThresholdSeconds);
           setDurationLimitCapSeconds(config.durationLimitCapSeconds);
           setTwoMinuteRequestCapSeconds(config.twoMinuteRequestCapSeconds);
@@ -708,11 +720,13 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // Caps the currently playing request's remaining runtime once any
   // applicable condition is met, instead of letting it run to the end.
   // During a backlog fast-forward window (fastForwardCapSeconds — see
-  // AppConfig), every request is guaranteed that much playback regardless of
-  // cancel votes — cancel votes must not be able to cut it shorter than the
-  // fast-forward guarantee. Otherwise, enough cancel votes (the tightest
-  // reached rung of cancelVoteTiers — see AppConfig.CancelVoteTier) caps it,
-  // and a request made with the "2分でリクエスト" button
+  // AppConfig), every request is guaranteed that much playback as a
+  // baseline — but enough cancel votes (the tightest reached rung of
+  // fastForwardCancelVoteTiers) can still cut it shorter than that
+  // guarantee, since a bad-voted request should work through the backlog
+  // even faster. Otherwise (fast-forward inactive), enough cancel votes (the
+  // tightest reached rung of cancelVoteTiers — see AppConfig.CancelVoteTier)
+  // caps it, and a request made with the "2分でリクエスト" button
   // (twoMinuteRequestCapSeconds) caps it too — cancel votes can still cut a
   // twoMinuteRequest shorter than that, same as any other request. Either
   // way, the video being at least durationLimitThresholdSeconds
@@ -738,6 +752,9 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     const caps: number[] = [];
     if (fastForwardActive) {
       caps.push(fastForwardCapSeconds);
+      for (const tier of fastForwardCancelVoteTiers) {
+        if (current.cancelVotes >= tier.votes) caps.push(tier.capSeconds);
+      }
     } else {
       for (const tier of cancelVoteTiers) {
         if (current.cancelVotes >= tier.votes) caps.push(tier.capSeconds);
@@ -786,6 +803,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     cancelVoteTiers,
     fastForwardActive,
     fastForwardCapSeconds,
+    fastForwardCancelVoteTiers,
     durationLimitThresholdSeconds,
     durationLimitCapSeconds,
     twoMinuteRequestCapSeconds,

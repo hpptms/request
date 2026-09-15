@@ -15,6 +15,12 @@ const DEFAULT_CANCEL_VOTE_TIERS: CancelVoteTier[] = [
   { votes: 15, capSeconds: 60 },
   { votes: 20, capSeconds: 30 },
 ];
+// Mirrors the backend's default store.FastForwardCancelVoteTiers
+// (internal/store/store.go) until the real config loads.
+const DEFAULT_FAST_FORWARD_CANCEL_VOTE_TIERS: CancelVoteTier[] = [
+  { votes: 5, capSeconds: 60 },
+  { votes: 10, capSeconds: 30 },
+];
 
 // Polling + request/vote/like/admin-action state shared by every public page
 // that shows the live queue (BoardPage, PlayPage): both need the exact same
@@ -30,6 +36,14 @@ export function useRequestQueue(source: string) {
   const [requestsLoaded, setRequestsLoaded] = useState(false);
   const [cancelVoteThreshold, setCancelVoteThreshold] = useState(DEFAULT_CANCEL_VOTE_THRESHOLD);
   const [cancelVoteTiers, setCancelVoteTiers] = useState<CancelVoteTier[]>(DEFAULT_CANCEL_VOTE_TIERS);
+  // Backlog fast-forward mode (see AppConfig.fastForwardActive): while
+  // active, fastForwardCancelVoteTiers is used instead of cancelVoteTiers
+  // for the bad-vote button's next-tier label (see NowPlaying/
+  // RequestSidePlayer) — kept in sync by the same config poll below.
+  const [fastForwardActive, setFastForwardActive] = useState(false);
+  const [fastForwardCancelVoteTiers, setFastForwardCancelVoteTiers] = useState<CancelVoteTier[]>(
+    DEFAULT_FAST_FORWARD_CANCEL_VOTE_TIERS,
+  );
   const [likePriorityThreshold, setLikePriorityThreshold] = useState(DEFAULT_LIKE_PRIORITY_THRESHOLD);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -44,15 +58,28 @@ export function useRequestQueue(source: string) {
     }
   }, []);
 
+  // Polled (not just fetched once) so a fast-forward window starting or
+  // ending mid-session is reflected without reloading the page — same
+  // pattern and interval as ViewerPage's own config poll.
   useEffect(() => {
-    api
-      .getConfig()
-      .then((config) => {
-        setCancelVoteThreshold(config.cancelVoteThreshold);
-        setCancelVoteTiers(config.cancelVoteTiers);
-        setLikePriorityThreshold(config.likePriorityThreshold);
-      })
-      .catch(() => {});
+    const fetchConfig = () => {
+      api
+        .getConfig()
+        .then((config) => {
+          setCancelVoteThreshold(config.cancelVoteThreshold);
+          setCancelVoteTiers(config.cancelVoteTiers);
+          setFastForwardActive(config.fastForwardActive);
+          setFastForwardCancelVoteTiers(config.fastForwardCancelVoteTiers);
+          setLikePriorityThreshold(config.likePriorityThreshold);
+        })
+        .catch(() => {});
+    };
+    fetchConfig();
+    const interval = setInterval(fetchConfig, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
     api.adminSession().then((session) => setIsAdmin(session.authenticated)).catch(() => {});
   }, []);
 
@@ -150,6 +177,9 @@ export function useRequestQueue(source: string) {
     requestsLoaded,
     cancelVoteThreshold,
     cancelVoteTiers: cancelVoteTiers.length > 0 ? cancelVoteTiers : DEFAULT_CANCEL_VOTE_TIERS,
+    fastForwardActive,
+    fastForwardCancelVoteTiers:
+      fastForwardCancelVoteTiers.length > 0 ? fastForwardCancelVoteTiers : DEFAULT_FAST_FORWARD_CANCEL_VOTE_TIERS,
     likePriorityThreshold,
     errorMessage,
     setErrorMessage,
