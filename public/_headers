@@ -2,8 +2,12 @@
 # for local Docker preview only — see docker-compose.yml). connect-src
 # includes https://api.request.tokyo because the API is now a separate
 # origin (see src/api.ts / .env.production) rather than same-origin /api.
+# script-src needs 'unsafe-inline' because gtag.js itself (not just our own
+# code) dynamically injects an inline <script> for its internal setup —
+# without it, the browser silently blocks that inline script and gtag never
+# actually sends a hit, even though gtag.js/gtag-init.js load fine.
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.youtube.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ytimg.com https://*.ytimg.com https://*.nimg.jp https://*.vimeocdn.com; frame-src https://www.youtube.com https://embed.nicovideo.jp https://player.vimeo.com; connect-src 'self' https://api.request.tokyo https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://www.youtube.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ytimg.com https://*.ytimg.com https://*.nimg.jp https://*.vimeocdn.com; frame-src https://www.youtube.com https://embed.nicovideo.jp https://player.vimeo.com; connect-src 'self' https://api.request.tokyo https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
