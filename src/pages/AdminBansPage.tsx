@@ -90,6 +90,11 @@ function AdminBansPage() {
   // Which flagged IP's request history is currently expanded (see
   // suspiciousUsers below); null = all collapsed.
   const [expandedIP, setExpandedIP] = useState<string | null>(null);
+  // Same idea, but for which recent-bad-voter IP's voted-on videos are
+  // expanded (see recentBadVoteUsers below) — kept separate from
+  // expandedIP so expanding an IP in one section doesn't also expand it
+  // in the other.
+  const [expandedBadVoteIP, setExpandedBadVoteIP] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     // Promise.allSettled rather than Promise.all: these calls are independent,
@@ -329,28 +334,65 @@ function AdminBansPage() {
           <Paper elevation={2}>
             <List disablePadding>
               {recentBadVoteUsers.map((v, i) => (
-                <ListItem
-                  key={v.ip}
-                  divider={i < recentBadVoteUsers.length - 1}
-                  secondaryAction={
-                    <Stack direction="row" spacing={0.5}>
-                      <BanButtons ip={v.ip} onBan={handleBan} />
-                    </Stack>
-                  }
-                >
-                  <ListItemText
-                    sx={{ pr: 11 }}
-                    primary={
-                      <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                        <ThumbDownAltIcon color="warning" fontSize="small" />
-                        <span>{v.ip}</span>
+                <Box key={v.ip}>
+                  <ListItem
+                    divider={!(expandedBadVoteIP === v.ip) && i < recentBadVoteUsers.length - 1}
+                    secondaryAction={
+                      <Stack direction="row" spacing={0.5}>
+                        <Tooltip title="投票先の動画">
+                          <IconButton
+                            edge="end"
+                            onClick={() =>
+                              setExpandedBadVoteIP(expandedBadVoteIP === v.ip ? null : v.ip)
+                            }
+                          >
+                            {expandedBadVoteIP === v.ip ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                          </IconButton>
+                        </Tooltip>
+                        <BanButtons ip={v.ip} onBan={handleBan} />
                       </Stack>
                     }
-                    secondary={
-                      `BAD投票: ${v.voteCount}件 / 最終投票: ${new Date(v.lastVoteAt).toLocaleString("ja-JP")}`
-                    }
-                  />
-                </ListItem>
+                  >
+                    <ListItemText
+                      sx={{ pr: 17 }}
+                      primary={
+                        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                          <ThumbDownAltIcon color="warning" fontSize="small" />
+                          <span>{v.ip}</span>
+                        </Stack>
+                      }
+                      secondary={
+                        `BAD投票: ${v.voteCount}件 / 最終投票: ${new Date(v.lastVoteAt).toLocaleString("ja-JP")}`
+                      }
+                    />
+                  </ListItem>
+                  <Collapse in={expandedBadVoteIP === v.ip} timeout="auto" unmountOnExit>
+                    <List disablePadding sx={{ bgcolor: "action.hover" }}>
+                      {v.votes.length === 0 && (
+                        <ListItem>
+                          <ListItemText secondary="投票先の動画情報は削除されています" />
+                        </ListItem>
+                      )}
+                      {v.votes.map((vote, j) => (
+                        <ListItem key={`${vote.requestId}-${vote.votedAt}`} divider={j < v.votes.length - 1}>
+                          <ListItemAvatar>
+                            <Avatar
+                              variant="rounded"
+                              src={vote.thumbnailUrl}
+                              sx={{ width: 48, height: 36, mr: 1 }}
+                            />
+                          </ListItemAvatar>
+                          <ListItemText
+                            primary={vote.title}
+                            secondary={`BAD投票日時: ${new Date(vote.votedAt).toLocaleString("ja-JP")}`}
+                            slotProps={{ primary: { noWrap: true } }}
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Collapse>
+                  {expandedBadVoteIP === v.ip && i < recentBadVoteUsers.length - 1 && <Divider />}
+                </Box>
               ))}
             </List>
           </Paper>
