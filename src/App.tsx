@@ -11,8 +11,11 @@ import BoardPage from "./pages/BoardPage";
 import PlayPage from "./pages/PlayPage";
 import StatsPage from "./pages/StatsPage";
 import ViewerPage from "./pages/ViewerPage";
+import { usePageViewTracking } from "./lib/usePageViewTracking";
 
 function AppRoutes() {
+  usePageViewTracking();
+
   return (
     <Routes>
       <Route path="/" element={<BoardPage />} />
