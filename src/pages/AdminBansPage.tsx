@@ -17,6 +17,7 @@ import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import BlockIcon from "@mui/icons-material/Block";
+import DevicesIcon from "@mui/icons-material/Devices";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
@@ -28,6 +29,7 @@ import { api } from "../api";
 import type {
   AdminVideoRequest,
   BannedIP,
+  MultiDeviceIP,
   RecentBadVoter,
   SuspiciousFingerprint,
   VoteOnlyVoter,
@@ -44,6 +46,12 @@ const STATUS_LABELS: Record<string, string> = {
   pending: "待機中",
   playing: "再生中",
   done: "再生済み",
+};
+
+// Matches backend/internal/devicemix.ClassifyUserAgent's two buckets.
+const DEVICE_CLASS_LABELS: Record<string, string> = {
+  desktop: "PC",
+  mobile: "スマホ",
 };
 
 // Two ban actions shown side by side wherever the admin can ban an IP from
@@ -85,6 +93,7 @@ function AdminBansPage() {
   const [suspiciousFingerprints, setSuspiciousFingerprints] = useState<SuspiciousFingerprint[]>([]);
   const [voteOnlyVoters, setVoteOnlyVoters] = useState<VoteOnlyVoter[]>([]);
   const [recentBadVoters, setRecentBadVoters] = useState<RecentBadVoter[]>([]);
+  const [multiDeviceIPs, setMultiDeviceIPs] = useState<MultiDeviceIP[]>([]);
   const [manualIP, setManualIP] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   // Which flagged IP's request history is currently expanded (see
@@ -103,19 +112,27 @@ function AdminBansPage() {
     // missing a just-added endpoint like recent-bad-voters. One 404 shouldn't
     // blank out lists (BAN中のIP, 最近のリクエスト送信元, ...) that the
     // backend can serve just fine.
-    const [requestsResult, bansResult, fingerprintsResult, voteOnlyVotersResult, recentBadVotersResult] =
-      await Promise.allSettled([
-        api.adminListRequests(),
-        api.adminListBans(),
-        api.adminListSuspiciousFingerprints(),
-        api.adminListVoteOnlyVoters(),
-        api.adminListRecentBadVoters(),
-      ]);
+    const [
+      requestsResult,
+      bansResult,
+      fingerprintsResult,
+      voteOnlyVotersResult,
+      recentBadVotersResult,
+      multiDeviceIPsResult,
+    ] = await Promise.allSettled([
+      api.adminListRequests(),
+      api.adminListBans(),
+      api.adminListSuspiciousFingerprints(),
+      api.adminListVoteOnlyVoters(),
+      api.adminListRecentBadVoters(),
+      api.adminListMultiDeviceIPs(),
+    ]);
     if (requestsResult.status === "fulfilled") setRequests(requestsResult.value);
     if (bansResult.status === "fulfilled") setBans(bansResult.value);
     if (fingerprintsResult.status === "fulfilled") setSuspiciousFingerprints(fingerprintsResult.value);
     if (voteOnlyVotersResult.status === "fulfilled") setVoteOnlyVoters(voteOnlyVotersResult.value);
     if (recentBadVotersResult.status === "fulfilled") setRecentBadVoters(recentBadVotersResult.value);
+    if (multiDeviceIPsResult.status === "fulfilled") setMultiDeviceIPs(multiDeviceIPsResult.value);
 
     const firstFailure = [
       requestsResult,
@@ -123,6 +140,7 @@ function AdminBansPage() {
       fingerprintsResult,
       voteOnlyVotersResult,
       recentBadVotersResult,
+      multiDeviceIPsResult,
     ].find((r): r is PromiseRejectedResult => r.status === "rejected");
     setErrorMessage(
       firstFailure
@@ -218,6 +236,12 @@ function AdminBansPage() {
   // have also submitted requests themselves — already-banned IPs excluded
   // since they're already handled in the BAN中のIP list above.
   const recentBadVoteUsers = recentBadVoters.filter((v) => !bannedIPs.has(v.ip));
+
+  // IPs currently sighted with more than one device class (desktop vs.
+  // mobile) — likely more than one physical device sharing a network —
+  // already-banned IPs excluded since they're already handled in the
+  // BAN中のIP list above.
+  const multiDeviceUsers = multiDeviceIPs.filter((d) => !bannedIPs.has(d.ip));
 
   return (
     <Stack spacing={3}>
@@ -503,6 +527,53 @@ function AdminBansPage() {
                         </Stack>
                       </Stack>
                     }
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </Paper>
+        </Box>
+      )}
+
+      {multiDeviceUsers.length > 0 && (
+        <Box>
+          <Typography variant="h6" sx={{ mb: 1.5 }}>
+            複数端末から投稿しているIP ({multiDeviceUsers.length})
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            同じIPアドレスから、PCとスマホなど異なる種類の端末でのアクセスが検出されています。同じ家庭/オフィスのネットワークを複数人が共有しているだけの場合もあるため、内容を確認した上で手動でBANしてください。
+          </Typography>
+          <Paper elevation={2}>
+            <List disablePadding>
+              {multiDeviceUsers.map((d, i) => (
+                <ListItem
+                  key={d.ip}
+                  divider={i < multiDeviceUsers.length - 1}
+                  secondaryAction={
+                    <Stack direction="row" spacing={0.5}>
+                      <BanButtons ip={d.ip} onBan={handleBan} />
+                    </Stack>
+                  }
+                >
+                  <ListItemText
+                    sx={{ pr: 11 }}
+                    primary={
+                      <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                        <DevicesIcon color="warning" fontSize="small" />
+                        <span>{d.ip}</span>
+                        <Stack direction="row" spacing={0.5}>
+                          {d.classes.map((c) => (
+                            <Chip
+                              key={c}
+                              label={DEVICE_CLASS_LABELS[c] ?? c}
+                              size="small"
+                              sx={{ height: 18, fontSize: "0.65rem" }}
+                            />
+                          ))}
+                        </Stack>
+                      </Stack>
+                    }
+                    secondary={`最終検知: ${new Date(d.lastSeen).toLocaleString("ja-JP")}`}
                   />
                 </ListItem>
               ))}

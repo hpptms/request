@@ -113,6 +113,20 @@ export interface SuspiciousFingerprint {
   lastSeen: string;
 }
 
+// An IP (backend/internal/devicemix) currently sighted with more than one
+// device class (desktop vs. mobile, by User-Agent) in a short span — a
+// heuristic for more than one physical device (e.g. a PC and a phone)
+// posting from behind the same address, most commonly a shared home/office
+// network. Unlike SuspiciousFingerprint (one fingerprint, many IPs), this
+// is the mirror case: one IP, several device classes. Shown on the admin
+// BAN page's 複数端末から投稿しているIP section for the admin to review;
+// nothing here is ever banned automatically.
+export interface MultiDeviceIP {
+  ip: string;
+  classes: string[];
+  lastSeen: string;
+}
+
 // An IP that has cast at least one cancel vote (BAD投票) within the last
 // hour and has never itself submitted a request
 // (backend/internal/store.Store.VoteOnlyVoters, windowed by

@@ -8,6 +8,7 @@ import type {
   FastForwardWindow,
   KeywordLimit,
   LikeResult,
+  MultiDeviceIP,
   PlaylistImportResult,
   PlaylistTrack,
   PlaylistUpdateResult,
@@ -154,6 +155,12 @@ export const api = {
   // (see backend/internal/fingerprint). Never banned automatically.
   adminListSuspiciousFingerprints: () =>
     request<SuspiciousFingerprint[]>("/admin/suspicious-fingerprints"),
+
+  // IPs currently sighted with more than one device class (desktop vs.
+  // mobile) in a short span — a heuristic for more than one physical
+  // device (e.g. a PC and a phone) sharing one network (see
+  // backend/internal/devicemix). Never banned automatically.
+  adminListMultiDeviceIPs: () => request<MultiDeviceIP[]>("/admin/multi-device-ips"),
 
   // IPs that have cast a cancel vote (BAD投票) within the last hour (see
   // backend's VoteOnlyVoterWindow) but never submitted a request
