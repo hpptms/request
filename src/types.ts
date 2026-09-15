@@ -130,10 +130,22 @@ export interface VoteOnlyVoter {
 // Time-boxed on the backend so the list stays a manageable size. Shown on
 // the admin BAN page for the admin to review and ban by hand; nothing here
 // is ever banned automatically.
+// One cancel vote making up a RecentBadVoter's votes — which video it was
+// cast against.
+export interface RecentBadVote {
+  requestId: string;
+  title: string;
+  thumbnailUrl: string;
+  votedAt: string;
+}
+
 export interface RecentBadVoter {
   ip: string;
   voteCount: number;
   lastVoteAt: string;
+  // Newest first. Empty for a vote whose request has since been deleted —
+  // it still counts toward voteCount, but there's no title/thumbnail left.
+  votes: RecentBadVote[];
 }
 
 // A "semi-banned" keyword (see backend/internal/keywordlimit): unlike
