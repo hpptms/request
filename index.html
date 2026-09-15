@@ -24,14 +24,12 @@
     <meta name="twitter:card" content="summary" />
 
     <!-- Google tag (gtag.js)
-         Init code lives in /boot.js (not inline, and deliberately not named
-         gtag-init.js — filter lists like EasyPrivacy block first-party
-         requests containing "gtag" in the path regardless of domain) because
-         the CSP's script-src has no 'unsafe-inline'/nonce/hash, so an inline
-         <script> here would be silently blocked by the browser and
-         gtag('config', ...) would never fire. -->
+         Init code lives in /gtag-init.js (not inline) because the CSP's
+         script-src has no 'unsafe-inline'/nonce/hash, so an inline <script>
+         here would be silently blocked by the browser and gtag('config', ...)
+         would never fire. -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8L7G9DTTF8"></script>
-    <script src="/boot.js"></script>
+    <script src="/gtag-init.js"></script>
   </head>
   <body>
     <div id="root"></div>
