@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
-// GA's automatic page_view (see public/gtag-init.js) only fires once, on the
+// GA's automatic page_view (see public/boot.js) only fires once, on the
 // initial full page load, so it never sees client-side route changes in this
 // SPA. This sends a page_view manually on every route change (the initial
-// one included, since send_page_view is disabled in gtag-init.js).
+// one included, since send_page_view is disabled in boot.js).
 export function usePageViewTracking(): void {
   const location = useLocation();
 

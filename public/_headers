@@ -7,7 +7,7 @@
 # *.analytics.google.com wildcards) because gtag.js actually sends its
 # collect hits to those exact hosts — a wildcard like *.analytics.google.com
 # does NOT match the bare analytics.google.com, so without these gtag.js/
-# gtag-init.js loaded fine but every hit was silently dropped by the CSP.
+# boot.js loaded fine but every hit was silently dropped by the CSP.
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
