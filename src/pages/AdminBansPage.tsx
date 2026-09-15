@@ -517,7 +517,7 @@ function AdminBansPage() {
             BADのみのユーザー ({voteOnlyUsers.length})
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-            一度もリクエストをせず、他の人のリクエストへのキャンセル投票(BAD投票)だけを行っているIPです。BANはこの一覧からは行われず、内容を確認した上で手動で行ってください。
+            過去1時間以内に、一度もリクエストをせず他の人のリクエストへのキャンセル投票(BAD投票)だけを行っているIPです。BANはこの一覧からは行われず、内容を確認した上で手動で行ってください。
           </Typography>
           <Paper elevation={2}>
             <List disablePadding>

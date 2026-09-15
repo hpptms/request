@@ -155,8 +155,9 @@ export const api = {
   adminListSuspiciousFingerprints: () =>
     request<SuspiciousFingerprint[]>("/admin/suspicious-fingerprints"),
 
-  // IPs that have cast a cancel vote (BAD投票) but never submitted a
-  // request themselves. Never banned automatically.
+  // IPs that have cast a cancel vote (BAD投票) within the last hour (see
+  // backend's VoteOnlyVoterWindow) but never submitted a request
+  // themselves. Never banned automatically.
   adminListVoteOnlyVoters: () => request<VoteOnlyVoter[]>("/admin/vote-only-voters"),
 
   // IPs that have cast a cancel vote (BAD投票) within the last few minutes
