@@ -24,6 +24,10 @@ interface Props {
   likePriorityThreshold: number;
   // Ordered by ascending votes — see NowPlaying's identical use.
   cancelVoteTiers: CancelVoteTier[];
+  // Used instead of cancelVoteTiers while fastForwardActive is true — see
+  // NowPlaying's identical use.
+  fastForwardActive: boolean;
+  fastForwardCancelVoteTiers: CancelVoteTier[];
   onLike: (id: string) => Promise<void>;
   onVoteCancel: (id: string) => Promise<void>;
 }
@@ -38,7 +42,15 @@ interface Props {
 // ViewerPage's OBS/admin screen) since this loads on every visitor's own
 // device — forcing sound-on video for everyone who opens the board page
 // would be intrusive, and most browsers would just block it anyway.
-export function RequestSidePlayer({ requests, likePriorityThreshold, cancelVoteTiers, onLike, onVoteCancel }: Props) {
+export function RequestSidePlayer({
+  requests,
+  likePriorityThreshold,
+  cancelVoteTiers,
+  fastForwardActive,
+  fastForwardCancelVoteTiers,
+  onLike,
+  onVoteCancel,
+}: Props) {
   const [introVisible, setIntroVisible] = useState(false);
   const [introContent, setIntroContent] = useState<{ title: string; channelTitle: string; videoId: string } | null>(null);
   const [durationBadgeVisible, setDurationBadgeVisible] = useState(false);
@@ -75,8 +87,9 @@ export function RequestSidePlayer({ requests, likePriorityThreshold, cancelVoteT
   const [voting, setVoting] = useState(false);
   const liked = nowPlaying !== null && hasLiked(nowPlaying.id);
   const voted = nowPlaying !== null && hasVoted(nowPlaying.id);
+  const activeTiers = fastForwardActive ? fastForwardCancelVoteTiers : cancelVoteTiers;
   const nextTier = nowPlaying
-    ? (cancelVoteTiers.find((tier) => nowPlaying.cancelVotes < tier.votes) ?? cancelVoteTiers[cancelVoteTiers.length - 1])
+    ? (activeTiers.find((tier) => nowPlaying.cancelVotes < tier.votes) ?? activeTiers[activeTiers.length - 1])
     : null;
 
   const handleLikeClick = async () => {

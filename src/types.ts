@@ -48,6 +48,11 @@ export interface AppConfig {
   // ViewerPage's playback-capping effect.
   fastForwardActive: boolean;
   fastForwardCapSeconds: number;
+  // Used instead of cancelVoteTiers while fastForwardActive is true —
+  // tighter than the normal ladder, so a bad-voted request cuts shorter
+  // than the plain fastForwardCapSeconds guarantee. See ViewerPage's
+  // playback-capping effect.
+  fastForwardCancelVoteTiers: CancelVoteTier[];
   // A request whose video is at least this long is capped at
   // durationLimitCapSeconds instead of playing out normally — see
   // ViewerPage's playback-capping effect and AdminFeaturesPage. 0 means the

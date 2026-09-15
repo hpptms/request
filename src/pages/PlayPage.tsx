@@ -37,6 +37,8 @@ function PlayPage() {
     requestsLoaded,
     cancelVoteThreshold,
     cancelVoteTiers,
+    fastForwardActive,
+    fastForwardCancelVoteTiers,
     likePriorityThreshold,
     errorMessage,
     setErrorMessage,
@@ -123,6 +125,8 @@ function PlayPage() {
                 requests={requests}
                 likePriorityThreshold={likePriorityThreshold}
                 cancelVoteTiers={cancelVoteTiers}
+                fastForwardActive={fastForwardActive}
+                fastForwardCancelVoteTiers={fastForwardCancelVoteTiers}
                 onLike={handleLike}
                 onVoteCancel={handleVoteCancel}
               />
