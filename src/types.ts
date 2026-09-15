@@ -113,10 +113,11 @@ export interface SuspiciousFingerprint {
   lastSeen: string;
 }
 
-// An IP that has cast at least one cancel vote (BAD投票) but has never
-// itself submitted a request (backend/internal/store.Store.VoteOnlyVoters).
-// Shown on the admin BAN page for the admin to review and ban by hand;
-// nothing here is ever banned automatically.
+// An IP that has cast at least one cancel vote (BAD投票) within the last
+// hour and has never itself submitted a request
+// (backend/internal/store.Store.VoteOnlyVoters, windowed by
+// VoteOnlyVoterWindow). Shown on the admin BAN page for the admin to
+// review and ban by hand; nothing here is ever banned automatically.
 export interface VoteOnlyVoter {
   ip: string;
   voteCount: number;
