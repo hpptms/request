@@ -35,6 +35,12 @@ interface Props {
   // 管理者パネルの「意思表示」機能 (see useBroadcastOverlay) — a one-off
   // message or image shown centered, semi-transparent, for 10 seconds.
   broadcastState: BroadcastState;
+  // 早送りタイム中のペーシング通知 (see useFastForwardPacingPopups): a cute
+  // pop-out on the right edge, once when a video starts (how long it's
+  // scheduled to play) and again with a minute left of that schedule.
+  scheduledVisible: boolean;
+  scheduledSeconds: number;
+  oneMinuteLeftVisible: boolean;
 }
 
 // The "now playing" overlay pieces shared by the admin ViewerPage player
@@ -53,6 +59,9 @@ export function PlayerOverlays({
   voteStatusVisible,
   voteStatusContent,
   broadcastState,
+  scheduledVisible,
+  scheduledSeconds,
+  oneMinuteLeftVisible,
 }: Props) {
   const theme = useTheme();
   const introAccent = introContent ? requestAccentColor(introContent.videoId) : theme.palette.primary.main;
@@ -235,6 +244,55 @@ export function PlayerOverlays({
             )}
           </Box>
         </Fade>
+      </Box>
+
+      {/* 早送りタイムのペーシング通知: 右端からポップアウトする2種類の
+          かわいい通知 — 動画開始時に「予定◯分」、その後残り1分になったら
+          再表示。RequestSidePlayerの反応レール(縦中央・右端)と被らないよう
+          その少し上に配置。pointerEvents "none" でクリックは透過させる。 */}
+      <Box
+        sx={{
+          position: "absolute",
+          right: { xs: 8, sm: 12 },
+          top: { xs: "22%", sm: "25%" },
+          transform: "translateY(-50%)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          gap: 1,
+          pointerEvents: "none",
+        }}
+      >
+        <Slide in={scheduledVisible} direction="left" timeout={{ enter: 300, exit: 250 }}>
+          <Chip
+            icon={<span style={{ fontSize: "1.1em" }}>⏱️</span>}
+            label={`予定 ${formatDuration(scheduledSeconds)}`}
+            sx={{
+              height: { xs: 30, sm: 40 },
+              fontWeight: 700,
+              bgcolor: "#FFD166",
+              color: "#5C3D00",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.35)",
+              "& .MuiChip-label": { fontSize: { xs: "0.75rem", sm: "0.95rem" }, px: 1 },
+              "& .MuiChip-icon": { ml: 1 },
+            }}
+          />
+        </Slide>
+        <Slide in={oneMinuteLeftVisible} direction="left" timeout={{ enter: 300, exit: 250 }}>
+          <Chip
+            icon={<span style={{ fontSize: "1.1em" }}>⏰</span>}
+            label="残り1分!"
+            sx={{
+              height: { xs: 30, sm: 40 },
+              fontWeight: 700,
+              bgcolor: "#FF6F91",
+              color: "white",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.35)",
+              "& .MuiChip-label": { fontSize: { xs: "0.75rem", sm: "0.95rem" }, px: 1 },
+              "& .MuiChip-icon": { ml: 1 },
+            }}
+          />
+        </Slide>
       </Box>
     </>
   );
