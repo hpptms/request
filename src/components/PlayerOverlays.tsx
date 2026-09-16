@@ -1,6 +1,8 @@
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
+import Fade from "@mui/material/Fade";
 import Grow from "@mui/material/Grow";
+import Paper from "@mui/material/Paper";
 import Slide from "@mui/material/Slide";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -8,8 +10,10 @@ import Zoom from "@mui/material/Zoom";
 import { useTheme } from "@mui/material/styles";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import ScheduleIcon from "@mui/icons-material/Schedule";
+import { broadcastImageUrl } from "../api";
 import { formatDuration } from "../lib/formatDuration";
 import { requestAccentColor } from "../lib/requestColor";
+import type { BroadcastState } from "../types";
 
 interface Props {
   // Music-program-style title card, shown while a video starts.
@@ -28,6 +32,9 @@ interface Props {
   // Vote-status badge (😨 cancel votes / 😊 likes) for whatever's playing.
   voteStatusVisible: boolean;
   voteStatusContent: { cancelVotes: number; likes: number } | null;
+  // 管理者パネルの「意思表示」機能 (see useBroadcastOverlay) — a one-off
+  // message or image shown centered, semi-transparent, for 10 seconds.
+  broadcastState: BroadcastState;
 }
 
 // The "now playing" overlay pieces shared by the admin ViewerPage player
@@ -45,6 +52,7 @@ export function PlayerOverlays({
   newRequestNotice,
   voteStatusVisible,
   voteStatusContent,
+  broadcastState,
 }: Props) {
   const theme = useTheme();
   const introAccent = introContent ? requestAccentColor(introContent.videoId) : theme.palette.primary.main;
@@ -180,6 +188,53 @@ export function PlayerOverlays({
             )}
           </Stack>
         </Grow>
+      </Box>
+
+      {/* 意思表示: an admin-triggered message or image, centered and
+          semi-transparent, for as long as useBroadcastOverlay reports one
+          (10 seconds). pointerEvents "none" so it never blocks the
+          video/queue controls underneath. */}
+      <Box
+        sx={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          p: { xs: 2, sm: 4 },
+          pointerEvents: "none",
+        }}
+      >
+        <Fade in={broadcastState !== null} timeout={{ enter: 300, exit: 400 }}>
+          <Box sx={{ maxWidth: "85%", maxHeight: "85%", display: "flex" }}>
+            {broadcastState?.kind === "image" && broadcastState.imageVersion ? (
+              <Box
+                component="img"
+                src={broadcastImageUrl(broadcastState.imageVersion)}
+                alt=""
+                sx={{ maxWidth: "100%", maxHeight: "100%", opacity: 0.85, borderRadius: 2 }}
+              />
+            ) : (
+              <Paper
+                elevation={6}
+                sx={{
+                  bgcolor: "rgba(0, 0, 0, 0.7)",
+                  px: { xs: 2, sm: 3 },
+                  py: { xs: 1.5, sm: 2 },
+                  borderRadius: 2,
+                }}
+              >
+                <Typography
+                  variant="h5"
+                  align="center"
+                  sx={{ color: "white", fontWeight: 600, whiteSpace: "pre-line", wordBreak: "break-word" }}
+                >
+                  {broadcastState?.text ?? ""}
+                </Typography>
+              </Paper>
+            )}
+          </Box>
+        </Fade>
       </Box>
     </>
   );

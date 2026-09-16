@@ -10,6 +10,7 @@ import { PlayerOverlays } from "./PlayerOverlays";
 import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
 import { formatDuration } from "../lib/formatDuration";
 import { hasLiked, markLiked } from "../lib/likeStorage";
+import { useBroadcastOverlay } from "../lib/useBroadcastOverlay";
 import {
   DURATION_BADGE_DELAY_MS,
   DURATION_BADGE_VISIBLE_MS,
@@ -64,6 +65,7 @@ export function RequestSidePlayer({
   const [newRequestNotice, setNewRequestNotice] = useState<{ id: string; title: string; videoId: string } | null>(null);
   const [voteStatusVisible, setVoteStatusVisible] = useState(false);
   const [voteStatusContent, setVoteStatusContent] = useState<{ cancelVotes: number; likes: number } | null>(null);
+  const broadcastState = useBroadcastOverlay();
 
   // Which request's title/duration card has already been shown, so a poll
   // that just re-confirms the same one playing doesn't replay the intro.
@@ -258,6 +260,7 @@ export function RequestSidePlayer({
         newRequestNotice={newRequestNotice}
         voteStatusVisible={voteStatusVisible}
         voteStatusContent={voteStatusContent}
+        broadcastState={broadcastState}
       />
 
       {/* Vertically centered on the right edge (Shorts/Reels-style reaction

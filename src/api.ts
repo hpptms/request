@@ -2,6 +2,7 @@ import type {
   AdminVideoRequest,
   AppConfig,
   BannedIP,
+  BroadcastState,
   CancelVoteResult,
   DurationLimit,
   FallbackTrack,
@@ -25,7 +26,10 @@ import { getDeviceFingerprint } from "./lib/deviceFingerprint";
 // Relative by default: works both behind the Docker/nginx reverse proxy and
 // with the Vite dev server proxy configured in vite.config.ts. Override via
 // VITE_API_BASE_URL only if the API is served from a different origin.
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "/api";
+// Exported so components that need a plain URL rather than a JSON fetch
+// (BroadcastOverlay's <img src>) can build one without duplicating this
+// logic.
+export const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -206,4 +210,29 @@ export const api = {
       method: "PUT",
       body: JSON.stringify({ thresholdSeconds }),
     }),
+
+  // Polled by useBroadcastOverlay (viewer/play screens) to detect a new
+  // 意思表示 via its triggeredAt.
+  getBroadcast: () => request<BroadcastState>("/broadcast"),
+
+  adminBroadcastMessage: (text: string) =>
+    request<BroadcastState>("/admin/broadcast/message", {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    }),
+
+  // imageDataUrl is a data: URL, as produced by FileReader.readAsDataURL on
+  // the file the admin picked — see AdminBroadcastPage.
+  adminBroadcastImage: (imageDataUrl: string) =>
+    request<BroadcastState>("/admin/broadcast/image", {
+      method: "POST",
+      body: JSON.stringify({ imageDataUrl }),
+    }),
 };
+
+// URL for the current broadcast image (see BroadcastState.imageVersion) —
+// not fetched via request()/api above since it's rendered directly as an
+// <img src>, not JSON.
+export function broadcastImageUrl(imageVersion: number): string {
+  return `${API_BASE}/broadcast/image?v=${imageVersion}`;
+}

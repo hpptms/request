@@ -9,6 +9,7 @@ import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
+import CampaignIcon from "@mui/icons-material/Campaign";
 import FastForwardIcon from "@mui/icons-material/FastForward";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import FilterAltOutlinedIcon from "@mui/icons-material/FilterAltOutlined";
@@ -85,6 +86,7 @@ const adminTabs = [
   },
   { value: "features", path: "/admin/features", label: "機能", icon: <SettingsIcon fontSize="small" /> },
   { value: "stats", path: "/admin/stats", label: "集計", icon: <QueryStatsIcon fontSize="small" /> },
+  { value: "broadcast", path: "/admin/broadcast", label: "意思表示", icon: <CampaignIcon fontSize="small" /> },
 ] as const;
 
 // Shared header for every authenticated /admin/* screen: title, logout, and

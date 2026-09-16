@@ -65,6 +65,20 @@ export interface AppConfig {
   twoMinuteRequestCapSeconds: number;
 }
 
+// The admin panel's 意思表示 feature (see AdminBroadcastPage): a one-off
+// text message or image, shown as a timed overlay on the viewer/play
+// screens (see useBroadcastOverlay). null means nothing has ever been
+// triggered. triggeredAt is what a poller compares against its own
+// last-seen value to detect a *new* trigger — including a re-trigger of
+// the exact same text/image, which is why kind/text/imageVersion alone
+// can't be used for that.
+export type BroadcastState = {
+  kind: "message" | "image";
+  text?: string;
+  imageVersion?: number;
+  triggeredAt: string;
+} | null;
+
 export interface CancelVoteResult {
   voteCount: number;
   threshold: number;
