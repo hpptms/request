@@ -268,13 +268,13 @@ export function PlayerOverlays({
             icon={<span style={{ fontSize: "1.1em" }}>⏱️</span>}
             label={`予定 ${formatDuration(scheduledSeconds)}`}
             sx={{
-              height: { xs: 30, sm: 40 },
+              height: { xs: 60, sm: 80 },
               fontWeight: 700,
               bgcolor: "#FFD166",
               color: "#5C3D00",
               boxShadow: "0 2px 10px rgba(0,0,0,0.35)",
-              "& .MuiChip-label": { fontSize: { xs: "0.75rem", sm: "0.95rem" }, px: 1 },
-              "& .MuiChip-icon": { ml: 1 },
+              "& .MuiChip-label": { fontSize: { xs: "1.5rem", sm: "1.9rem" }, px: 2 },
+              "& .MuiChip-icon": { ml: 2, fontSize: "1.6rem" },
             }}
           />
         </Slide>
