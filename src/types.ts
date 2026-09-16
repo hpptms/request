@@ -104,6 +104,16 @@ export interface BannedIP {
   // time it will be automatically lifted. Absent for a permanent (手動BAN)
   // or automatic ban.
   expiresAt?: string;
+  // Present only for a ban tied to a specific request (the title-keyword
+  // auto-ban) — see backend/internal/banlist.RequestedVideo. A
+  // keyword-matched request is rejected before ever becoming a queued
+  // request, so this is the only place it's recorded.
+  request?: {
+    title: string;
+    channelTitle?: string;
+    url: string;
+    matchedKeyword?: string;
+  };
 }
 
 // A device fingerprint (backend/internal/fingerprint) currently sighted

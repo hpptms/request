@@ -7,6 +7,7 @@ import Chip from "@mui/material/Chip";
 import Collapse from "@mui/material/Collapse";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
+import Link from "@mui/material/Link";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemAvatar from "@mui/material/ListItemAvatar";
@@ -331,13 +332,28 @@ function AdminBansPage() {
                       </Stack>
                     }
                     secondary={
-                      `BAN日時: ${new Date(b.bannedAt).toLocaleString("ja-JP")}` +
-                      (b.expiresAt
-                        ? ` / 自動解除: ${new Date(b.expiresAt).toLocaleString("ja-JP")}`
-                        : "") +
-                      (b.reason && b.reason !== "manual" && b.reason !== "manual-1h"
-                        ? ` (理由: ${b.reason})`
-                        : "")
+                      <>
+                        {`BAN日時: ${new Date(b.bannedAt).toLocaleString("ja-JP")}` +
+                          (b.expiresAt
+                            ? ` / 自動解除: ${new Date(b.expiresAt).toLocaleString("ja-JP")}`
+                            : "") +
+                          (b.reason && b.reason !== "manual" && b.reason !== "manual-1h"
+                            ? ` (理由: ${b.reason})`
+                            : "")}
+                        {b.request && (
+                          <>
+                            <br />
+                            リクエスト内容: {b.request.title}
+                            {b.request.channelTitle ? `（${b.request.channelTitle}）` : ""}
+                            {b.request.matchedKeyword
+                              ? ` — 禁止ワード「${b.request.matchedKeyword}」に一致`
+                              : ""}{" "}
+                            <Link href={b.request.url} target="_blank" rel="noopener noreferrer">
+                              動画を開く
+                            </Link>
+                          </>
+                        )}
+                      </>
                     }
                   />
                 </ListItem>
