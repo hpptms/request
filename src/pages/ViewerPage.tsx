@@ -14,6 +14,7 @@ import { PlayerOverlays } from "../components/PlayerOverlays";
 import { trackEvent } from "../lib/analytics";
 import { FALLBACK_VIDEO_IDS, pickRandomFallbackVideoId } from "../lib/fallbackPlaylist";
 import { loadYouTubeIframeApi } from "../lib/loadYouTubeIframeApi";
+import { useBroadcastOverlay } from "../lib/useBroadcastOverlay";
 import {
   DURATION_BADGE_DELAY_MS,
   DURATION_BADGE_VISIBLE_MS,
@@ -191,6 +192,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // playing — see the effect watching `requests` for lastShownVoteCountsRef.
   const [voteStatusVisible, setVoteStatusVisible] = useState(false);
   const [voteStatusContent, setVoteStatusContent] = useState<{ cancelVotes: number; likes: number } | null>(null);
+  const broadcastState = useBroadcastOverlay();
   const [fallbackNowPlayingId, setFallbackNowPlayingId] = useState<string | null>(null);
   // World/Japan Top 100 tracks from the backend; empty until resolved (or
   // permanently, with no YouTube API key configured), in which case the
@@ -1004,6 +1006,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
               newRequestNotice={newRequestNotice}
               voteStatusVisible={voteStatusVisible}
               voteStatusContent={voteStatusContent}
+              broadcastState={broadcastState}
             />
           </>
         </Box>

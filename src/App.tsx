@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import AboutPage from "./pages/AboutPage";
 import AdminBansPage from "./pages/AdminBansPage";
+import AdminBroadcastPage from "./pages/AdminBroadcastPage";
 import AdminFastForwardPage from "./pages/AdminFastForwardPage";
 import AdminFeaturesPage from "./pages/AdminFeaturesPage";
 import AdminKeywordLimitsPage from "./pages/AdminKeywordLimitsPage";
@@ -36,6 +37,7 @@ function AppRoutes() {
         <Route path="fastforward" element={<AdminFastForwardPage />} />
         <Route path="features" element={<AdminFeaturesPage />} />
         <Route path="stats" element={<AdminStatsPage />} />
+        <Route path="broadcast" element={<AdminBroadcastPage />} />
       </Route>
     </Routes>
   );
