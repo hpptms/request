@@ -31,7 +31,7 @@ export function Footer() {
         </Link>
       </Stack>
       <Typography variant="caption" color="text.secondary" align="center" sx={{ display: "block", mt: 1.5 }}>
-        動画リクエストキュー
+        動画リクエスト
       </Typography>
     </Box>
   );
