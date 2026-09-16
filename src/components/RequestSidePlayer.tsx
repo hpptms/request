@@ -10,7 +10,6 @@ import { PlayerOverlays } from "./PlayerOverlays";
 import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
 import { formatDuration } from "../lib/formatDuration";
 import { hasLiked, markLiked } from "../lib/likeStorage";
-import { useBroadcastOverlay } from "../lib/useBroadcastOverlay";
 import {
   DURATION_BADGE_DELAY_MS,
   DURATION_BADGE_VISIBLE_MS,
@@ -18,6 +17,8 @@ import {
   NOW_PLAYING_INTRO_MS,
   VOTE_STATUS_VISIBLE_MS,
 } from "../lib/playerOverlayTiming";
+import { useBroadcastOverlay } from "../lib/useBroadcastOverlay";
+import { useFastForwardPacingPopups } from "../lib/useFastForwardPacingPopups";
 import type { CancelVoteTier, VideoRequest } from "../types";
 
 interface Props {
@@ -29,6 +30,9 @@ interface Props {
   // NowPlaying's identical use.
   fastForwardActive: boolean;
   fastForwardCancelVoteTiers: CancelVoteTier[];
+  // Current per-video pacing target while fastForwardActive — see
+  // useFastForwardPacingPopups.
+  fastForwardCapSeconds: number;
   onLike: (id: string) => Promise<void>;
   onVoteCancel: (id: string) => Promise<void>;
 }
@@ -49,6 +53,7 @@ export function RequestSidePlayer({
   cancelVoteTiers,
   fastForwardActive,
   fastForwardCancelVoteTiers,
+  fastForwardCapSeconds,
   onLike,
   onVoteCancel,
 }: Props) {
@@ -82,6 +87,11 @@ export function RequestSidePlayer({
   const voteStatusHideTimerRef = useRef<number | null>(null);
 
   const nowPlaying = requests.find((r) => r.status === "playing") ?? null;
+  const { scheduledVisible, scheduledSeconds, oneMinuteLeftVisible } = useFastForwardPacingPopups(
+    nowPlaying?.id ?? null,
+    fastForwardActive,
+    fastForwardCapSeconds,
+  );
 
   // Like/bad buttons overlaid on the video itself — same storage-backed
   // "already voted" tracking as NowPlaying/QueueList's buttons.
@@ -261,6 +271,9 @@ export function RequestSidePlayer({
         voteStatusVisible={voteStatusVisible}
         voteStatusContent={voteStatusContent}
         broadcastState={broadcastState}
+        scheduledVisible={scheduledVisible}
+        scheduledSeconds={scheduledSeconds}
+        oneMinuteLeftVisible={oneMinuteLeftVisible}
       />
 
       {/* Vertically centered on the right edge (Shorts/Reels-style reaction

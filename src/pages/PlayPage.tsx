@@ -38,6 +38,7 @@ function PlayPage() {
     cancelVoteThreshold,
     cancelVoteTiers,
     fastForwardActive,
+    fastForwardCapSeconds,
     fastForwardCancelVoteTiers,
     likePriorityThreshold,
     errorMessage,
@@ -127,6 +128,7 @@ function PlayPage() {
                 cancelVoteTiers={cancelVoteTiers}
                 fastForwardActive={fastForwardActive}
                 fastForwardCancelVoteTiers={fastForwardCancelVoteTiers}
+                fastForwardCapSeconds={fastForwardCapSeconds}
                 onLike={handleLike}
                 onVoteCancel={handleVoteCancel}
               />

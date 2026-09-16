@@ -44,6 +44,10 @@ export function useRequestQueue(source: string) {
   const [fastForwardCancelVoteTiers, setFastForwardCancelVoteTiers] = useState<CancelVoteTier[]>(
     DEFAULT_FAST_FORWARD_CANCEL_VOTE_TIERS,
   );
+  // How many seconds each video is currently being paced to (see
+  // store.fastForwardFloorLocked) — used by useFastForwardPacingPopups for
+  // its "予定" / "残り1分" notices, only meaningful while fastForwardActive.
+  const [fastForwardCapSeconds, setFastForwardCapSeconds] = useState(0);
   const [likePriorityThreshold, setLikePriorityThreshold] = useState(DEFAULT_LIKE_PRIORITY_THRESHOLD);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -69,6 +73,7 @@ export function useRequestQueue(source: string) {
           setCancelVoteThreshold(config.cancelVoteThreshold);
           setCancelVoteTiers(config.cancelVoteTiers);
           setFastForwardActive(config.fastForwardActive);
+          setFastForwardCapSeconds(config.fastForwardCapSeconds);
           setFastForwardCancelVoteTiers(config.fastForwardCancelVoteTiers);
           setLikePriorityThreshold(config.likePriorityThreshold);
         })
@@ -178,6 +183,7 @@ export function useRequestQueue(source: string) {
     cancelVoteThreshold,
     cancelVoteTiers: cancelVoteTiers.length > 0 ? cancelVoteTiers : DEFAULT_CANCEL_VOTE_TIERS,
     fastForwardActive,
+    fastForwardCapSeconds,
     fastForwardCancelVoteTiers:
       fastForwardCancelVoteTiers.length > 0 ? fastForwardCancelVoteTiers : DEFAULT_FAST_FORWARD_CANCEL_VOTE_TIERS,
     likePriorityThreshold,
