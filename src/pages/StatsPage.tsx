@@ -9,6 +9,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { Link as RouterLink } from "react-router-dom";
+import { Footer } from "../components/Footer";
 import { StatsView } from "../components/StatsView";
 import { useSeo } from "../lib/useSeo";
 
@@ -55,6 +56,7 @@ function StatsPage() {
 
       <Container maxWidth="md" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1.5, sm: 3 } }}>
         <StatsView />
+        <Footer />
       </Container>
     </Box>
   );

@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import AboutPage from "./pages/AboutPage";
 import AdminBansPage from "./pages/AdminBansPage";
 import AdminFastForwardPage from "./pages/AdminFastForwardPage";
 import AdminFeaturesPage from "./pages/AdminFeaturesPage";
@@ -8,7 +9,9 @@ import AdminPage from "./pages/AdminPage";
 import AdminPlaylistPage from "./pages/AdminPlaylistPage";
 import AdminStatsPage from "./pages/AdminStatsPage";
 import BoardPage from "./pages/BoardPage";
+import ContactPage from "./pages/ContactPage";
 import PlayPage from "./pages/PlayPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import StatsPage from "./pages/StatsPage";
 import ViewerPage from "./pages/ViewerPage";
 import { usePageViewTracking } from "./lib/usePageViewTracking";
@@ -21,6 +24,9 @@ function AppRoutes() {
       <Route path="/" element={<BoardPage />} />
       <Route path="/play" element={<PlayPage />} />
       <Route path="/stats" element={<StatsPage />} />
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/privacy" element={<PrivacyPolicyPage />} />
+      <Route path="/contact" element={<ContactPage />} />
       <Route path="/viewer" element={<ViewerPage />} />
       <Route path="/admin" element={<AdminPage />}>
         <Route index element={<AdminBansPage />} />

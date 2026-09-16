@@ -13,6 +13,7 @@ import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import ShieldIcon from "@mui/icons-material/Shield";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 import { Link as RouterLink } from "react-router-dom";
+import { Footer } from "../components/Footer";
 import { NowPlaying } from "../components/NowPlaying";
 import { QueueList } from "../components/QueueList";
 import { RequestForm } from "../components/RequestForm";
@@ -136,6 +137,8 @@ function BoardPage() {
             />
           </Box>
         </Stack>
+
+        <Footer />
       </Container>
 
       <Snackbar
