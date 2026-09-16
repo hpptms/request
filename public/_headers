@@ -8,8 +8,12 @@
 # collect hits to those exact hosts — a wildcard like *.analytics.google.com
 # does NOT match the bare analytics.google.com, so without these gtag.js/
 # boot.js loaded fine but every hit was silently dropped by the CSP.
+# img-src includes https://api.request.tokyo for the same cross-origin-API
+# reason as connect-src above — the 意思表示 broadcast image is served
+# from GET /api/broadcast/image, and without this the <img> tag showing it
+# is silently blocked the same way gtag's hits were.
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.youtube.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ytimg.com https://*.ytimg.com https://*.nimg.jp https://*.vimeocdn.com; frame-src https://www.youtube.com https://embed.nicovideo.jp https://player.vimeo.com; connect-src 'self' https://api.request.tokyo https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://www.google.com https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.youtube.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ytimg.com https://*.ytimg.com https://*.nimg.jp https://*.vimeocdn.com https://api.request.tokyo; frame-src https://www.youtube.com https://embed.nicovideo.jp https://player.vimeo.com; connect-src 'self' https://api.request.tokyo https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://www.google.com https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'

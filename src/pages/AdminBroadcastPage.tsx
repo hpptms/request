@@ -8,7 +8,10 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import ImageIcon from "@mui/icons-material/Image";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { api } from "../api";
+
+const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 
 const MAX_MESSAGE_LENGTH = 200;
 // Client-side guard so a large file gets a clear error immediately instead
@@ -39,6 +42,7 @@ function AdminBroadcastPage() {
   const [sendingImage, setSendingImage] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
   const [imageSent, setImageSent] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
 
   const handleSendMessage = async () => {
     setSendingMessage(true);
@@ -55,14 +59,15 @@ function AdminBroadcastPage() {
     }
   };
 
-  const handleSelectImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    // Reset so selecting the exact same file again still fires onChange.
-    e.target.value = "";
-    if (!file) return;
-
+  // Shared by the file input (click-to-browse) and the drop zone below —
+  // both just need to hand off whichever File the user picked.
+  const handleImageFile = async (file: File) => {
     setImageError(null);
     setImageSent(false);
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      setImageError("PNG・JPEG・WebP・GIFのいずれかを選んでください");
+      return;
+    }
     if (file.size > MAX_IMAGE_BYTES) {
       setImageError(`画像は${Math.floor(MAX_IMAGE_BYTES / 1024)}KB以下にしてください`);
       return;
@@ -78,6 +83,20 @@ function AdminBroadcastPage() {
     } finally {
       setSendingImage(false);
     }
+  };
+
+  const handleSelectImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    // Reset so selecting the exact same file again still fires onChange.
+    e.target.value = "";
+    if (file) void handleImageFile(file);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) void handleImageFile(file);
   };
 
   return (
@@ -122,7 +141,30 @@ function AdminBroadcastPage() {
           </Typography>
           {imageError && <Alert severity="error">{imageError}</Alert>}
           {imageSent && <Alert severity="success">送信しました(10秒間表示されます)</Alert>}
-          <Box>
+          <Box
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(true);
+            }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleDrop}
+            sx={{
+              border: "2px dashed",
+              borderColor: dragOver ? "primary.main" : "divider",
+              borderRadius: 2,
+              bgcolor: dragOver ? "action.hover" : "transparent",
+              p: 3,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 1.5,
+              transition: "border-color 0.15s, background-color 0.15s",
+            }}
+          >
+            <UploadFileIcon color={dragOver ? "primary" : "disabled"} fontSize="large" />
+            <Typography variant="body2" color="text.secondary" align="center">
+              ここに画像をドラッグ&ドロップ、またはファイルを選択
+            </Typography>
             <Button variant="contained" component="label" disabled={sendingImage}>
               {sendingImage ? "送信中..." : "画像を選んで表示する(10秒)"}
               <input
