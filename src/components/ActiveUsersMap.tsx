@@ -135,11 +135,7 @@ export function ActiveUsersMap({ data }: { data: ActiveUsersByCity[] }) {
                   fill="#2a2a2e"
                   stroke="#3a3a3f"
                   strokeWidth={0.5}
-                  style={{
-                    default: { outline: "none" },
-                    hover: { outline: "none" },
-                    pressed: { outline: "none" },
-                  }}
+                  style={{ outline: "none" }}
                 />
               ))
             }
