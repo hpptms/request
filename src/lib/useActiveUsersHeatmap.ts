@@ -1,25 +1,47 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
-import { MOCK_ACTIVE_USERS, mapGA4CitiesToPoints, type ActiveUsersByCity } from "./activeUsersHeatmap";
+import {
+  MOCK_ACTIVE_USERS_RAW,
+  aggregateByPrefecture,
+  mapGA4CitiesToPoints,
+  type ActiveUsersByCity,
+  type ActiveUsersByPrefecture,
+} from "./activeUsersHeatmap";
 
 const POLL_INTERVAL_MS = 60000;
 
-// Polls GET /api/heatmap. data is null until the *first* request settles —
-// deliberately not seeded with MOCK_ACTIVE_USERS, so the placeholder
+type Result = {
+  // City-precision points for the map's bubble markers.
+  points: ActiveUsersByCity[] | null;
+  // Prefecture-only totals for the table under the map — see
+  // aggregateByPrefecture's own comment for why it's coarser than points.
+  prefectures: ActiveUsersByPrefecture[] | null;
+  isMock: boolean;
+};
+
+// Polls GET /api/heatmap. Both fields are null until the *first* request
+// settles — deliberately not seeded with mock data, so the placeholder
 // (Tokyo 420, Osaka 180, ...) never flashes on screen only to be replaced
 // a moment later by the real, much smaller numbers once the real request
-// resolves. MOCK_ACTIVE_USERS is used only as the actual fallback: the
+// resolves. MOCK_ACTIVE_USERS_RAW is used only as the actual fallback: the
 // backend has nothing yet (no GA4 property configured, background
 // refresher hasn't completed its first run) or the request itself failed.
 // isMock tells callers which case they're looking at so they can caption
 // the map accordingly.
-export function useActiveUsersHeatmap(): { data: ActiveUsersByCity[] | null; isMock: boolean } {
-  const [data, setData] = useState<ActiveUsersByCity[] | null>(null);
+export function useActiveUsersHeatmap(): Result {
+  const [points, setPoints] = useState<ActiveUsersByCity[] | null>(null);
+  const [prefectures, setPrefectures] = useState<ActiveUsersByPrefecture[] | null>(null);
   const [isMock, setIsMock] = useState(false);
   const hasSettledRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
+
+    const applyMock = () => {
+      setPoints(mapGA4CitiesToPoints(MOCK_ACTIVE_USERS_RAW));
+      setPrefectures(aggregateByPrefecture(MOCK_ACTIVE_USERS_RAW));
+      setIsMock(true);
+    };
 
     const poll = () => {
       api
@@ -27,13 +49,13 @@ export function useActiveUsersHeatmap(): { data: ActiveUsersByCity[] | null; isM
         .then((cities) => {
           if (cancelled) return;
           hasSettledRef.current = true;
-          const points = mapGA4CitiesToPoints(cities);
-          if (points.length === 0) {
-            setData(MOCK_ACTIVE_USERS);
-            setIsMock(true);
+          const mappedPoints = mapGA4CitiesToPoints(cities);
+          if (mappedPoints.length === 0) {
+            applyMock();
             return;
           }
-          setData(points);
+          setPoints(mappedPoints);
+          setPrefectures(aggregateByPrefecture(cities));
           setIsMock(false);
         })
         .catch(() => {
@@ -44,8 +66,7 @@ export function useActiveUsersHeatmap(): { data: ActiveUsersByCity[] | null; isM
           // rather than leaving the map stuck on its loading state.
           if (!hasSettledRef.current) {
             hasSettledRef.current = true;
-            setData(MOCK_ACTIVE_USERS);
-            setIsMock(true);
+            applyMock();
           }
         });
     };
@@ -58,5 +79,5 @@ export function useActiveUsersHeatmap(): { data: ActiveUsersByCity[] | null; isM
     };
   }, []);
 
-  return { data, isMock };
+  return { points, prefectures, isMock };
 }
