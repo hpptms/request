@@ -12,8 +12,13 @@
 # reason as connect-src above — the 意思表示 broadcast image is served
 # from GET /api/broadcast/image, and without this the <img> tag showing it
 # is silently blocked the same way gtag's hits were.
+# script-src also allows adm.shinobi.jp/cnobi.jp for the PC-only admax
+# sticky-right ad loaded from boot.js — deliberately NOT widening
+# img-src/frame-src for the ad network's own creative domains (they rotate
+# and include low-quality content-ad sites), so the ad script itself loads
+# but its creative may render blank; see boot.js.
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.youtube.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ytimg.com https://*.ytimg.com https://*.nimg.jp https://*.vimeocdn.com https://api.request.tokyo; frame-src https://www.youtube.com https://embed.nicovideo.jp https://player.vimeo.com; connect-src 'self' https://api.request.tokyo https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://www.google.com https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.youtube.com https://www.googletagmanager.com https://adm.shinobi.jp https://cnobi.jp; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ytimg.com https://*.ytimg.com https://*.nimg.jp https://*.vimeocdn.com https://api.request.tokyo; frame-src https://www.youtube.com https://embed.nicovideo.jp https://player.vimeo.com; connect-src 'self' https://api.request.tokyo https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://www.google.com https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
