@@ -2,29 +2,31 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import AboutPage from "./pages/AboutPage";
-import AdminBansPage from "./pages/AdminBansPage";
-import AdminBroadcastPage from "./pages/AdminBroadcastPage";
-import AdminFastForwardPage from "./pages/AdminFastForwardPage";
-import AdminFeaturesPage from "./pages/AdminFeaturesPage";
-import AdminKeywordLimitsPage from "./pages/AdminKeywordLimitsPage";
-import AdminKeywordsPage from "./pages/AdminKeywordsPage";
-import AdminPage from "./pages/AdminPage";
-import AdminPlaylistPage from "./pages/AdminPlaylistPage";
-import AdminStatsPage from "./pages/AdminStatsPage";
 import BoardPage from "./pages/BoardPage";
-import ContactPage from "./pages/ContactPage";
-import PlayPage from "./pages/PlayPage";
-import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
-import StatsPage from "./pages/StatsPage";
-import ViewerPage from "./pages/ViewerPage";
 import { usePageViewTracking } from "./lib/usePageViewTracking";
 
-// Lazy-loaded: react-simple-maps + d3-geo (see ActiveUsersMap) add ~270KB
-// gzipped, otherwise pulled into the main bundle for every visitor even
-// though only these two routes use it.
+// Lazy-loaded: BoardPage ("/") is the landing page almost every visitor
+// hits first, so it's the only one that stays in the main bundle.
+// Everything else — including the entire admin section (9 pages) and
+// ViewerPage (OBS-capture only) — is fetched on demand instead of paid for
+// by every visitor up front.
+const PlayPage = lazy(() => import("./pages/PlayPage"));
+const StatsPage = lazy(() => import("./pages/StatsPage"));
 const HeatmapPage = lazy(() => import("./pages/HeatmapPage"));
+const AboutPage = lazy(() => import("./pages/AboutPage"));
+const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
+const ContactPage = lazy(() => import("./pages/ContactPage"));
+const ViewerPage = lazy(() => import("./pages/ViewerPage"));
+const AdminPage = lazy(() => import("./pages/AdminPage"));
+const AdminBansPage = lazy(() => import("./pages/AdminBansPage"));
+const AdminPlaylistPage = lazy(() => import("./pages/AdminPlaylistPage"));
+const AdminKeywordsPage = lazy(() => import("./pages/AdminKeywordsPage"));
+const AdminKeywordLimitsPage = lazy(() => import("./pages/AdminKeywordLimitsPage"));
+const AdminFastForwardPage = lazy(() => import("./pages/AdminFastForwardPage"));
+const AdminFeaturesPage = lazy(() => import("./pages/AdminFeaturesPage"));
+const AdminStatsPage = lazy(() => import("./pages/AdminStatsPage"));
 const AdminHeatmapPage = lazy(() => import("./pages/AdminHeatmapPage"));
+const AdminBroadcastPage = lazy(() => import("./pages/AdminBroadcastPage"));
 
 function LazyPageFallback() {
   return (
@@ -38,41 +40,29 @@ function AppRoutes() {
   usePageViewTracking();
 
   return (
-    <Routes>
-      <Route path="/" element={<BoardPage />} />
-      <Route path="/play" element={<PlayPage />} />
-      <Route path="/stats" element={<StatsPage />} />
-      <Route
-        path="/heatmap"
-        element={
-          <Suspense fallback={<LazyPageFallback />}>
-            <HeatmapPage />
-          </Suspense>
-        }
-      />
-      <Route path="/about" element={<AboutPage />} />
-      <Route path="/privacy" element={<PrivacyPolicyPage />} />
-      <Route path="/contact" element={<ContactPage />} />
-      <Route path="/viewer" element={<ViewerPage />} />
-      <Route path="/admin" element={<AdminPage />}>
-        <Route index element={<AdminBansPage />} />
-        <Route path="playlist" element={<AdminPlaylistPage />} />
-        <Route path="keywords" element={<AdminKeywordsPage />} />
-        <Route path="keywordlimits" element={<AdminKeywordLimitsPage />} />
-        <Route path="fastforward" element={<AdminFastForwardPage />} />
-        <Route path="features" element={<AdminFeaturesPage />} />
-        <Route path="stats" element={<AdminStatsPage />} />
-        <Route
-          path="heatmap"
-          element={
-            <Suspense fallback={<LazyPageFallback />}>
-              <AdminHeatmapPage />
-            </Suspense>
-          }
-        />
-        <Route path="broadcast" element={<AdminBroadcastPage />} />
-      </Route>
-    </Routes>
+    <Suspense fallback={<LazyPageFallback />}>
+      <Routes>
+        <Route path="/" element={<BoardPage />} />
+        <Route path="/play" element={<PlayPage />} />
+        <Route path="/stats" element={<StatsPage />} />
+        <Route path="/heatmap" element={<HeatmapPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/viewer" element={<ViewerPage />} />
+        <Route path="/admin" element={<AdminPage />}>
+          <Route index element={<AdminBansPage />} />
+          <Route path="playlist" element={<AdminPlaylistPage />} />
+          <Route path="keywords" element={<AdminKeywordsPage />} />
+          <Route path="keywordlimits" element={<AdminKeywordLimitsPage />} />
+          <Route path="fastforward" element={<AdminFastForwardPage />} />
+          <Route path="features" element={<AdminFeaturesPage />} />
+          <Route path="stats" element={<AdminStatsPage />} />
+          <Route path="heatmap" element={<AdminHeatmapPage />} />
+          <Route path="broadcast" element={<AdminBroadcastPage />} />
+        </Route>
+      </Routes>
+    </Suspense>
   );
 }
 
