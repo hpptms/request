@@ -8,6 +8,7 @@ import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
+import MapIcon from "@mui/icons-material/Map";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import ShieldIcon from "@mui/icons-material/Shield";
@@ -78,6 +79,15 @@ function BoardPage() {
               sx={{ whiteSpace: "nowrap" }}
             >
               集計
+            </Button>
+            <Button
+              component={RouterLink}
+              to="/heatmap"
+              size="small"
+              startIcon={<MapIcon />}
+              sx={{ whiteSpace: "nowrap" }}
+            >
+              ヒートマップ
             </Button>
             <Button
               component="a"

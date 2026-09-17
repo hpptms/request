@@ -4,6 +4,7 @@ import AdminBansPage from "./pages/AdminBansPage";
 import AdminBroadcastPage from "./pages/AdminBroadcastPage";
 import AdminFastForwardPage from "./pages/AdminFastForwardPage";
 import AdminFeaturesPage from "./pages/AdminFeaturesPage";
+import AdminHeatmapPage from "./pages/AdminHeatmapPage";
 import AdminKeywordLimitsPage from "./pages/AdminKeywordLimitsPage";
 import AdminKeywordsPage from "./pages/AdminKeywordsPage";
 import AdminPage from "./pages/AdminPage";
@@ -11,6 +12,7 @@ import AdminPlaylistPage from "./pages/AdminPlaylistPage";
 import AdminStatsPage from "./pages/AdminStatsPage";
 import BoardPage from "./pages/BoardPage";
 import ContactPage from "./pages/ContactPage";
+import HeatmapPage from "./pages/HeatmapPage";
 import PlayPage from "./pages/PlayPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import StatsPage from "./pages/StatsPage";
@@ -25,6 +27,7 @@ function AppRoutes() {
       <Route path="/" element={<BoardPage />} />
       <Route path="/play" element={<PlayPage />} />
       <Route path="/stats" element={<StatsPage />} />
+      <Route path="/heatmap" element={<HeatmapPage />} />
       <Route path="/about" element={<AboutPage />} />
       <Route path="/privacy" element={<PrivacyPolicyPage />} />
       <Route path="/contact" element={<ContactPage />} />
@@ -37,6 +40,7 @@ function AppRoutes() {
         <Route path="fastforward" element={<AdminFastForwardPage />} />
         <Route path="features" element={<AdminFeaturesPage />} />
         <Route path="stats" element={<AdminStatsPage />} />
+        <Route path="heatmap" element={<AdminHeatmapPage />} />
         <Route path="broadcast" element={<AdminBroadcastPage />} />
       </Route>
     </Routes>
