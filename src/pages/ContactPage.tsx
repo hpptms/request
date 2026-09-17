@@ -13,7 +13,7 @@ import { useSeo } from "../lib/useSeo";
 
 // お問い合わせ窓口。開設済みならここにX(旧Twitter)のURL/@ハンドルを入れる
 // — 未設定のうちは下のContactPageが「準備中」表示にフォールバックする。
-const X_HANDLE: string | null = null;
+const X_HANDLE: string | null = "request_tokyo";
 
 // お問い合わせページ (/contact)。フォームは持たず、連絡手段としてX(旧
 // Twitter)のアカウントを案内する。AdSense審査上は「連絡手段があること」
