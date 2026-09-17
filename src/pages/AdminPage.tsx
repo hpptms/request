@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
@@ -143,7 +143,20 @@ function AdminLayout({ onLoggedOut }: { onLoggedOut: () => void }) {
       </AppBar>
 
       <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1.5, sm: 3 } }}>
-        <Outlet />
+        {/* Own Suspense boundary (not just App.tsx's top-level one): each
+            admin tab is its own lazy chunk (see App.tsx), and without this,
+            switching tabs would blank out this whole screen — AppBar and
+            tab strip included — behind the top-level fallback instead of
+            just this content area. */}
+        <Suspense
+          fallback={
+            <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+              <CircularProgress />
+            </Box>
+          }
+        >
+          <Outlet />
+        </Suspense>
       </Container>
     </Box>
   );
