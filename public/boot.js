@@ -17,7 +17,10 @@ gtag('config', 'G-8L7G9DTTF8', { send_page_view: false });
 // tablets never even fetch the ad script. Loaded as a real script element
 // (rather than the vendor snippet's document.write) since this file runs
 // as an ordinary external script, not an inline one during initial parse.
-if (window.matchMedia('(min-width: 1024px)').matches) {
+// Also skipped on /viewer, the admin-only OBS capture screen (opened as
+// its own URL, never client-side-navigated to from the public board — see
+// ViewerPage.tsx) — a floating ad has no business on a stream capture.
+if (window.location.pathname !== '/viewer' && window.matchMedia('(min-width: 1024px)').matches) {
   window.admaxaction = { tag_id: '23ae35e7e86013ef2c89b228df7e3ea3', type: 'a', width: 160, height: 600, action: 'sticky.right' };
   var admaxScript = document.createElement('script');
   admaxScript.src = 'https://adm.shinobi.jp/st/s.js';
