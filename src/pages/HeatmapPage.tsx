@@ -1,6 +1,7 @@
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
@@ -57,12 +58,20 @@ function HeatmapPage() {
       </AppBar>
 
       <Container maxWidth="md" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1.5, sm: 3 } }}>
-        {isMock && (
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            現在表示中はダミーデータです。GA4連携の設定が完了次第、実データに切り替わります。
-          </Typography>
+        {data === null ? (
+          <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <>
+            {isMock && (
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                現在表示中はダミーデータです。GA4連携の設定が完了次第、実データに切り替わります。
+              </Typography>
+            )}
+            <ActiveUsersMap data={data} />
+          </>
         )}
-        <ActiveUsersMap data={data} />
         <Footer />
       </Container>
     </Box>
