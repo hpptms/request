@@ -10,9 +10,9 @@ import { useActiveUsersHeatmap } from "../lib/useActiveUsersHeatmap";
 // にGA4未設定/未取得の間はダミーデータで表示する — 詳細は
 // src/lib/useActiveUsersHeatmap.ts。
 function AdminHeatmapPage() {
-  const { data, isMock } = useActiveUsersHeatmap();
+  const { points, prefectures, isMock } = useActiveUsersHeatmap();
 
-  if (data === null) {
+  if (points === null || prefectures === null) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
         <CircularProgress />
@@ -27,7 +27,7 @@ function AdminHeatmapPage() {
           現在表示中はダミーデータです。GA4連携の設定が完了次第、実データに切り替わります。
         </Typography>
       )}
-      <ActiveUsersMap data={data} />
+      <ActiveUsersMap points={points} prefectures={prefectures} />
     </Box>
   );
 }

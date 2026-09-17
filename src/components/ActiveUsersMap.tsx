@@ -10,7 +10,7 @@ import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import { geoMercator } from "d3-geo";
 import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";
-import type { ActiveUsersByCity } from "../lib/activeUsersHeatmap";
+import type { ActiveUsersByCity, ActiveUsersByPrefecture } from "../lib/activeUsersHeatmap";
 
 // Natural Earth 1:50m admin-0 countries (public domain), via the world-atlas
 // npm package — vendored as a static asset (public/data/countries-50m.json)
@@ -51,16 +51,38 @@ function radiusFor(value: number, maxValue: number) {
   return MIN_RADIUS + (MAX_RADIUS - MIN_RADIUS) * Math.sqrt(value / maxValue);
 }
 
+// Cheap, deterministic per-city hash so each marker's pulse animation gets
+// a stable (not re-randomized every render) but different timing —
+// otherwise every bubble breathing in lockstep reads as one blinking mass
+// rather than the soft "moya moya" drift asked for.
+function hashString(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return h;
+}
+
 // Proportional-symbol map of active users by city. A single continuous
 // measure (magnitude), so no categorical legend box — see
 // marks-and-anatomy.md's "single series needs no legend box" — but a
 // sequential ramp still gets a scale key since, unlike identity, the
 // reader can't otherwise tell where a shade sits on the low<->high range.
-export function ActiveUsersMap({ data }: { data: ActiveUsersByCity[] }) {
+//
+// points drive the map's bubble markers (city precision); prefectures
+// drive the table underneath it (prefecture-only — see
+// aggregateByPrefecture's comment for why the table is deliberately
+// coarser than the map).
+export function ActiveUsersMap({
+  points,
+  prefectures,
+}: {
+  points: ActiveUsersByCity[];
+  prefectures: ActiveUsersByPrefecture[];
+}) {
   const [hovered, setHovered] = useState<ActiveUsersByCity | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const maxValue = useMemo(() => Math.max(0, ...data.map((d) => d.activeUsers)), [data]);
-  const sorted = useMemo(() => [...data].sort((a, b) => b.activeUsers - a.activeUsers), [data]);
+  const maxValue = useMemo(() => Math.max(0, ...points.map((d) => d.activeUsers)), [points]);
+  const sortedPoints = useMemo(() => [...points].sort((a, b) => b.activeUsers - a.activeUsers), [points]);
+  const sortedPrefectures = useMemo(() => [...prefectures].sort((a, b) => b.activeUsers - a.activeUsers), [prefectures]);
 
   // Same projection as ComposableMap below, computed standalone so pointer
   // moves can be matched against each city's screen position directly.
@@ -70,11 +92,11 @@ export function ActiveUsersMap({ data }: { data: ActiveUsersByCity[] }) {
   );
   const projected = useMemo(
     () =>
-      data.map((d) => {
+      sortedPoints.map((d) => {
         const p = projection([d.lng, d.lat]);
         return { ...d, x: p?.[0] ?? 0, y: p?.[1] ?? 0 };
       }),
-    [data, projection],
+    [sortedPoints, projection],
   );
 
   // Nearest-point hit testing (interaction.md's guidance for dense
@@ -106,6 +128,19 @@ export function ActiveUsersMap({ data }: { data: ActiveUsersByCity[] }) {
 
   return (
     <Box>
+      {/* Gentle, staggered breathing so the map reads as "live" rather than
+          static — each circle's duration/delay come from hashString(city)
+          below so they drift out of sync with each other ("moya moya"),
+          not in one uniform pulse. Respects prefers-reduced-motion. */}
+      <style>{`
+        @keyframes heatmap-pulse {
+          0%, 100% { transform: scale(1); opacity: 0.8; }
+          50% { transform: scale(1.18); opacity: 0.5; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .heatmap-pulse-circle { animation: none !important; }
+        }
+      `}</style>
       <Box
         ref={containerRef}
         sx={{
@@ -146,9 +181,12 @@ export function ActiveUsersMap({ data }: { data: ActiveUsersByCity[] }) {
               hover is handled by the container's onPointerMove above
               (nearest-point); these circles only need to carry keyboard
               focus + a11y labels. */}
-          {sorted.map((d) => {
+          {sortedPoints.map((d) => {
             const r = radiusFor(d.activeUsers, maxValue);
             const hitR = Math.max(r + 8, 16);
+            const hash = hashString(d.city);
+            const duration = 2.6 + ((hash % 100) / 100) * 1.8;
+            const delay = -((hash % 137) / 137) * duration;
             return (
               <Marker key={d.city} coordinates={[d.lng, d.lat]}>
                 {/* Hit target: bigger than the painted mark (interaction.md). */}
@@ -165,12 +203,18 @@ export function ActiveUsersMap({ data }: { data: ActiveUsersByCity[] }) {
                 {/* 2px surface ring so overlapping bubbles (e.g. Tokyo/
                     Yokohama) stay legible — marks-and-anatomy.md. */}
                 <circle
+                  className="heatmap-pulse-circle"
                   r={r}
                   fill={bucketColor(d.activeUsers, maxValue)}
-                  fillOpacity={0.8}
                   stroke={MAP_SURFACE}
                   strokeWidth={2}
                   pointerEvents="none"
+                  style={{
+                    opacity: 0.8,
+                    transformBox: "fill-box",
+                    transformOrigin: "center",
+                    animation: `heatmap-pulse ${duration}s ease-in-out ${delay}s infinite`,
+                  }}
                 />
               </Marker>
             );
@@ -235,17 +279,17 @@ export function ActiveUsersMap({ data }: { data: ActiveUsersByCity[] }) {
       </Box>
 
       <TableContainer sx={{ mt: 2 }}>
-        <Table size="small" aria-label="都市別アクティブユーザー数">
+        <Table size="small" aria-label="都道府県別アクティブユーザー数">
           <TableHead>
             <TableRow>
-              <TableCell>都市</TableCell>
+              <TableCell>都道府県</TableCell>
               <TableCell align="right">アクティブユーザー</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {sorted.map((d) => (
-              <TableRow key={d.city} hover>
-                <TableCell>{d.city}</TableCell>
+            {sortedPrefectures.map((d) => (
+              <TableRow key={d.prefecture} hover>
+                <TableCell>{d.prefecture}</TableCell>
                 <TableCell align="right">{d.activeUsers.toLocaleString()}</TableCell>
               </TableRow>
             ))}
