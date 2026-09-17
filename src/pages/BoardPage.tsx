@@ -5,8 +5,10 @@ import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import Snackbar from "@mui/material/Snackbar";
 import Stack from "@mui/material/Stack";
+import { useTheme } from "@mui/material/styles";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import MapIcon from "@mui/icons-material/Map";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
@@ -22,6 +24,12 @@ import { useRequestQueue } from "../lib/useRequestQueue";
 import { useSeo } from "../lib/useSeo";
 
 function BoardPage() {
+  const theme = useTheme();
+  // Icon-only nav buttons below this width: four labeled buttons (再生/
+  // 集計/ヒートマップ/管理者) plus the title don't fit a phone-width
+  // Toolbar and were overflowing it horizontally.
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   useSeo(
     "動画リクエストキュー",
     "YouTube・ニコニコ動画・Vimeoの動画をみんなでリクエストして再生できる視聴者参加型のキューサービス。いいね・bad投票でリクエストの再生順が変わります。",
@@ -66,28 +74,31 @@ function BoardPage() {
               component={RouterLink}
               to="/play"
               size="small"
-              startIcon={<PlayCircleIcon />}
-              sx={{ whiteSpace: "nowrap" }}
+              aria-label={isMobile ? "再生" : undefined}
+              startIcon={isMobile ? undefined : <PlayCircleIcon />}
+              sx={{ whiteSpace: "nowrap", minWidth: 0, px: isMobile ? 1 : 2 }}
             >
-              再生
+              {isMobile ? <PlayCircleIcon fontSize="small" /> : "再生"}
             </Button>
             <Button
               component={RouterLink}
               to="/stats"
               size="small"
-              startIcon={<LeaderboardIcon />}
-              sx={{ whiteSpace: "nowrap" }}
+              aria-label={isMobile ? "集計" : undefined}
+              startIcon={isMobile ? undefined : <LeaderboardIcon />}
+              sx={{ whiteSpace: "nowrap", minWidth: 0, px: isMobile ? 1 : 2 }}
             >
-              集計
+              {isMobile ? <LeaderboardIcon fontSize="small" /> : "集計"}
             </Button>
             <Button
               component={RouterLink}
               to="/heatmap"
               size="small"
-              startIcon={<MapIcon />}
-              sx={{ whiteSpace: "nowrap" }}
+              aria-label={isMobile ? "ヒートマップ" : undefined}
+              startIcon={isMobile ? undefined : <MapIcon />}
+              sx={{ whiteSpace: "nowrap", minWidth: 0, px: isMobile ? 1 : 2 }}
             >
-              ヒートマップ
+              {isMobile ? <MapIcon fontSize="small" /> : "ヒートマップ"}
             </Button>
             <Button
               component="a"
@@ -95,11 +106,12 @@ function BoardPage() {
               target="_blank"
               rel="noopener"
               size="small"
-              startIcon={<ShieldIcon />}
-              endIcon={<OpenInNewIcon />}
-              sx={{ whiteSpace: "nowrap" }}
+              aria-label={isMobile ? "管理者" : undefined}
+              startIcon={isMobile ? undefined : <ShieldIcon />}
+              endIcon={isMobile ? undefined : <OpenInNewIcon />}
+              sx={{ whiteSpace: "nowrap", minWidth: 0, px: isMobile ? 1 : 2 }}
             >
-              管理者
+              {isMobile ? <ShieldIcon fontSize="small" /> : "管理者"}
             </Button>
           </Stack>
         </Toolbar>

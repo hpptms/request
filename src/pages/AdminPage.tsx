@@ -7,8 +7,10 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Container from "@mui/material/Container";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
+import { useTheme } from "@mui/material/styles";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import FastForwardIcon from "@mui/icons-material/FastForward";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
@@ -98,6 +100,10 @@ function AdminLayout({ onLoggedOut }: { onLoggedOut: () => void }) {
   const location = useLocation();
   const navigate = useNavigate();
   const tab = adminTabs.find((t) => t.value !== "bans" && location.pathname.startsWith(t.path))?.value ?? "bans";
+  const theme = useTheme();
+  // Icon-only toolbar buttons below this width — same overflow problem as
+  // BoardPage's nav row, just with the title added to the mix.
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const handleLogout = async () => {
     try {
@@ -112,7 +118,12 @@ function AdminLayout({ onLoggedOut }: { onLoggedOut: () => void }) {
       <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Toolbar sx={{ px: { xs: 2, sm: 3 }, gap: 1 }}>
           <ShieldIcon color="primary" sx={{ mr: 1.5 }} fontSize="large" />
-          <Typography variant="h6" component="h1" sx={{ flexGrow: 1 }}>
+          <Typography
+            variant="h6"
+            component="h1"
+            noWrap
+            sx={{ fontSize: { xs: "1.05rem", sm: "1.25rem" }, flexGrow: 1, minWidth: 0 }}
+          >
             管理者画面
           </Typography>
           <Button
@@ -121,23 +132,33 @@ function AdminLayout({ onLoggedOut }: { onLoggedOut: () => void }) {
             target="_blank"
             rel="noopener"
             size="small"
-            startIcon={<PlayCircleIcon />}
-            endIcon={<OpenInNewIcon />}
-            sx={{ whiteSpace: "nowrap" }}
+            aria-label={isMobile ? "再生画面を開く" : undefined}
+            startIcon={isMobile ? undefined : <PlayCircleIcon />}
+            endIcon={isMobile ? undefined : <OpenInNewIcon />}
+            sx={{ whiteSpace: "nowrap", minWidth: 0, px: isMobile ? 1 : 2 }}
           >
-            再生画面を開く
+            {isMobile ? <PlayCircleIcon fontSize="small" /> : "再生画面を開く"}
           </Button>
-          <Button size="small" startIcon={<LogoutIcon />} onClick={handleLogout}>
-            ログアウト
+          <Button
+            size="small"
+            aria-label={isMobile ? "ログアウト" : undefined}
+            startIcon={isMobile ? undefined : <LogoutIcon />}
+            onClick={handleLogout}
+            sx={{ whiteSpace: "nowrap", minWidth: 0, px: isMobile ? 1 : 2 }}
+          >
+            {isMobile ? <LogoutIcon fontSize="small" /> : "ログアウト"}
           </Button>
         </Toolbar>
         <Tabs
           value={tab}
           onChange={(_, value: string) => navigate(adminTabs.find((t) => t.value === value)?.path ?? "/admin")}
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
           sx={{ px: { xs: 1.5, sm: 3 } }}
         >
           {adminTabs.map((t) => (
-            <Tab key={t.value} value={t.value} label={t.label} icon={t.icon} iconPosition="start" />
+            <Tab key={t.value} value={t.value} label={t.label} icon={t.icon} iconPosition="start" sx={{ whiteSpace: "nowrap" }} />
           ))}
         </Tabs>
       </AppBar>
