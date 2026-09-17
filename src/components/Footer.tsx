@@ -3,6 +3,7 @@ import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { Link as RouterLink } from "react-router-dom";
+import { FooterAd } from "./FooterAd";
 
 // Shared bottom-of-page links to the site's non-queue pages (プライバシー
 // ポリシー/サイトについて/お問い合わせ) — added to the pages a crawler or
@@ -33,6 +34,7 @@ export function Footer() {
       <Typography variant="caption" color="text.secondary" align="center" sx={{ display: "block", mt: 1.5 }}>
         動画リクエスト
       </Typography>
+      <FooterAd />
     </Box>
   );
 }
