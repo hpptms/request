@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 import { ActiveUsersMap } from "../components/ActiveUsersMap";
 import { useActiveUsersHeatmap } from "../lib/useActiveUsersHeatmap";
@@ -10,6 +11,15 @@ import { useActiveUsersHeatmap } from "../lib/useActiveUsersHeatmap";
 // src/lib/useActiveUsersHeatmap.ts。
 function AdminHeatmapPage() {
   const { data, isMock } = useActiveUsersHeatmap();
+
+  if (data === null) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
     <Box>
       {isMock && (
