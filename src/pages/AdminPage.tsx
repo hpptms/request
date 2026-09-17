@@ -14,6 +14,7 @@ import FastForwardIcon from "@mui/icons-material/FastForward";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import FilterAltOutlinedIcon from "@mui/icons-material/FilterAltOutlined";
 import LogoutIcon from "@mui/icons-material/Logout";
+import MapIcon from "@mui/icons-material/Map";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import PlaylistPlayIcon from "@mui/icons-material/PlaylistPlay";
@@ -86,6 +87,7 @@ const adminTabs = [
   },
   { value: "features", path: "/admin/features", label: "機能", icon: <SettingsIcon fontSize="small" /> },
   { value: "stats", path: "/admin/stats", label: "集計", icon: <QueryStatsIcon fontSize="small" /> },
+  { value: "heatmap", path: "/admin/heatmap", label: "ヒートマップ", icon: <MapIcon fontSize="small" /> },
   { value: "broadcast", path: "/admin/broadcast", label: "意思表示", icon: <CampaignIcon fontSize="small" /> },
 ] as const;
 
