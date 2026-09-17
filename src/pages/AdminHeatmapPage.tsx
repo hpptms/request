@@ -1,20 +1,23 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { ActiveUsersMap } from "../components/ActiveUsersMap";
-import { MOCK_ACTIVE_USERS } from "../lib/activeUsersHeatmap";
+import { useActiveUsersHeatmap } from "../lib/useActiveUsersHeatmap";
 
 // アクティブユーザーヒートマップ (/admin/heatmap): 都市別のアクティブ
-// ユーザー数をバブルマップで表示する。現状はダミーデータ
-// (MOCK_ACTIVE_USERS — src/lib/activeUsersHeatmap.ts) 表示のみで、GA4
-// Realtime Data API(市区町村単位、IP/属性は含めない)との連携は
-// バックエンド側のサービスアカウント設定が済み次第つなぎ込む。
+// ユーザー数をバブルマップで表示する。GET /api/heatmap(GA4 Realtime、
+// 市区町村単位・IP/属性は含めない)を1分間隔でポーリングし、バックエンド
+// にGA4未設定/未取得の間はダミーデータで表示する — 詳細は
+// src/lib/useActiveUsersHeatmap.ts。
 function AdminHeatmapPage() {
+  const { data, isMock } = useActiveUsersHeatmap();
   return (
     <Box>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        現在表示中はダミーデータです。GA4連携の設定が完了次第、実データに切り替わります。
-      </Typography>
-      <ActiveUsersMap data={MOCK_ACTIVE_USERS} />
+      {isMock && (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          現在表示中はダミーデータです。GA4連携の設定が完了次第、実データに切り替わります。
+        </Typography>
+      )}
+      <ActiveUsersMap data={data} />
     </Box>
   );
 }
