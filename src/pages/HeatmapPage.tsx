@@ -11,12 +11,14 @@ import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { Link as RouterLink } from "react-router-dom";
 import { ActiveUsersMap } from "../components/ActiveUsersMap";
 import { Footer } from "../components/Footer";
-import { MOCK_ACTIVE_USERS } from "../lib/activeUsersHeatmap";
+import { useActiveUsersHeatmap } from "../lib/useActiveUsersHeatmap";
 import { useSeo } from "../lib/useSeo";
 
 // 公開のヒートマップ画面 (/heatmap): 管理画面の同名タブ(AdminHeatmapPage)
-// と共通の ActiveUsersMap を、認証不要で誰でも見られる形で表示する。
+// と共通の ActiveUsersMap / useActiveUsersHeatmap を、認証不要で誰でも
+// 見られる形で表示する。
 function HeatmapPage() {
+  const { data, isMock } = useActiveUsersHeatmap();
   useSeo(
     "アクティブユーザーヒートマップ | 動画リクエストキュー",
     "動画リクエストキューを今見ている人を都市別のバブルマップで表示します。",
@@ -55,10 +57,12 @@ function HeatmapPage() {
       </AppBar>
 
       <Container maxWidth="md" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1.5, sm: 3 } }}>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          現在表示中はダミーデータです。GA4連携の設定が完了次第、実データに切り替わります。
-        </Typography>
-        <ActiveUsersMap data={MOCK_ACTIVE_USERS} />
+        {isMock && (
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            現在表示中はダミーデータです。GA4連携の設定が完了次第、実データに切り替わります。
+          </Typography>
+        )}
+        <ActiveUsersMap data={data} />
         <Footer />
       </Container>
     </Box>

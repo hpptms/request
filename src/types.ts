@@ -110,6 +110,15 @@ export interface FallbackTrack {
   region: FallbackRegion;
 }
 
+// GA4 Realtime "active users by city" — see backend/internal/ga4heatmap.
+// city is exactly GA4's own English/romanized city name; matched against
+// src/lib/activeUsersHeatmap.ts's coordinate table on the frontend, not
+// looked up server-side.
+export interface GA4CityUsers {
+  city: string;
+  activeUsers: number;
+}
+
 export interface BannedIP {
   ip: string;
   bannedAt: string;
