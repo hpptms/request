@@ -37,7 +37,6 @@ function BoardPage() {
   );
 
   const {
-    cancelVoteThreshold,
     cancelVoteTiers,
     fastForwardActive,
     fastForwardCancelVoteTiers,
@@ -149,7 +148,6 @@ function BoardPage() {
             </Typography>
             <QueueList
               requests={pending}
-              cancelVoteThreshold={cancelVoteThreshold}
               likePriorityThreshold={likePriorityThreshold}
               isAdmin={isAdmin}
               onPlay={handlePlay}

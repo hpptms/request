@@ -35,7 +35,6 @@ function PlayPage() {
   const {
     requests,
     requestsLoaded,
-    cancelVoteThreshold,
     cancelVoteTiers,
     fastForwardActive,
     fastForwardCapSeconds,
@@ -152,7 +151,6 @@ function PlayPage() {
             </Typography>
             <QueueList
               requests={pending}
-              cancelVoteThreshold={cancelVoteThreshold}
               likePriorityThreshold={likePriorityThreshold}
               isAdmin={isAdmin}
               onPlay={handlePlay}
