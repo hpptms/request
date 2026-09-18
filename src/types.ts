@@ -301,6 +301,11 @@ export interface StatsSummary {
   rangeStart?: string;
   rangeEnd?: string;
   timeOfDay?: TimeSlot;
+  // True for period "day" when today (the default, or the selected slot's
+  // portion of today) had nothing recorded yet, so rangeStart/rangeEnd and
+  // every ranking below were substituted from the most recent day that does
+  // — see backend/internal/api.handleStats.
+  previousDayFallback?: boolean;
   topChannelsByRequests: ChannelStat[];
   topVideosByRequests: VideoStat[];
   topVideosByLikes: VideoStat[];

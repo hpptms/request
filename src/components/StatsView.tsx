@@ -152,6 +152,10 @@ export function StatsView() {
 
       {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
 
+      {stats?.previousDayFallback && (
+        <Alert severity="info">本日分のデータがまだないため、前日のデータを表示しています。</Alert>
+      )}
+
       {loading && !stats ? (
         <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
           <CircularProgress />
