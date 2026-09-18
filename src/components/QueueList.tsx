@@ -1,6 +1,5 @@
 import { useState } from "react";
 import Avatar from "@mui/material/Avatar";
-import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
@@ -24,7 +23,6 @@ import type { VideoRequest } from "../types";
 
 interface Props {
   requests: VideoRequest[];
-  cancelVoteThreshold: number;
   likePriorityThreshold: number;
   isAdmin: boolean;
   onPlay: (id: string) => void;
@@ -36,7 +34,6 @@ interface Props {
 
 export function QueueList({
   requests,
-  cancelVoteThreshold,
   likePriorityThreshold,
   isAdmin,
   onPlay,
@@ -63,13 +60,9 @@ export function QueueList({
             sx={{ px: { xs: 1.5, sm: 2 } }}
             secondaryAction={
               <Stack direction="row" spacing={0}>
-                <LikeIconButton request={r} threshold={likePriorityThreshold} onLike={onLike} />
+                <LikeIconButton request={r} onLike={onLike} />
                 <Box sx={{ width: { xs: 12, sm: 16 } }} />
-                <CancelVoteIconButton
-                  request={r}
-                  threshold={cancelVoteThreshold}
-                  onVoteCancel={onVoteCancel}
-                />
+                <CancelVoteIconButton request={r} onVoteCancel={onVoteCancel} />
                 {isMyRequest(r.id) && (
                   <Tooltip title="自分のリクエストをキャンセル">
                     <IconButton edge="end" color="warning" onClick={() => onCancelMine(r.id)}>
@@ -134,11 +127,10 @@ export function QueueList({
 
 interface LikeIconButtonProps {
   request: VideoRequest;
-  threshold: number;
   onLike: (id: string) => Promise<void>;
 }
 
-function LikeIconButton({ request, threshold, onLike }: LikeIconButtonProps) {
+function LikeIconButton({ request, onLike }: LikeIconButtonProps) {
   const [liking, setLiking] = useState(false);
   const liked = hasLiked(request.id);
 
@@ -153,12 +145,10 @@ function LikeIconButton({ request, threshold, onLike }: LikeIconButtonProps) {
   };
 
   return (
-    <Tooltip title={liked ? "いいね済み" : `いいね (${request.likes}/${threshold}で優先再生)`}>
+    <Tooltip title={liked ? "いいね済み" : "いいね"}>
       <span>
         <IconButton edge="end" color={liked ? "primary" : "default"} onClick={handleClick} disabled={liking || liked}>
-          <Badge badgeContent={request.likes} color="primary">
-            <ThumbUpAltIcon fontSize="small" />
-          </Badge>
+          <ThumbUpAltIcon fontSize="small" />
         </IconButton>
       </span>
     </Tooltip>
@@ -167,11 +157,10 @@ function LikeIconButton({ request, threshold, onLike }: LikeIconButtonProps) {
 
 interface CancelVoteIconButtonProps {
   request: VideoRequest;
-  threshold: number;
   onVoteCancel: (id: string) => Promise<void>;
 }
 
-function CancelVoteIconButton({ request, threshold, onVoteCancel }: CancelVoteIconButtonProps) {
+function CancelVoteIconButton({ request, onVoteCancel }: CancelVoteIconButtonProps) {
   const [voting, setVoting] = useState(false);
   const voted = hasVoted(request.id);
 
@@ -186,12 +175,10 @@ function CancelVoteIconButton({ request, threshold, onVoteCancel }: CancelVoteIc
   };
 
   return (
-    <Tooltip title={voted ? "投票済み" : `キャンセルに投票 (${request.cancelVotes}/${threshold})`}>
+    <Tooltip title={voted ? "投票済み" : "キャンセルに投票"}>
       <span>
         <IconButton edge="end" color={voted ? "default" : "error"} onClick={handleClick} disabled={voting || voted}>
-          <Badge badgeContent={request.cancelVotes} color="error">
-            <ThumbDownAltIcon fontSize="small" />
-          </Badge>
+          <ThumbDownAltIcon fontSize="small" />
         </IconButton>
       </span>
     </Tooltip>
