@@ -211,12 +211,12 @@ export function RequestSidePlayer({
     const last = lastShownVoteCountsRef.current;
     if (!last || last.id !== nowPlaying.id) {
       lastShownVoteCountsRef.current = { id: nowPlaying.id, cancelVotes: nowPlaying.cancelVotes, likes: nowPlaying.likes };
-      if (nowPlaying.cancelVotes > 0 || nowPlaying.likes > 0) {
+      if (nowPlaying.likes > 0) {
         showVoteStatus(nowPlaying.cancelVotes, nowPlaying.likes);
       }
       return;
     }
-    if (nowPlaying.cancelVotes > last.cancelVotes || nowPlaying.likes > last.likes) {
+    if (nowPlaying.likes > last.likes) {
       lastShownVoteCountsRef.current = { id: nowPlaying.id, cancelVotes: nowPlaying.cancelVotes, likes: nowPlaying.likes };
       showVoteStatus(nowPlaying.cancelVotes, nowPlaying.likes);
     }
@@ -317,7 +317,7 @@ export function RequestSidePlayer({
             title={
               voted
                 ? "投票済み"
-                : `${nextTier ? formatDuration(nextTier.capSeconds) : ""}に短縮へ投票 (${nowPlaying.cancelVotes}/${nextTier?.votes ?? 0})`
+                : `${nextTier ? formatDuration(nextTier.capSeconds) : ""}に短縮へ投票`
             }
           >
             <span>
@@ -325,7 +325,6 @@ export function RequestSidePlayer({
                 variant="contained"
                 size="small"
                 color="error"
-                startIcon={<ThumbDownAltIcon />}
                 onClick={handleVoteClick}
                 disabled={voting || voted}
                 sx={{
@@ -337,7 +336,7 @@ export function RequestSidePlayer({
                   "&.Mui-disabled": { color: "white", opacity: voted ? 1 : 0.5 },
                 }}
               >
-                {nowPlaying.cancelVotes}
+                <ThumbDownAltIcon />
               </Button>
             </span>
           </Tooltip>

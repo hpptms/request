@@ -714,12 +714,12 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     const last = lastShownVoteCountsRef.current;
     if (!last || last.id !== requestId) {
       lastShownVoteCountsRef.current = { id: requestId, cancelVotes: current.cancelVotes, likes: current.likes };
-      if (current.cancelVotes > 0 || current.likes > 0) {
+      if (current.likes > 0) {
         showVoteStatus(current.cancelVotes, current.likes);
       }
       return;
     }
-    if (current.cancelVotes > last.cancelVotes || current.likes > last.likes) {
+    if (current.likes > last.likes) {
       lastShownVoteCountsRef.current = { id: requestId, cancelVotes: current.cancelVotes, likes: current.likes };
       showVoteStatus(current.cancelVotes, current.likes);
     }

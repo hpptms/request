@@ -166,8 +166,7 @@ export function NowPlaying({
               disabled={voting || voted}
               sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
             >
-              {voted ? "投票済み" : `${formatDuration(nextTier.capSeconds)}に短縮へ投票`} (
-              {nowPlaying.cancelVotes}/{nextTier.votes})
+              {voted ? "投票済み" : `${formatDuration(nextTier.capSeconds)}に短縮へ投票`}
             </Button>
             {isMyRequest(nowPlaying.id) && (
               <Button

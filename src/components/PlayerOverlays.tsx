@@ -29,7 +29,7 @@ interface Props {
   // of flashing back to the default color as content goes null mid-fade.
   newRequestVisible: boolean;
   newRequestNotice: { id: string; title: string; videoId: string } | null;
-  // Vote-status badge (😨 cancel votes / 😊 likes) for whatever's playing.
+  // Vote-status badge (😊 likes) for whatever's playing.
   voteStatusVisible: boolean;
   voteStatusContent: { cancelVotes: number; likes: number } | null;
   // 管理者パネルの「意思表示」機能 (see useBroadcastOverlay) — a one-off
@@ -164,24 +164,11 @@ export function PlayerOverlays({
           />
         </Slide>
 
-        {/* Vote-status badge: current cancel-vote/like tally for the
+        {/* Vote-status badge: current like tally for the
             playing request, shown on start (if non-zero) and again on
             every increase. ~6x a normal small Chip on the md+ TV screen. */}
         <Grow in={voteStatusVisible} timeout={250} style={{ pointerEvents: "none" }}>
           <Stack direction="row" spacing={{ xs: 0.75, sm: 1.5 }}>
-            {voteStatusContent && voteStatusContent.cancelVotes > 0 && (
-              <Chip
-                label={`😨+${voteStatusContent.cancelVotes}`}
-                sx={{
-                  bgcolor: "rgba(0,0,0,0.7)",
-                  color: "white",
-                  fontWeight: 700,
-                  height: { xs: 36, sm: 64, md: 144 },
-                  borderRadius: { xs: 2.5, sm: 4, md: 6 },
-                  "& .MuiChip-label": { fontSize: { xs: "1.1rem", sm: "2rem", md: "4.8rem" }, px: { xs: 1, sm: 2, md: 5 } },
-                }}
-              />
-            )}
             {voteStatusContent && voteStatusContent.likes > 0 && (
               <Chip
                 label={`😊+${voteStatusContent.likes}`}
