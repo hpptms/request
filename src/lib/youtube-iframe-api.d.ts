@@ -48,6 +48,8 @@ declare namespace YT {
     unMute(): void;
     destroy(): void;
     getCurrentTime(): number;
+    getPlayerState(): PlayerState;
+    getVideoData(): { video_id: string; title: string };
     getDuration(): number;
     seekTo(seconds: number, allowSeekAhead: boolean): void;
   }

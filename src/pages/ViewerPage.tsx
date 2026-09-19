@@ -27,6 +27,8 @@ import type { CancelVoteTier, FallbackTrack, PlaylistTrack, VideoRequest } from 
 
 const POLL_INTERVAL_MS = 3000;
 const PLAYER_ELEMENT_ID = "yt-viewer-player";
+// YT.PlayerState.PLAYING; the enum is only available once the IFrame API has loaded.
+const PLAYER_STATE_PLAYING = 1;
 // Mirrors the backend's default store.CancelVoteTiers (internal/store/store.go)
 // until the real config loads.
 const DEFAULT_CANCEL_VOTE_TIERS: CancelVoteTier[] = [
@@ -417,6 +419,14 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
           onReady: () => setPlayerReady(true),
           onStateChange: (event) => {
             if (event.data === YTApi.PlayerState.ENDED) {
+              // stopVideo() on the video that just finished can deliver one
+              // more ENDED after the next request has already been loaded;
+              // taking it for the new video's end would try to finish it
+              // immediately (rejected as too early) and then seek it back
+              // to 0, losing its startSeconds. Only accept an ENDED that
+              // belongs to the video currently loaded.
+              const endedVideoId = playerRef.current?.getVideoData().video_id;
+              if (endedVideoId && loadedVideoIdRef.current && endedVideoId !== loadedVideoIdRef.current) return;
               handleEnded();
             }
           },
@@ -841,6 +851,12 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
 
       const now = performance.now();
       if (seekGuardTickRef.current === null) {
+        // Only take the baseline once the player is actually playing: right
+        // after loadVideoById it's still buffering and reports 0 (or the
+        // previous video's position), and adopting that would make the
+        // jump to the request's startSeconds look like a forbidden seek
+        // and get reverted.
+        if (player.getPlayerState() !== PLAYER_STATE_PLAYING) return;
         seekGuardTickRef.current = now;
         expectedTimeRef.current = current;
         return;
