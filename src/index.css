@@ -7,3 +7,13 @@ body,
 body {
   margin: 0;
 }
+
+/* Stats-table links sit on the dark theme, where the browser's default
+   blue/purple is hard to read. */
+a.stats-link {
+  color: #7fdbff;
+}
+
+a.stats-link:visited {
+  color: #7CFC9A;
+}
