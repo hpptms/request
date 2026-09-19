@@ -315,3 +315,12 @@ export interface StatsSummary {
   topVideosByLikes: VideoStat[];
   topVideosByCancelVotes: VideoStat[];
 }
+
+// backend/internal/analytics.IPLikeRank — a finished (JST date, time slot)
+// in which the caller's IP placed in the top 5 by likes received.
+export interface LikeRank {
+  date: string;
+  slot: Exclude<TimeSlot, "">;
+  rank: number;
+  likes: number;
+}
