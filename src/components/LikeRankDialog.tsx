@@ -45,6 +45,15 @@ export default function LikeRankDialog() {
   const [rank, setRank] = useState<LikeRank | null>(null);
 
   useEffect(() => {
+    // Preview for checking the wording: /?previewLikeRank=1 (rank 1) up to
+    // 5. Shows sample data only and never touches the seen list.
+    const preview = Number(new URLSearchParams(window.location.search).get("previewLikeRank"));
+    if (Number.isInteger(preview) && preview >= 1 && preview <= 5) {
+      const now = new Date();
+      const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      setRank({ date, slot: "morning", rank: preview, likes: 10 - preview });
+      return;
+    }
     let cancelled = false;
     api
       .getMyLikeRanks()
