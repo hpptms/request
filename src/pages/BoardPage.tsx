@@ -128,13 +128,15 @@ function BoardPage() {
 
       <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1.5, sm: 3 } }}>
         <Stack spacing={3}>
-          <Stack spacing={1}>
-            {NOTICES.map((text) => (
-              <Paper key={text} variant="outlined" sx={{ px: 2, py: 1.25 }}>
-                <Typography variant="body2">{text}</Typography>
-              </Paper>
-            ))}
-          </Stack>
+          <Paper variant="outlined" sx={{ px: 2, py: 1.5 }}>
+            <Stack spacing={1}>
+              {NOTICES.map((text) => (
+                <Typography key={text} variant="body2">
+                  {text}
+                </Typography>
+              ))}
+            </Stack>
+          </Paper>
           <Paper variant="outlined" sx={{ px: 2, py: 1.5 }}>
             <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
               直近の変更
