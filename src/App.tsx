@@ -1,7 +1,8 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
+import LikeRankDialog from "./components/LikeRankDialog";
 import BoardPage from "./pages/BoardPage";
 import { usePageViewTracking } from "./lib/usePageViewTracking";
 
@@ -40,8 +41,13 @@ function LazyPageFallback() {
 function AppRoutes() {
   usePageViewTracking();
 
+  const { pathname } = useLocation();
+  // Not on the OBS capture page or the admin section.
+  const showLikeRank = pathname !== "/viewer" && !pathname.startsWith("/admin");
+
   return (
     <Suspense fallback={<LazyPageFallback />}>
+      {showLikeRank && <LikeRankDialog />}
       <Routes>
         <Route path="/" element={<BoardPage />} />
         <Route path="/play" element={<PlayPage />} />

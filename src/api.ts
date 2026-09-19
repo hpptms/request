@@ -9,6 +9,7 @@ import type {
   FastForwardWindow,
   HeatmapReport,
   KeywordLimit,
+  LikeRank,
   LikeResult,
   MultiDeviceIP,
   PlaylistImportResult,
@@ -128,6 +129,10 @@ export const api = {
   // may have empty points if the backend hasn't refreshed yet, or has no
   // GA4 property configured; callers should fall back to
   // activeUsersHeatmap.ts's MOCK_ACTIVE_USERS in that case (empty points).
+  // Finished time slots (last 7 days) where the caller's IP ranked in the
+  // top 5 by likes received (see backend handleMyLikeRanks).
+  getMyLikeRanks: () => request<{ ranks: LikeRank[] }>("/my-like-ranks"),
+
   getHeatmap: () => request<HeatmapReport>("/heatmap"),
 
   adminSetPlaylist: (urls: string[]) =>
