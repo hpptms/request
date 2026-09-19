@@ -148,10 +148,9 @@ export function useRequestQueue(source: string) {
 
   const handleVoteCancel = async (id: string) => {
     try {
-      const result = await api.voteCancel(id);
+      await api.voteCancel(id);
       trackEvent("video_request_bad_vote", {
         request_id: id,
-        vote_count: result.voteCount,
         source,
       });
       await refresh();
