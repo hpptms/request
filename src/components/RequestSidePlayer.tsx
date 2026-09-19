@@ -357,7 +357,8 @@ export function RequestSidePlayer({
 function embedSrc(request: VideoRequest): string | undefined {
   if (request.platform === "youtube") {
     const start = request.startSeconds ? `&start=${request.startSeconds}` : "";
-    return `https://www.youtube.com/embed/${request.videoId}?rel=0&modestbranding=1${start}`;
+    const end = request.endSeconds ? `&end=${request.endSeconds}` : "";
+    return `https://www.youtube.com/embed/${request.videoId}?rel=0&modestbranding=1${start}${end}`;
   }
   return request.embedUrl?.replace("autoplay=1", "autoplay=0");
 }
