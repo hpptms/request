@@ -21,6 +21,9 @@ export interface VideoRequest {
   platform: string;
   embedUrl?: string;
   durationSeconds?: number;
+  // YouTube only: offset (from the URL's t=/start=) the video begins
+  // playing at. Elapsed-time caps count from here, not from 0.
+  startSeconds?: number;
   // Set when the requester used the "2分でリクエスト" button — see
   // AppConfig.twoMinuteRequestCapSeconds and ViewerPage's
   // playback-capping effect.

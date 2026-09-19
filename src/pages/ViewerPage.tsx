@@ -781,7 +781,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
       ? nonYouTubeStartRef.current !== null
         ? (Date.now() - nonYouTubeStartRef.current) / 1000
         : null
-      : playerRef.current?.getCurrentTime();
+      : (playerRef.current?.getCurrentTime() ?? 0) - (current.startSeconds ?? 0);
     if (typeof elapsed !== "number" || elapsed < capSeconds) return;
 
     endedHandledRef.current = true;
@@ -928,8 +928,11 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
 
       setNonYouTubeEmbedUrl(null);
       resetSeekGuard();
-      playerRef.current.loadVideoById(target.videoId);
-      startNowPlayingIntro(target.title, target.channelTitle, target.videoId, () => playerRef.current?.getDuration() ?? null);
+      playerRef.current.loadVideoById({ videoId: target.videoId, startSeconds: target.startSeconds ?? 0 });
+      startNowPlayingIntro(target.title, target.channelTitle, target.videoId, () => {
+        const duration = playerRef.current?.getDuration();
+        return typeof duration === "number" ? duration - (target.startSeconds ?? 0) : null;
+      });
       return;
     }
 
