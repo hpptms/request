@@ -1,20 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import {
-  MOCK_ACTIVE_USERS_RAW,
-  aggregateByPrefecture,
-  mapGA4CitiesToPoints,
-  type ActiveUsersByCity,
+  MOCK_ACTIVE_USERS,
+  type ActiveUsersPoint,
   type ActiveUsersByPrefecture,
 } from "./activeUsersHeatmap";
 
 const POLL_INTERVAL_MS = 60000;
 
 type Result = {
-  // City-precision points for the map's bubble markers.
-  points: ActiveUsersByCity[] | null;
-  // Prefecture-only totals for the table under the map — see
-  // aggregateByPrefecture's own comment for why it's coarser than points.
+  // Bubble markers (coordinates only — no city names are sent).
+  points: ActiveUsersPoint[] | null;
+  // Prefecture-only totals for the table under the map.
   prefectures: ActiveUsersByPrefecture[] | null;
   isMock: boolean;
 };
@@ -23,13 +20,13 @@ type Result = {
 // settles — deliberately not seeded with mock data, so the placeholder
 // (Tokyo 420, Osaka 180, ...) never flashes on screen only to be replaced
 // a moment later by the real, much smaller numbers once the real request
-// resolves. MOCK_ACTIVE_USERS_RAW is used only as the actual fallback: the
+// resolves. MOCK_ACTIVE_USERS is used only as the actual fallback: the
 // backend has nothing yet (no GA4 property configured, background
 // refresher hasn't completed its first run) or the request itself failed.
 // isMock tells callers which case they're looking at so they can caption
 // the map accordingly.
 export function useActiveUsersHeatmap(): Result {
-  const [points, setPoints] = useState<ActiveUsersByCity[] | null>(null);
+  const [points, setPoints] = useState<ActiveUsersPoint[] | null>(null);
   const [prefectures, setPrefectures] = useState<ActiveUsersByPrefecture[] | null>(null);
   const [isMock, setIsMock] = useState(false);
   const hasSettledRef = useRef(false);
@@ -38,24 +35,23 @@ export function useActiveUsersHeatmap(): Result {
     let cancelled = false;
 
     const applyMock = () => {
-      setPoints(mapGA4CitiesToPoints(MOCK_ACTIVE_USERS_RAW));
-      setPrefectures(aggregateByPrefecture(MOCK_ACTIVE_USERS_RAW));
+      setPoints(MOCK_ACTIVE_USERS.points);
+      setPrefectures(MOCK_ACTIVE_USERS.prefectures);
       setIsMock(true);
     };
 
     const poll = () => {
       api
         .getHeatmap()
-        .then((cities) => {
+        .then((report) => {
           if (cancelled) return;
           hasSettledRef.current = true;
-          const mappedPoints = mapGA4CitiesToPoints(cities);
-          if (mappedPoints.length === 0) {
+          if (report.points.length === 0) {
             applyMock();
             return;
           }
-          setPoints(mappedPoints);
-          setPrefectures(aggregateByPrefecture(cities));
+          setPoints(report.points);
+          setPrefectures(report.prefectures);
           setIsMock(false);
         })
         .catch(() => {
