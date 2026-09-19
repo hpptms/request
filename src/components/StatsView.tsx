@@ -166,10 +166,6 @@ export function StatsView() {
             <ChannelTable rows={stats.topChannelsByRequests} />
           </Section>
 
-          <Section title="リクエストの多い動画">
-            <VideoTable rows={stats.topVideosByRequests} valueKey="requestCount" valueLabel="リクエスト数" />
-          </Section>
-
           <Section title="いいねの多い動画">
             <VideoTable rows={stats.topVideosByLikes} valueKey="totalLikes" valueLabel="いいね数" />
           </Section>
