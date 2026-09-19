@@ -3,6 +3,7 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
+import Paper from "@mui/material/Paper";
 import Snackbar from "@mui/material/Snackbar";
 import Stack from "@mui/material/Stack";
 import { useTheme } from "@mui/material/styles";
@@ -22,6 +23,15 @@ import { QueueList } from "../components/QueueList";
 import { RequestForm } from "../components/RequestForm";
 import { useRequestQueue } from "../lib/useRequestQueue";
 import { useSeo } from "../lib/useSeo";
+
+const NOTICES = [
+  "0,6,9,12,15,18,21時は1時間半リクエスト早送りタイムです。",
+  "荒し対策のため操作が頻繁な場合自動BANされます。BANされるとリクエストが削除されます。",
+  "自動BANは特定のタイミングで解除されます。",
+  "キューが50件を超えている間は、1人1曲までのリクエストとなります。",
+];
+
+const RECENT_CHANGES = ["badを可視化出来なくしました"];
 
 function BoardPage() {
   const theme = useTheme();
@@ -118,16 +128,25 @@ function BoardPage() {
 
       <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1.5, sm: 3 } }}>
         <Stack spacing={3}>
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ whiteSpace: "pre-line" }}
-          >
-            {"0,6,9,12,15,18,21時は1時間半リクエスト早送りタイムです。\n" +
-              "荒し対策のため操作が頻繁な場合自動BANされます。BANされるとリクエストが削除されます。\n" +
-              "自動BANは特定のタイミングで解除されます。\n" +
-              "キューが50件を超えている間は、1人1曲までのリクエストとなります。"}
-          </Typography>
+          <Stack spacing={1}>
+            {NOTICES.map((text) => (
+              <Paper key={text} variant="outlined" sx={{ px: 2, py: 1.25 }}>
+                <Typography variant="body2">{text}</Typography>
+              </Paper>
+            ))}
+          </Stack>
+          <Paper variant="outlined" sx={{ px: 2, py: 1.5 }}>
+            <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+              直近の変更
+            </Typography>
+            <Stack component="ul" spacing={0.5} sx={{ m: 0, pl: 2.5 }}>
+              {RECENT_CHANGES.map((text) => (
+                <Typography key={text} component="li" variant="body2" color="text.secondary">
+                  {text}
+                </Typography>
+              ))}
+            </Stack>
+          </Paper>
           <RequestForm onSubmit={handleCreate} />
           <NowPlaying
             nowPlaying={nowPlaying}
