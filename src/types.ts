@@ -80,7 +80,6 @@ export type BroadcastState = {
 } | null;
 
 export interface CancelVoteResult {
-  voteCount: number;
   threshold: number;
 }
 
