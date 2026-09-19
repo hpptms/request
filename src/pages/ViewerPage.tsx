@@ -911,18 +911,23 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
         // backend's relaxed floor (see store.playbackFloorLocked) — otherwise
         // a short two-minute-request video would sit for the normal minimum
         // instead of ending right away.
+        // The embed itself starts at startSeconds (baked into embedUrl), so
+        // only the remainder of the video plays.
+        const playableSeconds = target.durationSeconds
+          ? Math.max(target.durationSeconds - (target.startSeconds ?? 0), 1)
+          : 0;
         const timerSeconds = durationLimited
           ? durationLimitCapSeconds
           : target.twoMinuteRequest
-            ? Math.min(target.durationSeconds || twoMinuteRequestCapSeconds, twoMinuteRequestCapSeconds)
+            ? Math.min(playableSeconds || twoMinuteRequestCapSeconds, twoMinuteRequestCapSeconds)
             : Math.min(
-                Math.max(target.durationSeconds || NON_YOUTUBE_DEFAULT_DURATION_SECONDS, SHORTENED_PLAYBACK_SECONDS),
+                Math.max(playableSeconds || NON_YOUTUBE_DEFAULT_DURATION_SECONDS, SHORTENED_PLAYBACK_SECONDS),
                 NON_YOUTUBE_MAX_DURATION_SECONDS,
               );
         nonYouTubeTimerRef.current = window.setTimeout(() => {
           advanceQueue(api.finishRequest);
         }, timerSeconds * 1000);
-        startNowPlayingIntro(target.title, target.channelTitle, target.videoId, () => target.durationSeconds ?? null);
+        startNowPlayingIntro(target.title, target.channelTitle, target.videoId, () => playableSeconds || null);
         return;
       }
 
