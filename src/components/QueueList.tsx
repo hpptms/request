@@ -98,7 +98,7 @@ export function QueueList({
               sx={{ pr: { xs: 10, sm: 13 } }}
               primary={
                 <Stack direction="row" spacing={0.75} sx={{ alignItems: "center", minWidth: 0 }}>
-                  {r.likes >= likePriorityThreshold && (
+                  {isAdmin && r.likes >= likePriorityThreshold && (
                     <Chip
                       label="優先"
                       size="small"
