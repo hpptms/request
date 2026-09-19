@@ -76,6 +76,15 @@ export const api = {
       body: JSON.stringify({ url, requesterName, twoMinuteRequest }),
     }),
 
+  // Admin-only test tool (see AdminInterruptPage): queues url past the
+  // same-video cooldown and to the front of the pending queue. The backend
+  // rejects adminInterrupt from anyone without an admin session with 403.
+  adminInterruptRequest: (url: string) =>
+    request<VideoRequest>("/requests", {
+      method: "POST",
+      body: JSON.stringify({ url, requesterName: "", adminInterrupt: true }),
+    }),
+
   playRequest: (id: string) =>
     request<VideoRequest>(`/requests/${id}/play`, { method: "POST" }),
 

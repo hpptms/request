@@ -7,7 +7,7 @@ import { usePageViewTracking } from "./lib/usePageViewTracking";
 
 // Lazy-loaded: BoardPage ("/") is the landing page almost every visitor
 // hits first, so it's the only one that stays in the main bundle.
-// Everything else — including the entire admin section (9 pages) and
+// Everything else — including the entire admin section (10 pages) and
 // ViewerPage (OBS-capture only) — is fetched on demand instead of paid for
 // by every visitor up front.
 const PlayPage = lazy(() => import("./pages/PlayPage"));
@@ -27,6 +27,7 @@ const AdminFeaturesPage = lazy(() => import("./pages/AdminFeaturesPage"));
 const AdminStatsPage = lazy(() => import("./pages/AdminStatsPage"));
 const AdminHeatmapPage = lazy(() => import("./pages/AdminHeatmapPage"));
 const AdminBroadcastPage = lazy(() => import("./pages/AdminBroadcastPage"));
+const AdminInterruptPage = lazy(() => import("./pages/AdminInterruptPage"));
 
 function LazyPageFallback() {
   return (
@@ -60,6 +61,7 @@ function AppRoutes() {
           <Route path="stats" element={<AdminStatsPage />} />
           <Route path="heatmap" element={<AdminHeatmapPage />} />
           <Route path="broadcast" element={<AdminBroadcastPage />} />
+          <Route path="interrupt" element={<AdminInterruptPage />} />
         </Route>
       </Routes>
     </Suspense>
