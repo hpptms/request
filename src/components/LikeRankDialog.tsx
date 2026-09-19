@@ -73,9 +73,11 @@ export default function LikeRankDialog() {
         <>
           <DialogTitle>🎉 いいねランキング入賞!</DialogTitle>
           <DialogContent>
-            <Typography>
-              {rank.date.replace(/-/g, "/")} の{SLOT_LABELS[rank.slot]}のリクエストで、
-              あなたは<strong>{rank.rank}番目</strong>にいいねが多かったです。(獲得 {rank.likes} いいね)
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              あなたのいいね数{rank.rank}位です。
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              {rank.date.replace(/-/g, "/")} {SLOT_LABELS[rank.slot]}のリクエスト(獲得 {rank.likes} いいね)
             </Typography>
           </DialogContent>
           <DialogActions>
