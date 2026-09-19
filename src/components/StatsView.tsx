@@ -8,6 +8,7 @@ import IconButton from "@mui/material/IconButton";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Tab from "@mui/material/Tab";
+import Link from "@mui/material/Link";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -183,6 +184,24 @@ export function StatsView() {
   );
 }
 
+// The watch-page URL for a stat row, rebuilt from platform + videoId (the
+// stats API doesn't send a URL). Channels get no link: only the channel's
+// display name is recorded, not its ID/URL. Unknown platforms yield null so
+// the title is just shown as text.
+function videoUrl(platform: string, videoId: string): string | null {
+  const id = encodeURIComponent(videoId);
+  switch (platform) {
+    case "youtube":
+      return `https://www.youtube.com/watch?v=${id}`;
+    case "niconico":
+      return `https://www.nicovideo.jp/watch/${id}`;
+    case "vimeo":
+      return `https://vimeo.com/${id}`;
+    default:
+      return null;
+  }
+}
+
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
@@ -257,7 +276,18 @@ function VideoTable({
           {rows.map((row, i) => (
             <TableRow key={`${row.platform}:${row.videoId}`}>
               <TableCell>{i + 1}</TableCell>
-              <TableCell sx={{ wordBreak: "break-word" }}>{row.title}</TableCell>
+              <TableCell sx={{ wordBreak: "break-word" }}>
+                {(() => {
+                  const url = videoUrl(row.platform, row.videoId);
+                  return url ? (
+                    <Link href={url} target="_blank" rel="noopener noreferrer">
+                      {row.title}
+                    </Link>
+                  ) : (
+                    row.title
+                  );
+                })()}
+              </TableCell>
               <TableCell sx={{ wordBreak: "break-word" }}>{row.channelTitle}</TableCell>
               <TableCell align="right">{row[valueKey].toLocaleString("ja-JP")}</TableCell>
             </TableRow>
