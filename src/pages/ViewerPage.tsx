@@ -16,6 +16,7 @@ import { FALLBACK_VIDEO_IDS, pickRandomFallbackVideoId } from "../lib/fallbackPl
 import { loadYouTubeIframeApi } from "../lib/loadYouTubeIframeApi";
 import { useBroadcastOverlay } from "../lib/useBroadcastOverlay";
 import { useFastForwardPacingPopups } from "../lib/useFastForwardPacingPopups";
+import { getPlayableSeconds } from "../lib/playableSeconds";
 import {
   DURATION_BADGE_DELAY_MS,
   DURATION_BADGE_VISIBLE_MS,
@@ -781,7 +782,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
         caps.push(twoMinuteRequestCapSeconds);
       }
     }
-    if (durationLimitThresholdSeconds > 0 && (current.durationSeconds ?? 0) >= durationLimitThresholdSeconds) {
+    if (durationLimitThresholdSeconds > 0 && getPlayableSeconds(current) >= durationLimitThresholdSeconds) {
       caps.push(durationLimitCapSeconds);
     }
     if (caps.length === 0) return;
@@ -921,7 +922,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
         setNonYouTubeEmbedUrl(target.embedUrl);
         nonYouTubeStartRef.current = Date.now();
         const durationLimited =
-          durationLimitThresholdSeconds > 0 && (target.durationSeconds ?? 0) >= durationLimitThresholdSeconds;
+          durationLimitThresholdSeconds > 0 && getPlayableSeconds(target) >= durationLimitThresholdSeconds;
         // twoMinuteRequest relaxes the usual SHORTENED_PLAYBACK_SECONDS floor
         // down to the video's own length when it's shorter, matching the
         // backend's relaxed floor (see store.playbackFloorLocked) — otherwise
@@ -929,9 +930,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
         // instead of ending right away.
         // The embed itself starts at startSeconds (baked into embedUrl), so
         // only the remainder of the video plays.
-        const playableSeconds = target.durationSeconds
-          ? Math.max(target.durationSeconds - (target.startSeconds ?? 0), 1)
-          : 0;
+        const playableSeconds = getPlayableSeconds(target);
         const timerSeconds = durationLimited
           ? durationLimitCapSeconds
           : target.twoMinuteRequest
