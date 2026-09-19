@@ -279,7 +279,7 @@ function VideoTable({
                 {(() => {
                   const url = videoUrl(row.platform, row.videoId);
                   return url ? (
-                    <a href={url} target="_blank" rel="noopener noreferrer">
+                    <a className="stats-link" href={url} target="_blank" rel="noopener noreferrer">
                       {row.title}
                     </a>
                   ) : (
