@@ -10,7 +10,7 @@ import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import { geoMercator } from "d3-geo";
 import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";
-import type { ActiveUsersByCity, ActiveUsersByPrefecture } from "../lib/activeUsersHeatmap";
+import type { ActiveUsersPoint, ActiveUsersByPrefecture } from "../lib/activeUsersHeatmap";
 
 // Natural Earth 1:50m admin-0 countries (public domain), via the world-atlas
 // npm package — vendored as a static asset (public/data/countries-50m.json)
@@ -51,7 +51,7 @@ function radiusFor(value: number, maxValue: number) {
   return MIN_RADIUS + (MAX_RADIUS - MIN_RADIUS) * Math.sqrt(value / maxValue);
 }
 
-// Cheap, deterministic per-city hash so each marker's pulse animation gets
+// Cheap, deterministic per-point hash so each marker's pulse animation gets
 // a stable (not re-randomized every render) but different timing —
 // otherwise every bubble breathing in lockstep reads as one blinking mass
 // rather than the soft "moya moya" drift asked for.
@@ -75,10 +75,10 @@ export function ActiveUsersMap({
   points,
   prefectures,
 }: {
-  points: ActiveUsersByCity[];
+  points: ActiveUsersPoint[];
   prefectures: ActiveUsersByPrefecture[];
 }) {
-  const [hovered, setHovered] = useState<ActiveUsersByCity | null>(null);
+  const [hovered, setHovered] = useState<ActiveUsersPoint | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const maxValue = useMemo(() => Math.max(0, ...points.map((d) => d.activeUsers)), [points]);
   const sortedPoints = useMemo(() => [...points].sort((a, b) => b.activeUsers - a.activeUsers), [points]);
@@ -184,20 +184,21 @@ export function ActiveUsersMap({
           {sortedPoints.map((d) => {
             const r = radiusFor(d.activeUsers, maxValue);
             const hitR = Math.max(r + 8, 16);
-            const hash = hashString(d.city);
+            const key = `${d.lat},${d.lng}`;
+            const hash = hashString(key);
             const duration = 2.6 + ((hash % 100) / 100) * 1.8;
             const delay = -((hash % 137) / 137) * duration;
             return (
-              <Marker key={d.city} coordinates={[d.lng, d.lat]}>
+              <Marker key={key} coordinates={[d.lng, d.lat]}>
                 {/* Hit target: bigger than the painted mark (interaction.md). */}
                 <circle
                   r={hitR}
                   fill="transparent"
                   tabIndex={0}
                   role="img"
-                  aria-label={`${d.city}: アクティブユーザー ${d.activeUsers}人`}
+                  aria-label={`${d.prefecture}: アクティブユーザー ${d.activeUsers}人`}
                   onFocus={() => setHovered(d)}
-                  onBlur={() => setHovered((h) => (h?.city === d.city ? null : h))}
+                  onBlur={() => setHovered((h) => (h === d ? null : h))}
                   style={{ cursor: "pointer" }}
                 />
                 {/* 2px surface ring so overlapping bubbles (e.g. Tokyo/
@@ -240,7 +241,7 @@ export function ActiveUsersMap({
               {hovered.activeUsers.toLocaleString()}人
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {hovered.city}
+              {hovered.prefecture}
             </Typography>
           </Box>
         )}

@@ -7,7 +7,7 @@ import type {
   DurationLimit,
   FallbackTrack,
   FastForwardWindow,
-  GA4CityUsers,
+  HeatmapReport,
   KeywordLimit,
   LikeResult,
   MultiDeviceIP,
@@ -115,11 +115,11 @@ export const api = {
   // empty. Takes priority over getFallbackPlaylist above when non-empty.
   getPlaylist: () => request<PlaylistTrack[]>("/playlist"),
 
-  // GA4 Realtime active-users-by-city (see backend/internal/ga4heatmap) —
-  // may be an empty list if the backend hasn't refreshed yet, or has no
+  // GA4 Realtime active users (map points + prefecture totals) (see backend/internal/ga4heatmap) —
+  // may have empty points if the backend hasn't refreshed yet, or has no
   // GA4 property configured; callers should fall back to
-  // activeUsersHeatmap.ts's MOCK_ACTIVE_USERS in that case.
-  getHeatmap: () => request<GA4CityUsers[]>("/heatmap"),
+  // activeUsersHeatmap.ts's MOCK_ACTIVE_USERS in that case (empty points).
+  getHeatmap: () => request<HeatmapReport>("/heatmap"),
 
   adminSetPlaylist: (urls: string[]) =>
     request<PlaylistUpdateResult>("/admin/playlist", {
