@@ -25,6 +25,9 @@ export interface VideoRequest {
   // begins playing at. Elapsed-time caps and the non-YouTube advance timer
   // count from here, not from 0.
   startSeconds?: number;
+  // YouTube only: position (from the URL's end=) playback stops at instead
+  // of running to the video's natural end.
+  endSeconds?: number;
   // Set when the requester used the "2分でリクエスト" button — see
   // AppConfig.twoMinuteRequestCapSeconds and ViewerPage's
   // playback-capping effect.
