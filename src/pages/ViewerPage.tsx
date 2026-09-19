@@ -271,7 +271,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
 
   const refresh = useCallback(async () => {
     try {
-      const data = await api.listRequests();
+      const data = await api.adminListRequests();
       setRequests(data);
 
       // Notify (once each) for every request that showed up since the
