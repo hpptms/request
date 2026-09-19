@@ -8,7 +8,6 @@ import IconButton from "@mui/material/IconButton";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Tab from "@mui/material/Tab";
-import Link from "@mui/material/Link";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -280,9 +279,9 @@ function VideoTable({
                 {(() => {
                   const url = videoUrl(row.platform, row.videoId);
                   return url ? (
-                    <Link href={url} target="_blank" rel="noopener noreferrer">
+                    <a href={url} target="_blank" rel="noopener noreferrer">
                       {row.title}
-                    </Link>
+                    </a>
                   ) : (
                     row.title
                   );
