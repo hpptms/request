@@ -92,6 +92,15 @@ function PrivacyPolicyPage() {
 
           <Box>
             <Typography variant="h6" gutterBottom>
+              アフィリエイトについて
+            </Typography>
+            <Typography variant="body1">
+              当サイトは、Amazonアソシエイト・プログラムおよび楽天アフィリエイトの参加者です。再生中の曲の横に表示する「Amazonで探す」「楽天で探す」のリンクは広告(アフィリエイトリンク)で、リンク先で商品を購入すると、当サイトが紹介料を受け取ることがあります。Amazonアソシエイトとして、適格販売により収入を得ています。これらのリンクをクリックすると、各社のサイトでCookie等が利用されることがあります。
+            </Typography>
+          </Box>
+
+          <Box>
+            <Typography variant="h6" gutterBottom>
               お問い合わせについて
             </Typography>
             <Typography variant="body1">

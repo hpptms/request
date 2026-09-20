@@ -15,6 +15,7 @@ import { formatDuration } from "../lib/formatDuration";
 import { hasLiked, markLiked } from "../lib/likeStorage";
 import { isMyRequest } from "../lib/myRequestStorage";
 import type { CancelVoteTier, VideoRequest } from "../types";
+import { MusicLinks } from "./MusicLinks";
 
 // Watch-page URL for the request's original video, by platform. videoId is
 // the bare id the backend extracted from whatever URL the requester
@@ -191,6 +192,7 @@ export function NowPlaying({
               </Button>
             )}
           </Stack>
+          <MusicLinks title={nowPlaying.title} />
         </Stack>
       </Box>
     </Paper>
