@@ -2,7 +2,18 @@ import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Link from "@mui/material/Link";
+import type { SvgIconProps } from "@mui/material/SvgIcon";
+import type { ComponentType } from "react";
+import { AmazonMark, AppleMusicMark, RakutenMark, SpotifyMark } from "./BrandIcons";
 import { hasAffiliateLinks, hasAmazonAffiliate, musicLinks, storeLinks } from "../lib/affiliate";
+
+// Each store's brand colours and mark, so a button reads as that service.
+const BRANDS: Record<string, { bg: string; hover: string; fg: string; Icon: ComponentType<SvgIconProps> }> = {
+  amazon: { bg: "#FF9900", hover: "#E68A00", fg: "#111111", Icon: AmazonMark },
+  rakuten: { bg: "#BF0000", hover: "#A00000", fg: "#FFFFFF", Icon: RakutenMark },
+  apple: { bg: "linear-gradient(135deg, #FA233B, #FB5C74)", hover: "linear-gradient(135deg, #E01F35, #EA4F68)", fg: "#FFFFFF", Icon: AppleMusicMark },
+  spotify: { bg: "#1DB954", hover: "#1ED760", fg: "#000000", Icon: SpotifyMark },
+};
 
 // 「この曲を探す」リンク。Amazon・楽天は広告(アフィリエイトリンク)で、
 // 景品表示法の広告表示と、Amazonアソシエイトの規約上の表記を付ける。
@@ -17,21 +28,34 @@ export function MusicLinks({ title }: { title: string }) {
         この曲を探す{hasAffiliate && "(Amazon・楽天のリンクは広告です)"}
       </Typography>
       <Stack useFlexGap direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
-        {links.map((l) => (
-          <Button
-            key={l.key}
-            component="a"
-            href={l.href}
-            target="_blank"
-            rel={l.affiliate ? "sponsored noopener noreferrer" : "noopener noreferrer"}
-            size="small"
-            variant="outlined"
-            color="inherit"
-            sx={{ whiteSpace: "nowrap", textTransform: "none" }}
-          >
-            {l.label}
-          </Button>
-        ))}
+        {links.map((l) => {
+          const brand = BRANDS[l.key];
+          return (
+            <Button
+              key={l.key}
+              component="a"
+              href={l.href}
+              target="_blank"
+              rel={l.affiliate ? "sponsored noopener noreferrer" : "noopener noreferrer"}
+              size="small"
+              variant="contained"
+              startIcon={brand ? <brand.Icon /> : undefined}
+              sx={{
+                whiteSpace: "nowrap",
+                textTransform: "none",
+                fontWeight: 700,
+                boxShadow: "none",
+                ...(brand && {
+                  background: brand.bg,
+                  color: brand.fg,
+                  "&:hover": { background: brand.hover, boxShadow: "none" },
+                }),
+              }}
+            >
+              {l.label}
+            </Button>
+          );
+        })}
       </Stack>
       {hasAmazon && (
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
@@ -49,18 +73,35 @@ export function StoreLinksInline({ keyword }: { keyword: string }) {
   const links = storeLinks(keyword);
   if (links.length === 0) return null;
   return (
-    <Typography variant="caption" component="span" sx={{ display: "inline-flex", gap: 1.5, whiteSpace: "nowrap" }}>
-      {links.map((l) => (
-        <Link
-          key={l.key}
-          href={l.href}
-          target="_blank"
-          rel={l.affiliate ? "sponsored noopener noreferrer" : "noopener noreferrer"}
-          underline="hover"
-        >
-          {l.key === "amazon" ? "Amazon" : "楽天"}
-        </Link>
-      ))}
+    <Typography variant="caption" component="span" sx={{ display: "inline-flex", gap: 0.75 }}>
+      {links.map((l) => {
+        const brand = BRANDS[l.key];
+        return (
+          <Link
+            key={l.key}
+            href={l.href}
+            target="_blank"
+            rel={l.affiliate ? "sponsored noopener noreferrer" : "noopener noreferrer"}
+            underline="none"
+            sx={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 0.25,
+              px: 0.75,
+              py: 0.1,
+              borderRadius: 1,
+              whiteSpace: "nowrap",
+              fontWeight: 700,
+              background: brand?.bg,
+              color: brand?.fg,
+              "&:hover": { background: brand?.hover },
+            }}
+          >
+            {brand && <brand.Icon sx={{ fontSize: 14 }} />}
+            {l.key === "amazon" ? "Amazon" : "楽天"}
+          </Link>
+        );
+      })}
     </Typography>
   );
 }
