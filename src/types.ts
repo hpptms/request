@@ -318,6 +318,8 @@ export interface StatsSummary {
   // — see backend/internal/api.handleStats.
   previousDayFallback?: boolean;
   topChannelsByRequests: ChannelStat[];
+  // Best-effort guess from titles/channel names (backend analytics/artist.go).
+  topArtistsByRequests?: ArtistStat[];
   topVideosByRequests: VideoStat[];
   topVideosByLikes: VideoStat[];
   topVideosByCancelVotes: VideoStat[];
@@ -355,4 +357,10 @@ export interface ChatMessage {
   id: number;
   text: string;
   ageMs: number;
+}
+
+// backend/internal/analytics.ArtistStat
+export interface ArtistStat {
+  artist: string;
+  requestCount: number;
 }
