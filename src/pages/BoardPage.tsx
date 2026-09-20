@@ -20,6 +20,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { Footer } from "../components/Footer";
 import { NowPlaying } from "../components/NowPlaying";
 import { QueueList } from "../components/QueueList";
+import { RecentDoneList } from "../components/RecentDoneList";
 import { RequestForm } from "../components/RequestForm";
 import { useRequestQueue } from "../lib/useRequestQueue";
 import { useSeo } from "../lib/useSeo";
@@ -31,7 +32,7 @@ const NOTICES = [
   "キューが50件を超えている間は、1人1曲までのリクエストとなります。",
 ];
 
-const RECENT_CHANGES = ["badを可視化出来なくしました"];
+const RECENT_CHANGES = ["badを可視化出来なくしました", "再生が終わった直近5曲にもいいね・badできるようにしました"];
 
 function BoardPage() {
   const theme = useTheme();
@@ -56,6 +57,7 @@ function BoardPage() {
     isAdmin,
     nowPlaying,
     pending,
+    recentDone,
     handleCreate,
     handleCancelMine,
     handlePlay,
@@ -177,6 +179,16 @@ function BoardPage() {
               onLike={handleLike}
               onCancelMine={handleCancelMine}
             />
+          </Box>
+
+          <Box>
+            <Typography variant="h6" sx={{ mb: 0.5 }}>
+              再生が終わった動画
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+              直近5曲にいいね・badできます。
+            </Typography>
+            <RecentDoneList requests={recentDone} onVoteCancel={handleVoteCancel} onLike={handleLike} />
           </Box>
         </Stack>
 

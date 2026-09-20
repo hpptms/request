@@ -11,6 +11,10 @@ export interface VideoRequest {
   createdAt: string;
   cancelVotes: number;
   likes: number;
+  // When the request became "done" (ISO string). Zero-value
+  // ("0001-01-01T00:00:00Z") for requests that finished before the backend
+  // tracked this.
+  finishedAt?: string;
   // Which video site videoId belongs to: "youtube" | "niconico" | "vimeo".
   // YouTube is driven by the IFrame Player API
   // (see ViewerPage); the others are shown as a plain
