@@ -19,6 +19,7 @@ const AboutPage = lazy(() => import("./pages/AboutPage"));
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 const ViewerPage = lazy(() => import("./pages/ViewerPage"));
+const NoticePage = lazy(() => import("./pages/NoticePage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const AdminBansPage = lazy(() => import("./pages/AdminBansPage"));
 const AdminPlaylistPage = lazy(() => import("./pages/AdminPlaylistPage"));
@@ -62,6 +63,7 @@ function AppRoutes() {
         <Route path="/play" element={<PlayPage />} />
         <Route path="/stats" element={<StatsPage />} />
         <Route path="/heatmap" element={<HeatmapPage />} />
+        <Route path="/notice" element={<NoticePage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route path="/contact" element={<ContactPage />} />

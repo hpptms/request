@@ -9,6 +9,7 @@ import { useTheme } from "@mui/material/styles";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import CampaignIcon from "@mui/icons-material/Campaign";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import MapIcon from "@mui/icons-material/Map";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
@@ -16,8 +17,6 @@ import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import ShieldIcon from "@mui/icons-material/Shield";
 import { Link as RouterLink } from "react-router-dom";
 import { Footer } from "../components/Footer";
-import { AdminMessageForm } from "../components/AdminMessageForm";
-import { Collapsible } from "../components/Collapsible";
 import { NowLive } from "../components/NowLive";
 import { NowPlaying } from "../components/NowPlaying";
 import { QueueList } from "../components/QueueList";
@@ -26,18 +25,6 @@ import { RequestForm } from "../components/RequestForm";
 import { useRequestQueue } from "../lib/useRequestQueue";
 import { useSeo } from "../lib/useSeo";
 import { SiteLogo } from "../components/SiteLogo";
-
-const NOTICES = [
-  "0,6,9,12,15,18,21時は1時間半リクエスト早送りタイムです。",
-  "荒し対策のため操作が頻繁な場合自動BANされます。BANされるとリクエストが削除されます。",
-  "自動BANは特定のタイミングで解除されます。",
-  "キューが50件を超えている間は、1人1曲までのリクエストとなります。",
-];
-
-const RECENT_CHANGES = [
-  "同じURLの再投稿を2時間に緩和しました",
-  "再生が終わった直近5曲にもいいね・badできるようにしました",
-];
 
 function BoardPage() {
   const theme = useTheme();
@@ -98,6 +85,16 @@ function BoardPage() {
             </Button>
             <Button
               component={RouterLink}
+              to="/notice"
+              size="small"
+              aria-label={isMobile ? "お知らせ" : undefined}
+              startIcon={isMobile ? undefined : <CampaignIcon />}
+              sx={{ whiteSpace: "nowrap", minWidth: 0, px: isMobile ? 1 : 2 }}
+            >
+              {isMobile ? <CampaignIcon fontSize="small" /> : "お知らせ"}
+            </Button>
+            <Button
+              component={RouterLink}
               to="/stats"
               size="small"
               aria-label={isMobile ? "集計" : undefined}
@@ -150,31 +147,7 @@ function BoardPage() {
             onLike={handleLike}
             onCancelMine={handleCancelMine}
           />
-          <Collapsible title="お知らせ・直近の変更" variant="outlined">
-            <Stack spacing={2}>
-              <Stack spacing={1}>
-                {NOTICES.map((text) => (
-                  <Typography key={text} variant="body2">
-                    {text}
-                  </Typography>
-                ))}
-              </Stack>
-              <Box>
-                <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-                  直近の変更
-                </Typography>
-                <Stack component="ul" spacing={0.5} sx={{ m: 0, pl: 2.5 }}>
-                  {RECENT_CHANGES.map((text) => (
-                    <Typography key={text} component="li" variant="body2" color="text.secondary">
-                      {text}
-                    </Typography>
-                  ))}
-                </Stack>
-              </Box>
-            </Stack>
-          </Collapsible>
           <RequestForm onSubmit={handleCreate} />
-          <AdminMessageForm />
 
           <Box>
             <Typography variant="h6" sx={{ mb: 1.5 }}>
