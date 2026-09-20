@@ -74,8 +74,10 @@ export function RecentDoneList({ requests, onVoteCancel, onLike }: Props) {
                 target="_blank"
                 rel="noopener noreferrer"
                 size="small"
-                endIcon={<OpenInNewIcon fontSize="small" />}
-                sx={{ whiteSpace: "nowrap" }}
+                variant="outlined"
+                color="inherit"
+                startIcon={<OpenInNewIcon fontSize="small" />}
+                sx={{ whiteSpace: "nowrap", borderRadius: 999, px: 2 }}
               >
                 元の動画に飛ぶ
               </Button>
