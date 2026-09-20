@@ -331,3 +331,21 @@ export interface LikeRank {
   rank: number;
   likes: number;
 }
+
+// backend/internal/inquiry.Message — one line of a visitor <-> admin thread.
+export interface InquiryMessage {
+  id: number;
+  ip: string;
+  fromAdmin: boolean;
+  text: string;
+  createdAt: string;
+  seen: boolean;
+}
+
+// backend/internal/inquiry.Thread — every message exchanged with one IP.
+export interface InquiryThread {
+  ip: string;
+  messages: InquiryMessage[];
+  unread: number;
+  lastAt: string;
+}

@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
+import AdminReplyDialog from "./components/AdminReplyDialog";
 import LikeRankDialog from "./components/LikeRankDialog";
 import BoardPage from "./pages/BoardPage";
 import { usePageViewTracking } from "./lib/usePageViewTracking";
@@ -30,6 +31,7 @@ const AdminStatsPage = lazy(() => import("./pages/AdminStatsPage"));
 const AdminHeatmapPage = lazy(() => import("./pages/AdminHeatmapPage"));
 const AdminBroadcastPage = lazy(() => import("./pages/AdminBroadcastPage"));
 const AdminInterruptPage = lazy(() => import("./pages/AdminInterruptPage"));
+const AdminMessagesPage = lazy(() => import("./pages/AdminMessagesPage"));
 
 function LazyPageFallback() {
   return (
@@ -46,10 +48,14 @@ function AppRoutes() {
   // Not on the OBS capture page (it would end up on stream). The admin
   // section is included so the admin sees their own ranking too.
   const showLikeRank = pathname !== "/viewer";
+  // Replies are for visitors: not on the OBS page, and not in the admin
+  // section (the admin's own IP would otherwise pop up their own replies).
+  const showReplies = pathname !== "/viewer" && !pathname.startsWith("/admin");
 
   return (
     <Suspense fallback={<LazyPageFallback />}>
       {showLikeRank && <LikeRankDialog />}
+      {showReplies && <AdminReplyDialog />}
       <Routes>
         <Route path="/" element={<BoardPage />} />
         <Route path="/play" element={<PlayPage />} />
@@ -71,6 +77,7 @@ function AppRoutes() {
           <Route path="heatmap" element={<AdminHeatmapPage />} />
           <Route path="broadcast" element={<AdminBroadcastPage />} />
           <Route path="interrupt" element={<AdminInterruptPage />} />
+          <Route path="messages" element={<AdminMessagesPage />} />
         </Route>
       </Routes>
     </Suspense>
