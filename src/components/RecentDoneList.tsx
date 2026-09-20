@@ -82,7 +82,13 @@ export function RecentDoneList({ requests, onVoteCancel, onLike }: Props) {
                 元の動画に飛ぶ
               </Button>
               <LikeIconButton request={r} onLike={onLike} />
+              <Typography variant="body2" color="text.secondary" sx={{ minWidth: 20 }} aria-label="いいね数">
+                {r.likes}
+              </Typography>
               <CancelVoteIconButton request={r} onVoteCancel={onVoteCancel} />
+              <Typography variant="body2" color="text.secondary" sx={{ minWidth: 20 }} aria-label="bad数">
+                {r.cancelVotes}
+              </Typography>
             </Stack>
           </ListItem>
         ))}
