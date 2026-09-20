@@ -133,6 +133,7 @@ interface LikeIconButtonProps {
 function LikeIconButton({ request, onLike }: LikeIconButtonProps) {
   const [liking, setLiking] = useState(false);
   const liked = hasLiked(request.id);
+  const own = isMyRequest(request.id);
 
   const handleClick = async () => {
     setLiking(true);
@@ -145,9 +146,14 @@ function LikeIconButton({ request, onLike }: LikeIconButtonProps) {
   };
 
   return (
-    <Tooltip title={liked ? "いいね済み" : "いいね"}>
+    <Tooltip title={own ? "自分のリクエストにはいいねできません" : liked ? "いいね済み" : "いいね"}>
       <span>
-        <IconButton edge="end" color={liked ? "primary" : "default"} onClick={handleClick} disabled={liking || liked}>
+        <IconButton
+          edge="end"
+          color={liked ? "primary" : "default"}
+          onClick={handleClick}
+          disabled={liking || liked || own}
+        >
           <ThumbUpAltIcon fontSize="small" />
         </IconButton>
       </span>

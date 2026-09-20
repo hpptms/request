@@ -153,7 +153,7 @@ export function NowPlaying({
               color={liked ? "primary" : "inherit"}
               startIcon={<ThumbUpAltIcon />}
               onClick={handleLike}
-              disabled={liking || liked}
+              disabled={liking || liked || isMyRequest(nowPlaying.id)}
               sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
             >
               {liked ? "いいね済み" : "いいね"} ({nowPlaying.likes}/{likePriorityThreshold})
