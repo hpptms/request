@@ -1,10 +1,11 @@
-// Affiliate / search links for the song currently playing. The IDs below are
-// public by nature (they appear in every generated link); they are the
-// account-level Amazon Associates tracking ID and Rakuten Affiliate ID.
+// Affiliate / search links for the song currently playing. The IDs come from
+// the VITE_AMAZON_TAG / VITE_RAKUTEN_AFFILIATE_ID env vars (.env.production);
+// they are public by nature (they appear in every generated link). With an ID
+// unset, that store's link is a plain search link and isn't marked as an ad.
 // Amazon requires the site the links appear on (request.tokyo) to be
 // registered in the Associates account's site list.
-export const AMAZON_TAG = "itemsearch05-22";
-export const RAKUTEN_AFFILIATE_ID = "560e48fa.f59f215f.560e48fb";
+const AMAZON_TAG = import.meta.env.VITE_AMAZON_TAG?.trim();
+const RAKUTEN_AFFILIATE_ID = import.meta.env.VITE_RAKUTEN_AFFILIATE_ID?.trim();
 
 // A video title as a search keyword: bracketed tags (【MV】, (Official Video),
 // [HD] ...) are noise for a store search.
@@ -28,18 +29,21 @@ export function musicLinks(title: string): MusicLink[] {
   if (!kw) return [];
   const q = encodeURIComponent(kw);
   const rakutenTarget = encodeURIComponent(`https://search.rakuten.co.jp/search/mall/${q}/`);
+  const rakutenPlain = `https://search.rakuten.co.jp/search/mall/${q}/`;
   return [
     {
       key: "amazon",
       label: "Amazonで探す",
-      href: `https://www.amazon.co.jp/s?k=${q}&i=popular&tag=${AMAZON_TAG}`,
-      affiliate: true,
+      href: `https://www.amazon.co.jp/s?k=${q}&i=popular${AMAZON_TAG ? `&tag=${encodeURIComponent(AMAZON_TAG)}` : ""}`,
+      affiliate: Boolean(AMAZON_TAG),
     },
     {
       key: "rakuten",
       label: "楽天で探す",
-      href: `https://hb.afl.rakuten.co.jp/hgc/${RAKUTEN_AFFILIATE_ID}/?pc=${rakutenTarget}&m=${rakutenTarget}`,
-      affiliate: true,
+      href: RAKUTEN_AFFILIATE_ID
+        ? `https://hb.afl.rakuten.co.jp/hgc/${encodeURIComponent(RAKUTEN_AFFILIATE_ID)}/?pc=${rakutenTarget}&m=${rakutenTarget}`
+        : rakutenPlain,
+      affiliate: Boolean(RAKUTEN_AFFILIATE_ID),
     },
     { key: "apple", label: "Apple Music", href: `https://music.apple.com/jp/search?term=${q}`, affiliate: false },
     { key: "spotify", label: "Spotify", href: `https://open.spotify.com/search/${q}`, affiliate: false },
