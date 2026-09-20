@@ -15,7 +15,6 @@ import MapIcon from "@mui/icons-material/Map";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import ShieldIcon from "@mui/icons-material/Shield";
-import YouTubeIcon from "@mui/icons-material/YouTube";
 import { Link as RouterLink } from "react-router-dom";
 import { Footer } from "../components/Footer";
 import { AdminMessageForm } from "../components/AdminMessageForm";
@@ -75,7 +74,7 @@ function BoardPage() {
     <Box sx={{ minHeight: "100%", bgcolor: "background.default" }}>
       <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Toolbar sx={{ px: { xs: 2, sm: 3 }, gap: 1 }}>
-          <YouTubeIcon color="primary" sx={{ mr: 1.5 }} fontSize="large" />
+          <Box component="img" src="/logo.svg" alt="" sx={{ height: { xs: 32, sm: 38 }, width: "auto", mr: 1.5, flexShrink: 0 }} />
           <Typography
             variant="h6"
             component="h1"
