@@ -46,8 +46,8 @@ function BoardPage() {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useSeo(
-    "動画リクエストキュー",
-    "YouTube・ニコニコ動画・Vimeoの動画をみんなでリクエストして再生できる視聴者参加型のキューサービス。いいね・bad投票でリクエストの再生順が変わります。",
+    "動画リクエストキュー | みんなで一緒に動画を見るリクエストサイト",
+    "動画リクエストキューは、リクエスタ(リクエスター)がYouTube・ニコニコ動画・Vimeoの動画をリクエストして、みんなで一緒に動画を見られる視聴者参加型の動画リクエストサイトです。いいね・bad投票でリクエストの再生順が変わります。",
     "/",
   );
 
@@ -193,6 +193,15 @@ function BoardPage() {
             <RecentDoneList requests={recentDone} onVoteCancel={handleVoteCancel} onLike={handleLike} />
           </Box>
         </Stack>
+
+        <Box component="section" sx={{ mt: 4 }}>
+          <Typography variant="h6" component="h2" gutterBottom>
+            みんなで一緒に動画を見る、動画リクエストサイト
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            動画リクエストキューは、リクエスタ(リクエスター)がYouTube・ニコニコ動画・Vimeoの動画URLを送るだけで、みんなで一緒に動画を見られる視聴者参加型のサービスです。リクエストされた動画は待機列に並び、いいねが集まると再生順が上がり、bad投票が集まると短く切り上げられます。配信やイベント、友達との動画鑑賞会などでご利用ください。
+          </Typography>
+        </Box>
 
         <Footer />
       </Container>
