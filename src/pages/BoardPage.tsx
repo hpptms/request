@@ -33,7 +33,10 @@ const NOTICES = [
   "キューが50件を超えている間は、1人1曲までのリクエストとなります。",
 ];
 
-const RECENT_CHANGES = ["再生が終わった直近5曲にもいいね・badできるようにしました"];
+const RECENT_CHANGES = [
+  "同じURLの再投稿を2時間に緩和しました",
+  "再生が終わった直近5曲にもいいね・badできるようにしました",
+];
 
 function BoardPage() {
   const theme = useTheme();
