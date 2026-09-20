@@ -8,6 +8,7 @@ import type {
   FallbackTrack,
   FastForwardWindow,
   HeatmapReport,
+  ChatMessage,
   InquiryMessage,
   InquiryThread,
   KeywordLimit,
@@ -142,6 +143,11 @@ export const api = {
   getMyReplies: () => request<{ replies: InquiryMessage[] }>("/my-replies"),
   ackReplies: (ids: number[]) =>
     request<void>("/my-replies/ack", { method: "POST", body: JSON.stringify({ ids }) }),
+
+  // /play's throwaway chat (backend/internal/chat).
+  getChat: (afterId: number) => request<{ messages: ChatMessage[] }>(`/chat?after=${afterId}`),
+  sendChat: (text: string) =>
+    request<{ ok: boolean }>("/chat", { method: "POST", body: JSON.stringify({ text }) }),
 
   adminListInquiries: () => request<{ threads: InquiryThread[]; unread: number }>("/admin/inquiries"),
   adminReadInquiry: (ip: string) =>

@@ -13,9 +13,11 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import ShieldIcon from "@mui/icons-material/Shield";
 import { Link as RouterLink } from "react-router-dom";
+import { PlayChatForm, PlayChatOverlay } from "../components/PlayChat";
 import { QueueList } from "../components/QueueList";
 import { RequestForm } from "../components/RequestForm";
 import { RequestSidePlayer } from "../components/RequestSidePlayer";
+import { usePlayChat } from "../lib/usePlayChat";
 import { useRequestQueue } from "../lib/useRequestQueue";
 import { useSeo } from "../lib/useSeo";
 
@@ -51,6 +53,8 @@ function PlayPage() {
     handleVoteCancel,
     handleLike,
   } = useRequestQueue("play");
+
+  const { lines: chatLines, poll: pollChat } = usePlayChat();
 
   return (
     <>
@@ -119,7 +123,7 @@ function PlayPage() {
             overflowY: { xs: "auto", md: "hidden" },
           }}
         >
-          <Box sx={{ flex: { md: "3 1 0%" }, minWidth: 0, flexShrink: 0 }}>
+          <Box sx={{ position: "relative", flex: { md: "3 1 0%" }, minWidth: 0, flexShrink: 0 }}>
             {requestsLoaded && (
               <RequestSidePlayer
                 requests={requests}
@@ -132,6 +136,7 @@ function PlayPage() {
                 onVoteCancel={handleVoteCancel}
               />
             )}
+            <PlayChatOverlay lines={chatLines} />
           </Box>
 
           <Box
@@ -176,7 +181,10 @@ function PlayPage() {
             pb: { xs: "calc(12px + env(safe-area-inset-bottom))", sm: 2 },
           }}
         >
-          <RequestForm onSubmit={handleCreate} />
+          <Stack spacing={1.5}>
+            <RequestForm onSubmit={handleCreate} inline />
+            <PlayChatForm onSent={pollChat} />
+          </Stack>
         </Box>
 
         <Snackbar
