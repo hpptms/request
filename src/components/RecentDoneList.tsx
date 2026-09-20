@@ -1,4 +1,5 @@
 import Avatar from "@mui/material/Avatar";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
@@ -9,6 +10,8 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import type { VideoRequest } from "../types";
+import { searchKeyword } from "../lib/affiliate";
+import { AffiliateNotice, StoreLinksInline } from "./MusicLinks";
 import { CancelVoteIconButton, LikeIconButton } from "./QueueList";
 
 interface Props {
@@ -90,9 +93,15 @@ export function RecentDoneList({ requests, onVoteCancel, onLike }: Props) {
                 {r.cancelVotes}
               </Typography>
             </Stack>
+            <Box sx={{ width: "100%", pl: { xs: 7.5, sm: 9.5 } }}>
+              <StoreLinksInline keyword={searchKeyword(r.title)} withStreaming />
+            </Box>
           </ListItem>
         ))}
       </List>
+      <Box sx={{ px: { xs: 1.5, sm: 2 }, py: 1 }}>
+        <AffiliateNotice />
+      </Box>
     </Paper>
   );
 }
