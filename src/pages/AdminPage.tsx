@@ -28,6 +28,7 @@ import ShieldIcon from "@mui/icons-material/Shield";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import { api } from "../api";
 import { AdminLoginForm } from "../components/AdminLoginForm";
+import { SiteLogo } from "../components/SiteLogo";
 
 // Gatekeeper for every /admin/* route: shows a login form until an admin
 // session cookie is confirmed, then hands off to AdminLayout (header +
@@ -143,7 +144,7 @@ function AdminLayout({ onLoggedOut }: { onLoggedOut: () => void }) {
     <Box sx={{ minHeight: "100%", bgcolor: "background.default" }}>
       <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Toolbar sx={{ px: { xs: 2, sm: 3 }, gap: 1 }}>
-          <ShieldIcon color="primary" sx={{ mr: 1.5 }} fontSize="large" />
+          <SiteLogo />
           <Typography
             variant="h6"
             component="h1"

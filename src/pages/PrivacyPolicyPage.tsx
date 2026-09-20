@@ -7,10 +7,10 @@ import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import PolicyIcon from "@mui/icons-material/Policy";
 import { Link as RouterLink } from "react-router-dom";
 import { Footer } from "../components/Footer";
 import { useSeo } from "../lib/useSeo";
+import { SiteLogo } from "../components/SiteLogo";
 
 // プライバシーポリシー (/privacy)。Google公式ヘルプが必須としている3点
 // (第三者配信事業者によるCookie利用/パーソナライズド広告の表示/広告設定
@@ -28,7 +28,7 @@ function PrivacyPolicyPage() {
     <Box sx={{ minHeight: "100%", bgcolor: "background.default" }}>
       <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Toolbar sx={{ px: { xs: 2, sm: 3 }, gap: 1 }}>
-          <PolicyIcon color="primary" sx={{ mr: 1.5 }} fontSize="large" />
+          <SiteLogo />
           <Typography variant="h6" component="h1" noWrap sx={{ flexGrow: 1, minWidth: 0 }}>
             プライバシーポリシー
           </Typography>
