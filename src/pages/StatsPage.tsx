@@ -1,17 +1,13 @@
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
-import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
-import PlayCircleIcon from "@mui/icons-material/PlayCircle";
-import { Link as RouterLink } from "react-router-dom";
 import { Footer } from "../components/Footer";
 import { StatsView } from "../components/StatsView";
 import { useSeo } from "../lib/useSeo";
+import { PublicNavButtons } from "../components/PublicNavButtons";
 
 // 公開の集計画面 (/stats): backend/internal/analytics の日別/週別/累計
 // ランキング(GET /api/stats、認証不要)を誰でも見られる形で表示する。
@@ -31,26 +27,7 @@ function StatsPage() {
           <Typography variant="h6" component="h1" noWrap sx={{ flexGrow: 1, minWidth: 0 }}>
             集計
           </Typography>
-          <Stack direction="row" spacing={0.5}>
-            <Button
-              component={RouterLink}
-              to="/play"
-              size="small"
-              startIcon={<PlayCircleIcon />}
-              sx={{ whiteSpace: "nowrap" }}
-            >
-              再生
-            </Button>
-            <Button
-              component={RouterLink}
-              to="/"
-              size="small"
-              startIcon={<ArrowBackIcon />}
-              sx={{ whiteSpace: "nowrap" }}
-            >
-              トップに戻る
-            </Button>
-          </Stack>
+          <PublicNavButtons />
         </Toolbar>
       </AppBar>
 

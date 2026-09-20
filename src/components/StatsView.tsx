@@ -116,7 +116,7 @@ export function StatsView() {
       </Paper>
 
       <Paper elevation={2} sx={{ p: { xs: 1, sm: 1.5 } }}>
-        <Tabs value={timeSlot} onChange={handleTimeSlotChange} variant="fullWidth">
+        <Tabs value={timeSlot} onChange={handleTimeSlotChange} variant="scrollable" scrollButtons="auto">
           <Tab value="" label="すべての時間帯" />
           {Object.entries(TIME_SLOT_LABELS).map(([slot, label]) => (
             <Tab key={slot} value={slot} label={label} />
@@ -125,11 +125,11 @@ export function StatsView() {
       </Paper>
 
       {periodTab !== "all" && (
-        <Stack direction="row" sx={{ alignItems: "center", justifyContent: "center", gap: 1 }}>
+        <Stack direction="row" sx={{ alignItems: "center", justifyContent: "center", gap: { xs: 0.5, sm: 1 }, flexWrap: "wrap" }}>
           <IconButton onClick={handlePrev} disabled={loading || !refDate} aria-label="前へ">
             <ChevronLeftIcon />
           </IconButton>
-          <Typography variant="subtitle1" sx={{ minWidth: 200, textAlign: "center" }}>
+          <Typography variant="subtitle1" sx={{ minWidth: { sm: 200 }, textAlign: "center" }}>
             {rangeLabel || " "}
           </Typography>
           <IconButton onClick={handleNext} disabled={loading || !refDate} aria-label="次へ">
@@ -141,7 +141,7 @@ export function StatsView() {
         </Stack>
       )}
 
-      <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between" }}>
+      <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1 }}>
         <Typography variant="body2" color="text.secondary">
           プレイリスト再生・フォールバック再生分は含まれません。
         </Typography>
@@ -208,7 +208,30 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
+// Rankings can run to hundreds of rows (every channel/video ever requested),
+// which made the page tens of thousands of pixels tall on a phone: show the
+// top PAGE_SIZE and let the visitor reveal more.
+const PAGE_SIZE = 30;
+
+// Tighter cell padding on phones so three/four columns fit a ~360px screen.
+const tableSx = { "& .MuiTableCell-root": { px: { xs: 1, sm: 2 } } } as const;
+
+function useShowMore(total: number) {
+  const [limit, setLimit] = useState(PAGE_SIZE);
+  const remaining = total - limit;
+  const button =
+    remaining > 0 ? (
+      <Box sx={{ display: "flex", justifyContent: "center", pt: 1.5 }}>
+        <Button size="small" onClick={() => setLimit((n) => n + PAGE_SIZE)}>
+          もっと見る (残り{remaining.toLocaleString("ja-JP")}件)
+        </Button>
+      </Box>
+    ) : null;
+  return { limit, button };
+}
+
 function ChannelTable({ rows }: { rows: ChannelStat[] }) {
+  const { limit, button } = useShowMore(rows.length);
   if (rows.length === 0) {
     return (
       <Typography color="text.secondary" variant="body2">
@@ -217,26 +240,31 @@ function ChannelTable({ rows }: { rows: ChannelStat[] }) {
     );
   }
   return (
-    <TableContainer sx={{ overflowX: "auto" }}>
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>#</TableCell>
-            <TableCell>チャンネル</TableCell>
-            <TableCell align="right">リクエスト数</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {rows.map((row, i) => (
-            <TableRow key={row.channelTitle}>
-              <TableCell>{i + 1}</TableCell>
-              <TableCell sx={{ wordBreak: "break-word" }}>{row.channelTitle}</TableCell>
-              <TableCell align="right">{row.requestCount.toLocaleString("ja-JP")}</TableCell>
+    <>
+      <TableContainer sx={{ overflowX: "auto" }}>
+        <Table size="small" sx={tableSx}>
+          <TableHead>
+            <TableRow>
+              <TableCell>#</TableCell>
+              <TableCell>チャンネル</TableCell>
+              <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+                リクエスト数
+              </TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+          </TableHead>
+          <TableBody>
+            {rows.slice(0, limit).map((row, i) => (
+              <TableRow key={row.channelTitle}>
+                <TableCell>{i + 1}</TableCell>
+                <TableCell sx={{ wordBreak: "break-word" }}>{row.channelTitle}</TableCell>
+                <TableCell align="right">{row.requestCount.toLocaleString("ja-JP")}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      {button}
+    </>
   );
 }
 
@@ -249,6 +277,7 @@ function VideoTable({
   valueKey: "requestCount" | "totalLikes" | "totalCancelVotes";
   valueLabel: string;
 }) {
+  const { limit, button } = useShowMore(rows.length);
   if (rows.length === 0) {
     return (
       <Typography color="text.secondary" variant="body2">
@@ -256,39 +285,54 @@ function VideoTable({
       </Typography>
     );
   }
+  // The channel column is folded under the title below sm: four columns don't
+  // fit a phone without squeezing the title into a few characters per line.
+  const channelCellSx = { wordBreak: "break-word", display: { xs: "none", sm: "table-cell" } } as const;
   return (
-    <TableContainer sx={{ overflowX: "auto" }}>
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>#</TableCell>
-            <TableCell>動画</TableCell>
-            <TableCell>チャンネル</TableCell>
-            <TableCell align="right">{valueLabel}</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {rows.map((row, i) => (
-            <TableRow key={`${row.platform}:${row.videoId}`}>
-              <TableCell>{i + 1}</TableCell>
-              <TableCell sx={{ wordBreak: "break-word" }}>
-                {(() => {
-                  const url = videoUrl(row.platform, row.videoId);
-                  return url ? (
-                    <a className="stats-link" href={url} target="_blank" rel="noopener noreferrer">
-                      {row.title}
-                    </a>
-                  ) : (
-                    row.title
-                  );
-                })()}
+    <>
+      <TableContainer sx={{ overflowX: "auto" }}>
+        <Table size="small" sx={tableSx}>
+          <TableHead>
+            <TableRow>
+              <TableCell>#</TableCell>
+              <TableCell>動画</TableCell>
+              <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>チャンネル</TableCell>
+              <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+                {valueLabel}
               </TableCell>
-              <TableCell sx={{ wordBreak: "break-word" }}>{row.channelTitle}</TableCell>
-              <TableCell align="right">{row[valueKey].toLocaleString("ja-JP")}</TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+          </TableHead>
+          <TableBody>
+            {rows.slice(0, limit).map((row, i) => (
+              <TableRow key={`${row.platform}:${row.videoId}`}>
+                <TableCell>{i + 1}</TableCell>
+                <TableCell sx={{ wordBreak: "break-word" }}>
+                  {(() => {
+                    const url = videoUrl(row.platform, row.videoId);
+                    return url ? (
+                      <a className="stats-link" href={url} target="_blank" rel="noopener noreferrer">
+                        {row.title}
+                      </a>
+                    ) : (
+                      row.title
+                    );
+                  })()}
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: { xs: "block", sm: "none" }, wordBreak: "break-word" }}
+                  >
+                    {row.channelTitle}
+                  </Typography>
+                </TableCell>
+                <TableCell sx={channelCellSx}>{row.channelTitle}</TableCell>
+                <TableCell align="right">{row[valueKey].toLocaleString("ja-JP")}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      {button}
+    </>
   );
 }
