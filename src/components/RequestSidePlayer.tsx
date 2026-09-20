@@ -20,6 +20,7 @@ import {
 import { useBroadcastOverlay } from "../lib/useBroadcastOverlay";
 import { useFastForwardPacingPopups } from "../lib/useFastForwardPacingPopups";
 import type { CancelVoteTier, VideoRequest } from "../types";
+import { LANDSCAPE_PHONE } from "../lib/layout";
 
 interface Props {
   requests: VideoRequest[];
@@ -241,7 +242,14 @@ export function RequestSidePlayer({
         // Fills whatever the parent layout gives it (PlayPage sizes this to
         // dominate the screen) instead of a fixed aspect ratio, matching how
         // ViewerPage's own OBS video box is sized.
-        height: { xs: "56vh", md: "100%" },
+        // Phones (portrait): a 16:9 box instead of a fixed share of the
+        // screen — 56vh left big black bars above/below the video on a tall
+        // phone — capped so the queue and request bar keep some room.
+        height: { xs: "auto", md: "100%" },
+        aspectRatio: { xs: "16 / 9", md: "auto" },
+        maxHeight: { xs: "55dvh", md: "none" },
+        // Sideways phone: fill the (short) side-by-side column instead.
+        [LANDSCAPE_PHONE]: { height: "100%", aspectRatio: "auto", maxHeight: "none" },
         bgcolor: "black",
         overflow: "hidden",
       }}

@@ -17,6 +17,7 @@ import { PlayChatForm, PlayChatOverlay } from "../components/PlayChat";
 import { QueueList } from "../components/QueueList";
 import { RequestForm } from "../components/RequestForm";
 import { RequestSidePlayer } from "../components/RequestSidePlayer";
+import { LANDSCAPE_PHONE } from "../lib/layout";
 import { usePlayChat } from "../lib/usePlayChat";
 import { useRequestQueue } from "../lib/useRequestQueue";
 import { useSeo } from "../lib/useSeo";
@@ -121,9 +122,18 @@ function PlayPage() {
             display: "flex",
             flexDirection: { xs: "column", md: "row" },
             overflowY: { xs: "auto", md: "hidden" },
+            [LANDSCAPE_PHONE]: { flexDirection: "row", overflowY: "hidden" },
           }}
         >
-          <Box sx={{ position: "relative", flex: { md: "3 1 0%" }, minWidth: 0, flexShrink: 0 }}>
+          <Box
+            sx={{
+              position: "relative",
+              flex: { md: "3 1 0%" },
+              minWidth: 0,
+              flexShrink: 0,
+              [LANDSCAPE_PHONE]: { flex: "3 1 0%", flexShrink: 1 },
+            }}
+          >
             {requestsLoaded && (
               <RequestSidePlayer
                 requests={requests}
@@ -143,6 +153,7 @@ function PlayPage() {
             sx={{
               flex: { md: "1 1 340px" },
               width: { md: 340 },
+              [LANDSCAPE_PHONE]: { flex: "1 1 240px", width: 240, overflowY: "auto" },
               flexShrink: 0,
               minHeight: 0,
               display: "flex",
@@ -177,11 +188,12 @@ function PlayPage() {
             borderTop: 1,
             borderColor: "divider",
             bgcolor: "background.paper",
-            p: { xs: 1.5, sm: 2 },
-            pb: { xs: "calc(12px + env(safe-area-inset-bottom))", sm: 2 },
+            p: { xs: 1, sm: 2 },
+            pb: { xs: "calc(8px + env(safe-area-inset-bottom))", sm: 2 },
           }}
         >
-          <Stack spacing={1.5}>
+          {/* Two compact rows (request, then message). */}
+          <Stack spacing={1}>
             <RequestForm onSubmit={handleCreate} inline />
             <PlayChatForm onSent={pollChat} />
           </Stack>

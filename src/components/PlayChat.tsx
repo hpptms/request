@@ -17,7 +17,8 @@ export function PlayChatOverlay({ lines }: { lines: VisibleChat[] }) {
       sx={{
         position: "absolute",
         left: { xs: 8, sm: 16 },
-        bottom: { xs: 8, sm: 16 },
+        // Above the bottom-center title card, which would otherwise sit on top of it.
+        bottom: { xs: 72, sm: 96 },
         maxWidth: { xs: "calc(100% - 16px)", md: "55%" },
         zIndex: 5,
         pointerEvents: "none",
@@ -85,7 +86,14 @@ export function PlayChatForm({ onSent }: { onSent: () => void }) {
           variant="contained"
           startIcon={<SendIcon />}
           disabled={sending || !text.trim()}
-          sx={{ whiteSpace: "nowrap", flexShrink: 0, alignSelf: "flex-start" }}
+          sx={{
+            whiteSpace: "nowrap",
+            flexShrink: 0,
+            alignSelf: "flex-start",
+            minHeight: 40,
+            px: { xs: 1.5, sm: 2 },
+            "& .MuiButton-startIcon": { display: { xs: "none", sm: "inherit" } },
+          }}
         >
           送信
         </Button>
