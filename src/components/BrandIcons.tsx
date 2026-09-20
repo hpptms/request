@@ -45,4 +45,28 @@ export function AppleMusicMark(props: SvgIconProps) {
   return <MusicNoteIcon {...props} />;
 }
 
+// ニコニコ動画: the TV set with antennae that its logo is built around.
+export function NiconicoMark(props: SvgIconProps) {
+  return (
+    <SvgIcon viewBox="0 0 24 24" {...props}>
+      <path d="M8 3.5l4 3.5 4-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="2.5" y="7" width="19" height="13.5" rx="3.5" fill="currentColor" />
+      <rect x="5" y="9.5" width="10.5" height="8.5" rx="2" fill="#252525" />
+      <circle cx="18.6" cy="12" r="1.1" fill="#252525" />
+      <circle cx="18.6" cy="15.6" r="1.1" fill="#252525" />
+    </SvgIcon>
+  );
+}
+
+// FC2 live: the bold "FC2" wordmark.
+export function Fc2Mark(props: SvgIconProps) {
+  return (
+    <SvgIcon viewBox="0 0 24 24" {...props}>
+      <text x="12" y="16.5" textAnchor="middle" fontSize="11.5" fontWeight="900" fontFamily="Arial, sans-serif" fill="currentColor">
+        FC2
+      </text>
+    </SvgIcon>
+  );
+}
+
 export { AppleIcon };
