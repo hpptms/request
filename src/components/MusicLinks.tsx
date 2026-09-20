@@ -66,14 +66,16 @@ export function MusicLinks({ title }: { title: string }) {
   );
 }
 
-// Small "Amazon / 楽天" text links for a stats row (an artist name or an
+// Small brand-coloured link pills for a stats row (an artist name or an
 // already-cleaned title). Ad disclosure is shown once per page via
 // AffiliateNotice, not per row.
-export function StoreLinksInline({ keyword }: { keyword: string }) {
-  const links = storeLinks(keyword);
+export function StoreLinksInline({ keyword, withStreaming = false }: { keyword: string; withStreaming?: boolean }) {
+  // withStreaming adds the plain Apple Music / Spotify searches after the
+  // two store links.
+  const links = withStreaming ? musicLinks(keyword) : storeLinks(keyword);
   if (links.length === 0) return null;
   return (
-    <Typography variant="caption" component="span" sx={{ display: "inline-flex", gap: 0.75 }}>
+    <Typography variant="caption" component="span" sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
       {links.map((l) => {
         const brand = BRANDS[l.key];
         return (
@@ -98,7 +100,7 @@ export function StoreLinksInline({ keyword }: { keyword: string }) {
             }}
           >
             {brand && <brand.Icon sx={{ fontSize: 14 }} />}
-            {l.key === "amazon" ? "Amazon" : "楽天"}
+            {l.label}
           </Link>
         );
       })}
