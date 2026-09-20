@@ -15,6 +15,7 @@ import type {
   LikeRank,
   LikeResult,
   MultiDeviceIP,
+  NowLiveItem,
   PlaylistImportResult,
   PlaylistTrack,
   PlaylistUpdateResult,
@@ -143,6 +144,12 @@ export const api = {
   getMyReplies: () => request<{ replies: InquiryMessage[] }>("/my-replies"),
   ackReplies: (ids: number[]) =>
     request<void>("/my-replies/ack", { method: "POST", body: JSON.stringify({ ids }) }),
+
+  // Live-stream links shown in the board page's NOW LIVE box.
+  getNowLive: () => request<{ items: NowLiveItem[] }>("/now-live"),
+  adminGetNowLive: () => request<{ items: NowLiveItem[] }>("/admin/now-live"),
+  adminSetNowLive: (urls: Record<string, string>) =>
+    request<{ items: NowLiveItem[] }>("/admin/now-live", { method: "PUT", body: JSON.stringify({ urls }) }),
 
   // /play's throwaway chat (backend/internal/chat).
   getChat: (afterId: number) => request<{ messages: ChatMessage[] }>(`/chat?after=${afterId}`),

@@ -18,6 +18,7 @@ import FilterAltOutlinedIcon from "@mui/icons-material/FilterAltOutlined";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MapIcon from "@mui/icons-material/Map";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import LiveTvIcon from "@mui/icons-material/LiveTv";
 import MailIcon from "@mui/icons-material/Mail";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
@@ -98,6 +99,7 @@ const adminTabs = [
   { value: "broadcast", path: "/admin/broadcast", label: "意思表示", icon: <CampaignIcon fontSize="small" /> },
   { value: "interrupt", path: "/admin/interrupt", label: "割り込みリクエスト", icon: <PlaylistAddIcon fontSize="small" /> },
   { value: "messages", path: "/admin/messages", label: "メッセージ", icon: <MailIcon fontSize="small" /> },
+  { value: "live", path: "/admin/live", label: "NOW LIVE", icon: <LiveTvIcon fontSize="small" /> },
 ] as const;
 
 // Shared header for every authenticated /admin/* screen: title, logout, and
