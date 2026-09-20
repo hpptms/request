@@ -24,8 +24,15 @@ export interface MusicLink {
   affiliate: boolean;
 }
 
-export function musicLinks(title: string): MusicLink[] {
-  const kw = searchKeyword(title);
+// True when at least one store link earns a commission (ad disclosure is
+// needed), and when specifically the Amazon one does (its required wording).
+export const hasAffiliateLinks = Boolean(AMAZON_TAG || RAKUTEN_AFFILIATE_ID);
+export const hasAmazonAffiliate = Boolean(AMAZON_TAG);
+
+// The two store links (Amazon, Rakuten) for a free-text keyword (an artist
+// name, or an already-cleaned title).
+export function storeLinks(keyword: string): MusicLink[] {
+  const kw = keyword.trim();
   if (!kw) return [];
   const q = encodeURIComponent(kw);
   const rakutenTarget = encodeURIComponent(`https://search.rakuten.co.jp/search/mall/${q}/`);
@@ -45,6 +52,16 @@ export function musicLinks(title: string): MusicLink[] {
         : rakutenPlain,
       affiliate: Boolean(RAKUTEN_AFFILIATE_ID),
     },
+  ];
+}
+
+// Store links plus plain Apple Music / Spotify searches for a video title.
+export function musicLinks(title: string): MusicLink[] {
+  const kw = searchKeyword(title);
+  if (!kw) return [];
+  const q = encodeURIComponent(kw);
+  return [
+    ...storeLinks(kw),
     { key: "apple", label: "Apple Music", href: `https://music.apple.com/jp/search?term=${q}`, affiliate: false },
     { key: "spotify", label: "Spotify", href: `https://open.spotify.com/search/${q}`, affiliate: false },
   ];
