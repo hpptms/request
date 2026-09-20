@@ -18,6 +18,7 @@ import FilterAltOutlinedIcon from "@mui/icons-material/FilterAltOutlined";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MapIcon from "@mui/icons-material/Map";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import MailIcon from "@mui/icons-material/Mail";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import PlaylistPlayIcon from "@mui/icons-material/PlaylistPlay";
@@ -95,6 +96,7 @@ const adminTabs = [
   { value: "heatmap", path: "/admin/heatmap", label: "ヒートマップ", icon: <MapIcon fontSize="small" /> },
   { value: "broadcast", path: "/admin/broadcast", label: "意思表示", icon: <CampaignIcon fontSize="small" /> },
   { value: "interrupt", path: "/admin/interrupt", label: "割り込みリクエスト", icon: <PlaylistAddIcon fontSize="small" /> },
+  { value: "messages", path: "/admin/messages", label: "メッセージ", icon: <MailIcon fontSize="small" /> },
 ] as const;
 
 // Shared header for every authenticated /admin/* screen: title, logout, and
@@ -108,6 +110,26 @@ function AdminLayout({ onLoggedOut }: { onLoggedOut: () => void }) {
   // Icon-only toolbar buttons below this width — same overflow problem as
   // BoardPage's nav row, just with the title added to the mix.
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  // Unread visitor messages, shown on the メッセージ tab so a new one is
+  // noticed without having that tab open.
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    const poll = () =>
+      api
+        .adminListInquiries()
+        .then(({ unread }) => {
+          if (!cancelled) setUnreadMessages(unread);
+        })
+        .catch(() => {});
+    poll();
+    const interval = setInterval(poll, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     try {
@@ -162,7 +184,13 @@ function AdminLayout({ onLoggedOut }: { onLoggedOut: () => void }) {
           sx={{ px: { xs: 1.5, sm: 3 } }}
         >
           {adminTabs.map((t) => (
-            <Tab key={t.value} value={t.value} label={t.label} icon={t.icon} iconPosition="start" sx={{ whiteSpace: "nowrap" }} />
+            <Tab
+              key={t.value}
+              value={t.value}
+              label={t.value === "messages" && unreadMessages > 0 ? `${t.label} (${unreadMessages})` : t.label}
+              icon={t.icon} iconPosition="start"
+              sx={{ whiteSpace: "nowrap" }}
+            />
           ))}
         </Tabs>
       </AppBar>

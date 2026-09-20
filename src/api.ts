@@ -8,6 +8,8 @@ import type {
   FallbackTrack,
   FastForwardWindow,
   HeatmapReport,
+  InquiryMessage,
+  InquiryThread,
   KeywordLimit,
   LikeRank,
   LikeResult,
@@ -132,6 +134,25 @@ export const api = {
   // Finished time slots (last 7 days) where the caller's IP ranked in the
   // top 5 by likes received (see backend handleMyLikeRanks).
   getMyLikeRanks: () => request<{ ranks: LikeRank[] }>("/my-like-ranks"),
+
+  // Visitor -> admin message, and the admin's replies to the caller's IP
+  // (best-effort: matched by IP only, see backend/internal/inquiry).
+  sendInquiry: (text: string) =>
+    request<{ ok: boolean }>("/inquiries", { method: "POST", body: JSON.stringify({ text }) }),
+  getMyReplies: () => request<{ replies: InquiryMessage[] }>("/my-replies"),
+  ackReplies: (ids: number[]) =>
+    request<void>("/my-replies/ack", { method: "POST", body: JSON.stringify({ ids }) }),
+
+  adminListInquiries: () => request<{ threads: InquiryThread[]; unread: number }>("/admin/inquiries"),
+  adminReadInquiry: (ip: string) =>
+    request<void>(`/admin/inquiries/${encodeURIComponent(ip)}/read`, { method: "POST" }),
+  adminReplyInquiry: (ip: string, text: string) =>
+    request<{ ok: boolean }>(`/admin/inquiries/${encodeURIComponent(ip)}/reply`, {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    }),
+  adminDeleteInquiry: (ip: string) =>
+    request<void>(`/admin/inquiries/${encodeURIComponent(ip)}`, { method: "DELETE" }),
 
   getHeatmap: () => request<HeatmapReport>("/heatmap"),
 
