@@ -1,20 +1,39 @@
 import { useEffect, useState } from "react";
+import type { ComponentType } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
+import type { SvgIconProps } from "@mui/material/SvgIcon";
 import Typography from "@mui/material/Typography";
-import LiveTvIcon from "@mui/icons-material/LiveTv";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 import { api } from "../api";
+import { Fc2Mark, NiconicoMark } from "./BrandIcons";
 import type { NowLiveItem } from "../types";
 
 const REFRESH_MS = 60000;
 
-const BRANDS: Record<NowLiveItem["key"], { bg: string; hover: string; fg: string }> = {
-  youtube: { bg: "#FF0000", hover: "#CC0000", fg: "#FFFFFF" },
-  niconico: { bg: "#EDEDED", hover: "#FFFFFF", fg: "#252525" },
-  fc2: { bg: "#1E6FD9", hover: "#1859B0", fg: "#FFFFFF" },
+// Each platform's tile: its brand colours as the background and its mark as
+// the icon, so a viewer can tell them apart before reading the label.
+const BRANDS: Record<NowLiveItem["key"], { bg: string; hover: string; fg: string; Icon: ComponentType<SvgIconProps> }> = {
+  youtube: {
+    bg: "linear-gradient(135deg, #FF0000, #C4000B)",
+    hover: "linear-gradient(135deg, #E00000, #A60009)",
+    fg: "#FFFFFF",
+    Icon: YouTubeIcon,
+  },
+  niconico: {
+    bg: "linear-gradient(135deg, #3A3A3A, #1B1B1B)",
+    hover: "linear-gradient(135deg, #4A4A4A, #262626)",
+    fg: "#FFFFFF",
+    Icon: NiconicoMark,
+  },
+  fc2: {
+    bg: "linear-gradient(135deg, #2F7BEA, #1745A8)",
+    hover: "linear-gradient(135deg, #276CD1, #123A90)",
+    fg: "#FFFFFF",
+    Icon: Fc2Mark,
+  },
 };
 
 // 配信中のプラットフォームへのリンク。管理画面で入力したURLの分だけ表示し、
@@ -77,10 +96,14 @@ export function NowLive() {
                 target="_blank"
                 rel="noopener noreferrer"
                 variant="contained"
-                startIcon={it.key === "youtube" ? <YouTubeIcon /> : <LiveTvIcon />}
+                startIcon={<brand.Icon sx={{ fontSize: 28 }} />}
                 sx={{
                   textTransform: "none",
-                  fontWeight: 700,
+                  fontWeight: 800,
+                  fontSize: "1rem",
+                  minHeight: 48,
+                  px: 2.5,
+                  borderRadius: 2,
                   boxShadow: "none",
                   background: brand.bg,
                   color: brand.fg,
