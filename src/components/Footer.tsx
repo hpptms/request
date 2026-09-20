@@ -16,10 +16,10 @@ export function Footer() {
   return (
     <Box component="footer" sx={{ borderTop: 1, borderColor: "divider", mt: 4, py: 3 }}>
       <Stack
-        direction="row"
-        spacing={2}
-        divider={<Box sx={{ borderLeft: 1, borderColor: "divider" }} />}
-        sx={{ justifyContent: "center", flexWrap: "wrap", px: 2 }}
+        direction={{ xs: "column", sm: "row" }}
+        spacing={{ xs: 1.5, sm: 2 }}
+        divider={<Box sx={{ display: { xs: "none", sm: "block" }, borderLeft: 1, borderColor: "divider" }} />}
+        sx={{ justifyContent: "center", alignItems: "center", flexWrap: "wrap", px: 2 }}
       >
         <Link component={RouterLink} to="/about" variant="body2" color="text.secondary" underline="hover">
           サイトについて

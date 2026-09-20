@@ -1,19 +1,15 @@
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Container from "@mui/material/Container";
-import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import MapIcon from "@mui/icons-material/Map";
-import PlayCircleIcon from "@mui/icons-material/PlayCircle";
-import { Link as RouterLink } from "react-router-dom";
 import { ActiveUsersMap } from "../components/ActiveUsersMap";
 import { Footer } from "../components/Footer";
 import { useActiveUsersHeatmap } from "../lib/useActiveUsersHeatmap";
 import { useSeo } from "../lib/useSeo";
+import { PublicNavButtons } from "../components/PublicNavButtons";
 
 // 公開のヒートマップ画面 (/heatmap): 管理画面の同名タブ(AdminHeatmapPage)
 // と共通の ActiveUsersMap / useActiveUsersHeatmap を、認証不要で誰でも
@@ -34,26 +30,7 @@ function HeatmapPage() {
           <Typography variant="h6" component="h1" noWrap sx={{ flexGrow: 1, minWidth: 0 }}>
             アクティブユーザーヒートマップ
           </Typography>
-          <Stack direction="row" spacing={0.5}>
-            <Button
-              component={RouterLink}
-              to="/play"
-              size="small"
-              startIcon={<PlayCircleIcon />}
-              sx={{ whiteSpace: "nowrap" }}
-            >
-              再生
-            </Button>
-            <Button
-              component={RouterLink}
-              to="/"
-              size="small"
-              startIcon={<ArrowBackIcon />}
-              sx={{ whiteSpace: "nowrap" }}
-            >
-              トップに戻る
-            </Button>
-          </Stack>
+          <PublicNavButtons />
         </Toolbar>
       </AppBar>
 
