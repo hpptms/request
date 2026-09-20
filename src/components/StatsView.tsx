@@ -162,7 +162,20 @@ export function StatsView() {
         </Box>
       ) : stats ? (
         <>
-          <Section title="リクエストの多いアーティスト / チャンネル">
+          <Section title="リクエストの多いアーティスト(推定)">
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
+              動画のタイトルとチャンネル名から自動で推定しているため、誤りや抜けがあります。
+            </Typography>
+            <ChannelTable
+              rows={(stats.topArtistsByRequests ?? []).map((a) => ({
+                channelTitle: a.artist,
+                requestCount: a.requestCount,
+              }))}
+              label="アーティスト"
+            />
+          </Section>
+
+          <Section title="リクエストの多いチャンネル">
             <ChannelTable rows={stats.topChannelsByRequests} />
           </Section>
 
@@ -230,7 +243,7 @@ function useShowMore(total: number) {
   return { limit, button };
 }
 
-function ChannelTable({ rows }: { rows: ChannelStat[] }) {
+function ChannelTable({ rows, label = "チャンネル" }: { rows: ChannelStat[]; label?: string }) {
   const { limit, button } = useShowMore(rows.length);
   if (rows.length === 0) {
     return (
@@ -246,7 +259,7 @@ function ChannelTable({ rows }: { rows: ChannelStat[] }) {
           <TableHead>
             <TableRow>
               <TableCell>#</TableCell>
-              <TableCell>チャンネル</TableCell>
+              <TableCell>{label}</TableCell>
               <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
                 リクエスト数
               </TableCell>
