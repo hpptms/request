@@ -8,10 +8,12 @@ import { musicLinks } from "../lib/affiliate";
 export function MusicLinks({ title }: { title: string }) {
   const links = musicLinks(title);
   if (links.length === 0) return null;
+  const hasAffiliate = links.some((l) => l.affiliate);
+  const hasAmazon = links.some((l) => l.key === "amazon" && l.affiliate);
   return (
     <div>
       <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
-        この曲を探す(Amazon・楽天のリンクは広告です)
+        この曲を探す{hasAffiliate && "(Amazon・楽天のリンクは広告です)"}
       </Typography>
       <Stack useFlexGap direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
         {links.map((l) => (
@@ -30,9 +32,11 @@ export function MusicLinks({ title }: { title: string }) {
           </Button>
         ))}
       </Stack>
-      <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-        Amazonアソシエイトとして、適格販売により収入を得ています。
-      </Typography>
+      {hasAmazon && (
+        <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+          Amazonアソシエイトとして、適格販売により収入を得ています。
+        </Typography>
+      )}
     </div>
   );
 }
