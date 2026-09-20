@@ -135,27 +135,9 @@ function BoardPage() {
 
       <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1.5, sm: 3 } }}>
         <Stack spacing={3}>
-          <Collapsible title="お知らせ" variant="outlined">
-            <Stack spacing={1}>
-              {NOTICES.map((text) => (
-                <Typography key={text} variant="body2">
-                  {text}
-                </Typography>
-              ))}
-            </Stack>
-          </Collapsible>
-          <Collapsible title="直近の変更" variant="outlined">
-            <Stack component="ul" spacing={0.5} sx={{ m: 0, pl: 2.5 }}>
-              {RECENT_CHANGES.map((text) => (
-                <Typography key={text} component="li" variant="body2" color="text.secondary">
-                  {text}
-                </Typography>
-              ))}
-            </Stack>
-          </Collapsible>
+          {/* Live status first, so it is on screen as soon as the page opens;
+              the rules and change log are folded into one box below it. */}
           <NowLive />
-          <RequestForm onSubmit={handleCreate} />
-          <AdminMessageForm />
           <NowPlaying
             nowPlaying={nowPlaying}
             cancelVoteTiers={cancelVoteTiers}
@@ -168,6 +150,31 @@ function BoardPage() {
             onLike={handleLike}
             onCancelMine={handleCancelMine}
           />
+          <Collapsible title="お知らせ・直近の変更" variant="outlined">
+            <Stack spacing={2}>
+              <Stack spacing={1}>
+                {NOTICES.map((text) => (
+                  <Typography key={text} variant="body2">
+                    {text}
+                  </Typography>
+                ))}
+              </Stack>
+              <Box>
+                <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+                  直近の変更
+                </Typography>
+                <Stack component="ul" spacing={0.5} sx={{ m: 0, pl: 2.5 }}>
+                  {RECENT_CHANGES.map((text) => (
+                    <Typography key={text} component="li" variant="body2" color="text.secondary">
+                      {text}
+                    </Typography>
+                  ))}
+                </Stack>
+              </Box>
+            </Stack>
+          </Collapsible>
+          <RequestForm onSubmit={handleCreate} />
+          <AdminMessageForm />
 
           <Box>
             <Typography variant="h6" sx={{ mb: 1.5 }}>
