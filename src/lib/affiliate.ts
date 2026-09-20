@@ -40,13 +40,13 @@ export function storeLinks(keyword: string): MusicLink[] {
   return [
     {
       key: "amazon",
-      label: "Amazonで探す",
+      label: "Amazon",
       href: `https://www.amazon.co.jp/s?k=${q}&i=popular${AMAZON_TAG ? `&tag=${encodeURIComponent(AMAZON_TAG)}` : ""}`,
       affiliate: Boolean(AMAZON_TAG),
     },
     {
       key: "rakuten",
-      label: "楽天で探す",
+      label: "楽天",
       href: RAKUTEN_AFFILIATE_ID
         ? `https://hb.afl.rakuten.co.jp/hgc/${encodeURIComponent(RAKUTEN_AFFILIATE_ID)}/?pc=${rakutenTarget}&m=${rakutenTarget}`
         : rakutenPlain,
