@@ -42,8 +42,9 @@ function AppRoutes() {
   usePageViewTracking();
 
   const { pathname } = useLocation();
-  // Not on the OBS capture page or the admin section.
-  const showLikeRank = pathname !== "/viewer" && !pathname.startsWith("/admin");
+  // Not on the OBS capture page (it would end up on stream). The admin
+  // section is included so the admin sees their own ranking too.
+  const showLikeRank = pathname !== "/viewer";
 
   return (
     <Suspense fallback={<LazyPageFallback />}>
