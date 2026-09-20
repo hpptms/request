@@ -12,10 +12,20 @@ import TimerIcon from "@mui/icons-material/Timer";
 interface Props {
   onSubmit: (url: string, twoMinuteRequest: boolean) => Promise<void>;
   // Compact single-row layout (URL, リクエスト, 2分でリクエスト side by side,
-  // no card or title) for the /play screen's bottom bar. It stacks again on
-  // phone widths, where one row wouldn't fit.
+  // no card or title) for the /play screen's bottom bar. On phone widths the
+  // button labels/icons shrink so it still fits one row.
   inline?: boolean;
 }
+
+// Inline (phone-friendly) buttons: sized to their label, icon dropped below
+// sm, so URL + both buttons still fit one row on a ~360px screen.
+const inlineButtonSx = {
+  whiteSpace: "nowrap",
+  minHeight: 40,
+  px: { xs: 1.25, sm: 2 },
+  flexShrink: 0,
+  "& .MuiButton-startIcon": { display: { xs: "none", sm: "inherit" } },
+} as const;
 
 export function RequestForm({ onSubmit, inline = false }: Props) {
   const [url, setUrl] = useState("");
@@ -59,7 +69,7 @@ export function RequestForm({ onSubmit, inline = false }: Props) {
       variant="contained"
       startIcon={<AddCircleIcon />}
       disabled={submitting || !url.trim()}
-      sx={{ whiteSpace: "nowrap", flex: 1 }}
+      sx={inline ? inlineButtonSx : { whiteSpace: "nowrap", flex: 1 }}
     >
       リクエスト
     </Button>
@@ -71,9 +81,12 @@ export function RequestForm({ onSubmit, inline = false }: Props) {
       startIcon={<TimerIcon />}
       disabled={submitting || !url.trim()}
       onClick={() => submit(true)}
-      sx={{ whiteSpace: "nowrap", flex: 1 }}
+      sx={inline ? inlineButtonSx : { whiteSpace: "nowrap", flex: 1 }}
     >
-      2分でリクエスト
+      2分
+      <Box component="span" sx={{ display: inline ? { xs: "none", sm: "inline" } : "inline" }}>
+        でリクエスト
+      </Box>
     </Button>
   );
   const errorAlert = error && (
@@ -85,8 +98,8 @@ export function RequestForm({ onSubmit, inline = false }: Props) {
   if (inline) {
     return (
       <Box component="form" onSubmit={handleSubmit}>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-          <Box sx={{ flex: { sm: "1 1 auto" }, minWidth: 0 }}>{urlField}</Box>
+        <Stack direction="row" spacing={1}>
+          <Box sx={{ flex: "1 1 auto", minWidth: 0 }}>{urlField}</Box>
           <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
             {requestButton}
             {twoMinuteButton}
