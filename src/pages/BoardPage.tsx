@@ -24,6 +24,7 @@ import { RecentDoneList } from "../components/RecentDoneList";
 import { RequestForm } from "../components/RequestForm";
 import { useRequestQueue } from "../lib/useRequestQueue";
 import { useSeo } from "../lib/useSeo";
+import { SiteLogo } from "../components/SiteLogo";
 
 const NOTICES = [
   "0,6,9,12,15,18,21時は1時間半リクエスト早送りタイムです。",
@@ -74,7 +75,7 @@ function BoardPage() {
     <Box sx={{ minHeight: "100%", bgcolor: "background.default" }}>
       <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Toolbar sx={{ px: { xs: 2, sm: 3 }, gap: 1 }}>
-          <Box component="img" src="/logo.svg" alt="" sx={{ height: { xs: 32, sm: 38 }, width: "auto", mr: 1.5, flexShrink: 0 }} />
+          <SiteLogo />
           <Typography
             variant="h6"
             component="h1"

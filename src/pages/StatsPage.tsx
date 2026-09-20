@@ -3,11 +3,11 @@ import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
-import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import { Footer } from "../components/Footer";
 import { StatsView } from "../components/StatsView";
 import { useSeo } from "../lib/useSeo";
 import { PublicNavButtons } from "../components/PublicNavButtons";
+import { SiteLogo } from "../components/SiteLogo";
 
 // 公開の集計画面 (/stats): backend/internal/analytics の日別/週別/累計
 // ランキング(GET /api/stats、認証不要)を誰でも見られる形で表示する。
@@ -23,7 +23,7 @@ function StatsPage() {
     <Box sx={{ minHeight: "100%", bgcolor: "background.default" }}>
       <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Toolbar sx={{ px: { xs: 2, sm: 3 }, gap: 1 }}>
-          <LeaderboardIcon color="primary" sx={{ mr: 1.5 }} fontSize="large" />
+          <SiteLogo />
           <Typography variant="h6" component="h1" noWrap sx={{ flexGrow: 1, minWidth: 0 }}>
             集計
           </Typography>

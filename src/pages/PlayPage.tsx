@@ -10,7 +10,6 @@ import Typography from "@mui/material/Typography";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import ShieldIcon from "@mui/icons-material/Shield";
 import { Link as RouterLink } from "react-router-dom";
 import { PlayChatForm, PlayChatOverlay } from "../components/PlayChat";
@@ -21,6 +20,7 @@ import { LANDSCAPE_PHONE } from "../lib/layout";
 import { usePlayChat } from "../lib/usePlayChat";
 import { useRequestQueue } from "../lib/useRequestQueue";
 import { useSeo } from "../lib/useSeo";
+import { SiteLogo } from "../components/SiteLogo";
 
 // 公開の再生画面 (/play): キュー制御(シークガード・投票による短縮・終了時の
 // 自動送りなど)には一切関与しない閲覧用プレイヤー(RequestSidePlayer)を
@@ -73,7 +73,7 @@ function PlayPage() {
       >
         <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: 1, borderColor: "divider", flexShrink: 0 }}>
           <Toolbar sx={{ px: { xs: 2, sm: 3 }, gap: 1 }}>
-            <PlayCircleIcon color="primary" sx={{ mr: 1.5 }} fontSize="large" />
+            <SiteLogo />
             <Typography variant="h6" component="h1" noWrap sx={{ flexGrow: 1, minWidth: 0 }}>
               再生
             </Typography>

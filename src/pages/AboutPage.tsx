@@ -6,10 +6,10 @@ import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import InfoIcon from "@mui/icons-material/Info";
 import { Link as RouterLink } from "react-router-dom";
 import { Footer } from "../components/Footer";
 import { useSeo } from "../lib/useSeo";
+import { SiteLogo } from "../components/SiteLogo";
 
 // サイトについて/運営者情報ページ (/about)。誰が何の目的で運営しているかを
 // 示す、AdSense審査で求められる「運営者情報」ページ。実名・住所までは載せず、
@@ -25,7 +25,7 @@ function AboutPage() {
     <Box sx={{ minHeight: "100%", bgcolor: "background.default" }}>
       <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Toolbar sx={{ px: { xs: 2, sm: 3 }, gap: 1 }}>
-          <InfoIcon color="primary" sx={{ mr: 1.5 }} fontSize="large" />
+          <SiteLogo />
           <Typography variant="h6" component="h1" noWrap sx={{ flexGrow: 1, minWidth: 0 }}>
             サイトについて
           </Typography>
