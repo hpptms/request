@@ -4,6 +4,7 @@ import {
   MOCK_ACTIVE_USERS,
   type ActiveUsersPoint,
   type ActiveUsersByPrefecture,
+  type ActiveUsersByCountry,
 } from "./activeUsersHeatmap";
 
 const POLL_INTERVAL_MS = 60000;
@@ -13,6 +14,8 @@ type Result = {
   points: ActiveUsersPoint[] | null;
   // Prefecture-only totals for the table under the map.
   prefectures: ActiveUsersByPrefecture[] | null;
+  // Overseas totals per country (Japan excluded).
+  countries: ActiveUsersByCountry[];
   isMock: boolean;
 };
 
@@ -28,6 +31,7 @@ type Result = {
 export function useActiveUsersHeatmap(): Result {
   const [points, setPoints] = useState<ActiveUsersPoint[] | null>(null);
   const [prefectures, setPrefectures] = useState<ActiveUsersByPrefecture[] | null>(null);
+  const [countries, setCountries] = useState<ActiveUsersByCountry[]>([]);
   const [isMock, setIsMock] = useState(false);
   const hasSettledRef = useRef(false);
 
@@ -37,6 +41,7 @@ export function useActiveUsersHeatmap(): Result {
     const applyMock = () => {
       setPoints(MOCK_ACTIVE_USERS.points);
       setPrefectures(MOCK_ACTIVE_USERS.prefectures);
+      setCountries(MOCK_ACTIVE_USERS.countries ?? []);
       setIsMock(true);
     };
 
@@ -46,12 +51,15 @@ export function useActiveUsersHeatmap(): Result {
         .then((report) => {
           if (cancelled) return;
           hasSettledRef.current = true;
-          if (report.points.length === 0) {
+          const overseas = report.countries ?? [];
+          // Overseas-only traffic leaves points empty but is still real data.
+          if (report.points.length === 0 && overseas.length === 0) {
             applyMock();
             return;
           }
           setPoints(report.points);
           setPrefectures(report.prefectures);
+          setCountries(overseas);
           setIsMock(false);
         })
         .catch(() => {
@@ -75,5 +83,5 @@ export function useActiveUsersHeatmap(): Result {
     };
   }, []);
 
-  return { points, prefectures, isMock };
+  return { points, prefectures, countries, isMock };
 }

@@ -19,7 +19,7 @@ import { useSeo } from "../lib/useSeo";
 // と共通の ActiveUsersMap / useActiveUsersHeatmap を、認証不要で誰でも
 // 見られる形で表示する。
 function HeatmapPage() {
-  const { points, prefectures, isMock } = useActiveUsersHeatmap();
+  const { points, prefectures, countries, isMock } = useActiveUsersHeatmap();
   useSeo(
     "アクティブユーザーヒートマップ | 動画リクエストキュー",
     "動画リクエストキューを今見ている人を都市別のバブルマップで表示します。",
@@ -69,7 +69,7 @@ function HeatmapPage() {
                 現在表示中はダミーデータです。GA4連携の設定が完了次第、実データに切り替わります。
               </Typography>
             )}
-            <ActiveUsersMap points={points} prefectures={prefectures} />
+            <ActiveUsersMap points={points} prefectures={prefectures} countries={countries} />
           </>
         )}
         <Footer />

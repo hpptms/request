@@ -10,7 +10,7 @@ import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import { geoMercator } from "d3-geo";
 import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";
-import type { ActiveUsersPoint, ActiveUsersByPrefecture } from "../lib/activeUsersHeatmap";
+import type { ActiveUsersPoint, ActiveUsersByPrefecture, ActiveUsersByCountry } from "../lib/activeUsersHeatmap";
 
 // Natural Earth 1:50m admin-0 countries (public domain), via the world-atlas
 // npm package — vendored as a static asset (public/data/countries-50m.json)
@@ -51,6 +51,16 @@ function radiusFor(value: number, maxValue: number) {
   return MIN_RADIUS + (MAX_RADIUS - MIN_RADIUS) * Math.sqrt(value / maxValue);
 }
 
+// Localizes an ISO 3166-1 alpha-2 code ("US" -> "アメリカ合衆国"), falling
+// back to the backend's English name if the browser can't resolve it.
+function countryLabel(code: string, fallback: string) {
+  try {
+    return new Intl.DisplayNames(["ja"], { type: "region" }).of(code) ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 // Cheap, deterministic per-point hash so each marker's pulse animation gets
 // a stable (not re-randomized every render) but different timing —
 // otherwise every bubble breathing in lockstep reads as one blinking mass
@@ -74,14 +84,18 @@ function hashString(s: string): number {
 export function ActiveUsersMap({
   points,
   prefectures,
+  countries = [],
 }: {
   points: ActiveUsersPoint[];
   prefectures: ActiveUsersByPrefecture[];
+  countries?: ActiveUsersByCountry[];
 }) {
   const [hovered, setHovered] = useState<ActiveUsersPoint | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const maxValue = useMemo(() => Math.max(0, ...points.map((d) => d.activeUsers)), [points]);
   const sortedPoints = useMemo(() => [...points].sort((a, b) => b.activeUsers - a.activeUsers), [points]);
+  const sortedCountries = useMemo(() => [...countries].sort((a, b) => b.activeUsers - a.activeUsers), [countries]);
+  const overseasTotal = useMemo(() => countries.reduce((sum, c) => sum + c.activeUsers, 0), [countries]);
   const sortedPrefectures = useMemo(() => [...prefectures].sort((a, b) => b.activeUsers - a.activeUsers), [prefectures]);
 
   // Same projection as ComposableMap below, computed standalone so pointer
@@ -246,6 +260,30 @@ export function ActiveUsersMap({
           </Box>
         )}
 
+        {overseasTotal > 0 && (
+          <Box
+            sx={{
+              position: "absolute",
+              top: 8,
+              right: 8,
+              bgcolor: "rgba(20,20,22,0.92)",
+              border: 1,
+              borderColor: "divider",
+              borderRadius: 1,
+              px: 1.25,
+              py: 0.75,
+              pointerEvents: "none",
+            }}
+          >
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+              {overseasTotal.toLocaleString()}人
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              海外（{sortedCountries.length}か国・地域）
+            </Typography>
+          </Box>
+        )}
+
         <Box
           sx={{
             position: "absolute",
@@ -297,6 +335,27 @@ export function ActiveUsersMap({
           </TableBody>
         </Table>
       </TableContainer>
+
+      {sortedCountries.length > 0 && (
+        <TableContainer sx={{ mt: 2 }}>
+          <Table size="small" aria-label="海外の国・地域別アクティブユーザー数">
+            <TableHead>
+              <TableRow>
+                <TableCell>海外（国・地域）</TableCell>
+                <TableCell align="right">アクティブユーザー</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {sortedCountries.map((c) => (
+                <TableRow key={c.code} hover>
+                  <TableCell>{countryLabel(c.code, c.country)}</TableCell>
+                  <TableCell align="right">{c.activeUsers.toLocaleString()}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
     </Box>
   );
 }
