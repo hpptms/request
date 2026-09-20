@@ -208,6 +208,19 @@ export const api = {
   adminRemoveKeyword: (keyword: string) =>
     request<void>(`/admin/keywords/${encodeURIComponent(keyword)}`, { method: "DELETE" }),
 
+  // Words allowed to contain a banned keyword (e.g. 裸足 contains 裸): they
+  // are ignored when a requested title is checked against the ban list.
+  adminListSafeWords: () => request<string[]>("/admin/safewords"),
+
+  adminAddSafeWord: (word: string) =>
+    request<{ ok: boolean }>("/admin/safewords", {
+      method: "POST",
+      body: JSON.stringify({ word }),
+    }),
+
+  adminRemoveSafeWord: (word: string) =>
+    request<void>(`/admin/safewords/${encodeURIComponent(word)}`, { method: "DELETE" }),
+
   adminListKeywordLimits: () => request<KeywordLimit[]>("/admin/keywordlimits"),
 
   adminSetKeywordLimits: (entries: KeywordLimit[]) =>

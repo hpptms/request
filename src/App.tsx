@@ -22,6 +22,7 @@ const AdminPage = lazy(() => import("./pages/AdminPage"));
 const AdminBansPage = lazy(() => import("./pages/AdminBansPage"));
 const AdminPlaylistPage = lazy(() => import("./pages/AdminPlaylistPage"));
 const AdminKeywordsPage = lazy(() => import("./pages/AdminKeywordsPage"));
+const AdminSafeWordsPage = lazy(() => import("./pages/AdminSafeWordsPage"));
 const AdminKeywordLimitsPage = lazy(() => import("./pages/AdminKeywordLimitsPage"));
 const AdminFastForwardPage = lazy(() => import("./pages/AdminFastForwardPage"));
 const AdminFeaturesPage = lazy(() => import("./pages/AdminFeaturesPage"));
@@ -62,6 +63,7 @@ function AppRoutes() {
           <Route index element={<AdminBansPage />} />
           <Route path="playlist" element={<AdminPlaylistPage />} />
           <Route path="keywords" element={<AdminKeywordsPage />} />
+          <Route path="safewords" element={<AdminSafeWordsPage />} />
           <Route path="keywordlimits" element={<AdminKeywordLimitsPage />} />
           <Route path="fastforward" element={<AdminFastForwardPage />} />
           <Route path="features" element={<AdminFeaturesPage />} />
