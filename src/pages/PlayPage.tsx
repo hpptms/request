@@ -12,6 +12,7 @@ import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import ShieldIcon from "@mui/icons-material/Shield";
 import { Link as RouterLink } from "react-router-dom";
+import { MusicLinks } from "../components/MusicLinks";
 import { PlayChatForm, PlayChatOverlay } from "../components/PlayChat";
 import { QueueList } from "../components/QueueList";
 import { RequestForm } from "../components/RequestForm";
@@ -56,6 +57,7 @@ function PlayPage() {
   } = useRequestQueue("play");
 
   const { lines: chatLines, poll: pollChat } = usePlayChat();
+  const nowPlaying = requests.find((r) => r.status === "playing") ?? null;
 
   return (
     <>
@@ -162,6 +164,11 @@ function PlayPage() {
               p: { xs: 1.5, sm: 2 },
             }}
           >
+            {nowPlaying && (
+              <Box sx={{ mb: 2 }}>
+                <MusicLinks title={nowPlaying.title} />
+              </Box>
+            )}
             <Typography variant="subtitle1" sx={{ mb: 1 }}>
               待機中のリクエスト {pending.length > 0 && `(${pending.length})`}
             </Typography>
