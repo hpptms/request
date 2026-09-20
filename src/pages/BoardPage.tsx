@@ -3,7 +3,6 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
-import Paper from "@mui/material/Paper";
 import Snackbar from "@mui/material/Snackbar";
 import Stack from "@mui/material/Stack";
 import { useTheme } from "@mui/material/styles";
@@ -18,6 +17,7 @@ import ShieldIcon from "@mui/icons-material/Shield";
 import { Link as RouterLink } from "react-router-dom";
 import { Footer } from "../components/Footer";
 import { AdminMessageForm } from "../components/AdminMessageForm";
+import { Collapsible } from "../components/Collapsible";
 import { NowLive } from "../components/NowLive";
 import { NowPlaying } from "../components/NowPlaying";
 import { QueueList } from "../components/QueueList";
@@ -135,7 +135,7 @@ function BoardPage() {
 
       <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1.5, sm: 3 } }}>
         <Stack spacing={3}>
-          <Paper variant="outlined" sx={{ px: 2, py: 1.5 }}>
+          <Collapsible title="お知らせ" variant="outlined">
             <Stack spacing={1}>
               {NOTICES.map((text) => (
                 <Typography key={text} variant="body2">
@@ -143,11 +143,8 @@ function BoardPage() {
                 </Typography>
               ))}
             </Stack>
-          </Paper>
-          <Paper variant="outlined" sx={{ px: 2, py: 1.5 }}>
-            <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-              直近の変更
-            </Typography>
+          </Collapsible>
+          <Collapsible title="直近の変更" variant="outlined">
             <Stack component="ul" spacing={0.5} sx={{ m: 0, pl: 2.5 }}>
               {RECENT_CHANGES.map((text) => (
                 <Typography key={text} component="li" variant="body2" color="text.secondary">
@@ -155,7 +152,7 @@ function BoardPage() {
                 </Typography>
               ))}
             </Stack>
-          </Paper>
+          </Collapsible>
           <NowLive />
           <RequestForm onSubmit={handleCreate} />
           <AdminMessageForm />
