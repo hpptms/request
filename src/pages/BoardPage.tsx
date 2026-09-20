@@ -18,6 +18,7 @@ import ShieldIcon from "@mui/icons-material/Shield";
 import { Link as RouterLink } from "react-router-dom";
 import { Footer } from "../components/Footer";
 import { AdminMessageForm } from "../components/AdminMessageForm";
+import { NowLive } from "../components/NowLive";
 import { NowPlaying } from "../components/NowPlaying";
 import { QueueList } from "../components/QueueList";
 import { RecentDoneList } from "../components/RecentDoneList";
@@ -155,6 +156,7 @@ function BoardPage() {
               ))}
             </Stack>
           </Paper>
+          <NowLive />
           <RequestForm onSubmit={handleCreate} />
           <AdminMessageForm />
           <NowPlaying

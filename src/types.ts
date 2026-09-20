@@ -364,3 +364,11 @@ export interface ArtistStat {
   artist: string;
   requestCount: number;
 }
+
+// backend/internal/nowlive.Item — a live-streaming platform and its URL
+// (the public endpoint only returns platforms that have one).
+export interface NowLiveItem {
+  key: "youtube" | "niconico" | "fc2";
+  label: string;
+  url: string;
+}

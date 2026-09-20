@@ -32,6 +32,7 @@ const AdminHeatmapPage = lazy(() => import("./pages/AdminHeatmapPage"));
 const AdminBroadcastPage = lazy(() => import("./pages/AdminBroadcastPage"));
 const AdminInterruptPage = lazy(() => import("./pages/AdminInterruptPage"));
 const AdminMessagesPage = lazy(() => import("./pages/AdminMessagesPage"));
+const AdminNowLivePage = lazy(() => import("./pages/AdminNowLivePage"));
 
 function LazyPageFallback() {
   return (
@@ -78,6 +79,7 @@ function AppRoutes() {
           <Route path="broadcast" element={<AdminBroadcastPage />} />
           <Route path="interrupt" element={<AdminInterruptPage />} />
           <Route path="messages" element={<AdminMessagesPage />} />
+          <Route path="live" element={<AdminNowLivePage />} />
         </Route>
       </Routes>
     </Suspense>
