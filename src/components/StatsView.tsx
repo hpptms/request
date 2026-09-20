@@ -20,6 +20,8 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { api } from "../api";
+import { searchKeyword } from "../lib/affiliate";
+import { AffiliateNotice, StoreLinksInline } from "./MusicLinks";
 import type { ChannelStat, StatsPeriod, StatsSummary, TimeSlot, VideoStat } from "../types";
 
 const TIME_SLOT_LABELS: Record<Exclude<TimeSlot, "">, string> = {
@@ -172,7 +174,11 @@ export function StatsView() {
                 requestCount: a.requestCount,
               }))}
               label="アーティスト"
+              storeLinks
             />
+            <Box sx={{ mt: 1.5 }}>
+              <AffiliateNotice />
+            </Box>
           </Section>
 
           <Section title="リクエストの多いチャンネル">
@@ -180,6 +186,9 @@ export function StatsView() {
           </Section>
 
           <Section title="いいねの多い動画">
+            <Box sx={{ mb: 1.5 }}>
+              <AffiliateNotice />
+            </Box>
             <VideoTable rows={stats.topVideosByLikes} valueKey="totalLikes" valueLabel="いいね数" />
           </Section>
 
@@ -243,7 +252,16 @@ function useShowMore(total: number) {
   return { limit, button };
 }
 
-function ChannelTable({ rows, label = "チャンネル" }: { rows: ChannelStat[]; label?: string }) {
+function ChannelTable({
+  rows,
+  label = "チャンネル",
+  storeLinks = false,
+}: {
+  rows: ChannelStat[];
+  label?: string;
+  // Add Amazon/楽天 search links under each name (used for artists).
+  storeLinks?: boolean;
+}) {
   const { limit, button } = useShowMore(rows.length);
   if (rows.length === 0) {
     return (
@@ -269,7 +287,14 @@ function ChannelTable({ rows, label = "チャンネル" }: { rows: ChannelStat[]
             {rows.slice(0, limit).map((row, i) => (
               <TableRow key={row.channelTitle}>
                 <TableCell>{i + 1}</TableCell>
-                <TableCell sx={{ wordBreak: "break-word" }}>{row.channelTitle}</TableCell>
+                <TableCell sx={{ wordBreak: "break-word" }}>
+                  {row.channelTitle}
+                  {storeLinks && (
+                    <Box sx={{ mt: 0.25 }}>
+                      <StoreLinksInline keyword={row.channelTitle} />
+                    </Box>
+                  )}
+                </TableCell>
                 <TableCell align="right">{row.requestCount.toLocaleString("ja-JP")}</TableCell>
               </TableRow>
             ))}
@@ -337,6 +362,9 @@ function VideoTable({
                   >
                     {row.channelTitle}
                   </Typography>
+                  <Box sx={{ mt: 0.25 }}>
+                    <StoreLinksInline keyword={searchKeyword(row.title)} />
+                  </Box>
                 </TableCell>
                 <TableCell sx={channelCellSx}>{row.channelTitle}</TableCell>
                 <TableCell align="right">{row[valueKey].toLocaleString("ja-JP")}</TableCell>
