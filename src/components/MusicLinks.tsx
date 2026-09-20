@@ -27,7 +27,7 @@ export function MusicLinks({ title }: { title: string }) {
             size="small"
             variant="outlined"
             color="inherit"
-            sx={{ whiteSpace: "nowrap" }}
+            sx={{ whiteSpace: "nowrap", textTransform: "none" }}
           >
             {l.label}
           </Button>
