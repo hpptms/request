@@ -11,9 +11,13 @@ import TimerIcon from "@mui/icons-material/Timer";
 
 interface Props {
   onSubmit: (url: string, twoMinuteRequest: boolean) => Promise<void>;
+  // Compact single-row layout (URL, リクエスト, 2分でリクエスト side by side,
+  // no card or title) for the /play screen's bottom bar. It stacks again on
+  // phone widths, where one row wouldn't fit.
+  inline?: boolean;
 }
 
-export function RequestForm({ onSubmit }: Props) {
+export function RequestForm({ onSubmit, inline = false }: Props) {
   const [url, setUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,6 +42,61 @@ export function RequestForm({ onSubmit }: Props) {
     submit(false);
   };
 
+  const urlField = (
+    <TextField
+      label="動画のURL"
+      placeholder="YouTube・ニコニコ動画・Vimeo のURL"
+      value={url}
+      onChange={(e) => setUrl(e.target.value)}
+      fullWidth
+      required
+      size="small"
+    />
+  );
+  const requestButton = (
+    <Button
+      type="submit"
+      variant="contained"
+      startIcon={<AddCircleIcon />}
+      disabled={submitting || !url.trim()}
+      sx={{ whiteSpace: "nowrap", flex: 1 }}
+    >
+      リクエスト
+    </Button>
+  );
+  const twoMinuteButton = (
+    <Button
+      type="button"
+      variant="outlined"
+      startIcon={<TimerIcon />}
+      disabled={submitting || !url.trim()}
+      onClick={() => submit(true)}
+      sx={{ whiteSpace: "nowrap", flex: 1 }}
+    >
+      2分でリクエスト
+    </Button>
+  );
+  const errorAlert = error && (
+    <Alert severity="error" sx={{ mt: inline ? 1 : 2 }}>
+      {error}
+    </Alert>
+  );
+
+  if (inline) {
+    return (
+      <Box component="form" onSubmit={handleSubmit}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+          <Box sx={{ flex: { sm: "1 1 auto" }, minWidth: 0 }}>{urlField}</Box>
+          <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
+            {requestButton}
+            {twoMinuteButton}
+          </Stack>
+        </Stack>
+        {errorAlert}
+      </Box>
+    );
+  }
+
   return (
     <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
       <Typography variant="h6" gutterBottom>
@@ -45,43 +104,14 @@ export function RequestForm({ onSubmit }: Props) {
       </Typography>
       <Box component="form" onSubmit={handleSubmit}>
         <Stack spacing={2}>
-          <TextField
-            label="動画のURL"
-            placeholder="YouTube・ニコニコ動画・Vimeo のURL"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            fullWidth
-            required
-            size="small"
-          />
+          {urlField}
           <Stack direction="row" spacing={1}>
-            <Button
-              type="submit"
-              variant="contained"
-              startIcon={<AddCircleIcon />}
-              disabled={submitting || !url.trim()}
-              sx={{ whiteSpace: "nowrap", flex: 1 }}
-            >
-              リクエスト
-            </Button>
-            <Button
-              type="button"
-              variant="outlined"
-              startIcon={<TimerIcon />}
-              disabled={submitting || !url.trim()}
-              onClick={() => submit(true)}
-              sx={{ whiteSpace: "nowrap", flex: 1 }}
-            >
-              2分でリクエスト
-            </Button>
+            {requestButton}
+            {twoMinuteButton}
           </Stack>
         </Stack>
       </Box>
-      {error && (
-        <Alert severity="error" sx={{ mt: 2 }}>
-          {error}
-        </Alert>
-      )}
+      {errorAlert}
     </Paper>
   );
 }

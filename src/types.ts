@@ -349,3 +349,10 @@ export interface InquiryThread {
   unread: number;
   lastAt: string;
 }
+
+// backend/internal/chat.Message — ageMs is how long ago it was sent.
+export interface ChatMessage {
+  id: number;
+  text: string;
+  ageMs: number;
+}
