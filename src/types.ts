@@ -121,6 +121,9 @@ export interface FallbackTrack {
 export interface HeatmapReport {
   points: { lat: number; lng: number; prefecture: string; activeUsers: number }[];
   prefectures: { prefecture: string; activeUsers: number }[];
+  // Visitors outside Japan, per country (no map bubble — the map is Japan-only).
+  // Optional so an older backend that omits it still type-checks.
+  countries?: { code: string; country: string; activeUsers: number }[];
 }
 
 export interface BannedIP {

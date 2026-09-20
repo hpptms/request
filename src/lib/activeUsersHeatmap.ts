@@ -5,6 +5,7 @@ import type { HeatmapReport } from "../types";
 // backend/internal/ga4heatmap) and never reach the browser.
 export type ActiveUsersPoint = HeatmapReport["points"][number];
 export type ActiveUsersByPrefecture = HeatmapReport["prefectures"][number];
+export type ActiveUsersByCountry = NonNullable<HeatmapReport["countries"]>[number];
 
 // TEMPORARY placeholder — shown whenever GET /api/heatmap returns nothing
 // yet (no GA4 property configured, or the backend's background refresher
@@ -39,5 +40,10 @@ export const MOCK_ACTIVE_USERS: HeatmapReport = {
     { prefecture: "沖縄県", activeUsers: 15 },
     { prefecture: "石川県", activeUsers: 12 },
     { prefecture: "新潟県", activeUsers: 10 },
+  ],
+  countries: [
+    { code: "US", country: "United States", activeUsers: 12 },
+    { code: "TW", country: "Taiwan", activeUsers: 6 },
+    { code: "KR", country: "South Korea", activeUsers: 4 },
   ],
 };

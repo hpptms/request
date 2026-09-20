@@ -10,7 +10,7 @@ import { useActiveUsersHeatmap } from "../lib/useActiveUsersHeatmap";
 // にGA4未設定/未取得の間はダミーデータで表示する — 詳細は
 // src/lib/useActiveUsersHeatmap.ts。
 function AdminHeatmapPage() {
-  const { points, prefectures, isMock } = useActiveUsersHeatmap();
+  const { points, prefectures, countries, isMock } = useActiveUsersHeatmap();
 
   if (points === null || prefectures === null) {
     return (
@@ -27,7 +27,7 @@ function AdminHeatmapPage() {
           現在表示中はダミーデータです。GA4連携の設定が完了次第、実データに切り替わります。
         </Typography>
       )}
-      <ActiveUsersMap points={points} prefectures={prefectures} />
+      <ActiveUsersMap points={points} prefectures={prefectures} countries={countries} />
     </Box>
   );
 }
