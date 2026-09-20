@@ -13,7 +13,7 @@ const MAX_LENGTH = 500;
 // 管理者へのメッセージ欄。リクエストできなかった動画の報告などを送る。
 // 返信は同じIPで次にページを開いたときに表示される(IPが変わると届かない)。
 // 普段は畳んでおき、見出しをクリックすると開く(Collapsible)。
-export function AdminMessageForm() {
+export function AdminMessageForm({ defaultOpen = false }: { defaultOpen?: boolean }) {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +38,7 @@ export function AdminMessageForm() {
   };
 
   return (
-    <Collapsible title="管理者へメッセージ">
+    <Collapsible title="管理者へメッセージ" defaultOpen={defaultOpen}>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         この動画がリクエストできなかったなど、管理者に伝えたいことがあれば送ってください。返信がある場合は、次回このページを開いたときに表示されます(接続元のIPが変わると届かないことがあります)。
       </Typography>

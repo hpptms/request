@@ -25,6 +25,12 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://request.tokyo/notice</loc>
+    <lastmod>2026-09-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
     <loc>https://request.tokyo/about</loc>
     <lastmod>2026-09-20</lastmod>
     <changefreq>monthly</changefreq>
