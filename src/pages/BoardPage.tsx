@@ -182,11 +182,8 @@ function BoardPage() {
           </Box>
 
           <Box>
-            <Typography variant="h6" sx={{ mb: 0.5 }}>
+            <Typography variant="h6" sx={{ mb: 1.5 }}>
               再生が終わった動画
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-              直近5曲にいいね・badできます。数字はいいね数とbad数です。
             </Typography>
             <RecentDoneList requests={recentDone} onVoteCancel={handleVoteCancel} onLike={handleLike} />
           </Box>
