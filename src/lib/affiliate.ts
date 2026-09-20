@@ -55,8 +55,14 @@ export function storeLinks(keyword: string): MusicLink[] {
   ];
 }
 
-// Store links for a video title. (Apple Music / Spotify search links were
-// dropped: they earn nothing.)
+// Store links plus plain Apple Music / Spotify searches for a video title.
 export function musicLinks(title: string): MusicLink[] {
-  return storeLinks(searchKeyword(title));
+  const kw = searchKeyword(title);
+  if (!kw) return [];
+  const q = encodeURIComponent(kw);
+  return [
+    ...storeLinks(kw),
+    { key: "apple", label: "Apple Music", href: `https://music.apple.com/jp/search?term=${q}`, affiliate: false },
+    { key: "spotify", label: "Spotify", href: `https://open.spotify.com/search/${q}`, affiliate: false },
+  ];
 }
