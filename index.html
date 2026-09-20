@@ -11,7 +11,7 @@
          address/status bar blends with the app instead of showing as a
          mismatched white/grey strip above it. -->
     <meta name="theme-color" content="#0f0f0f" />
-    <title>動画リクエストキュー</title>
+    <title>動画リクエストキュー | みんなで一緒に動画を見るリクエストサイト</title>
 
     <!-- Sitewide defaults for crawlers and link previews. Each public page
          (BoardPage/ReportPage/StatsPage) overwrites description/canonical/
@@ -19,16 +19,35 @@
          is a client-rendered SPA with no server-side rendering, so these
          tags are what's present before/without JS, and also what a page
          without its own useSeo call (ViewerPage, AdminPage) keeps. -->
-    <meta name="description" content="動画リクエストキューは、YouTube・ニコニコ動画・Vimeoの動画をみんなでリクエストして再生できる視聴者参加型のキューサービスです。いいね・bad投票でリクエストの再生順が変わります。" />
+    <meta name="description" content="動画リクエストキューは、リクエスタ(リクエスター)がYouTube・ニコニコ動画・Vimeoの動画をリクエストして、みんなで一緒に動画を見られる視聴者参加型の動画リクエストサイトです。いいね・bad投票でリクエストの再生順が変わります。" />
+    <meta name="keywords" content="動画リクエスト,リクエスタ,リクエスター,みんなで一緒に動画を見る,同時視聴,動画リクエストキュー,YouTube,ニコニコ動画,Vimeo,視聴者参加型" />
     <meta name="robots" content="index,follow" />
     <link rel="canonical" href="https://request.tokyo/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="動画リクエストキュー" />
     <meta property="og:locale" content="ja_JP" />
-    <meta property="og:title" content="動画リクエストキュー" />
-    <meta property="og:description" content="YouTube・ニコニコ動画・Vimeoの動画をみんなでリクエストして再生できる視聴者参加型のキューサービス。" />
+    <meta property="og:title" content="動画リクエストキュー | みんなで一緒に動画を見るリクエストサイト" />
+    <meta property="og:description" content="動画をリクエストして、みんなで一緒に動画を見よう。YouTube・ニコニコ動画・Vimeoに対応した視聴者参加型の動画リクエストサイト。" />
     <meta property="og:url" content="https://request.tokyo/" />
     <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="動画リクエストキュー | みんなで一緒に動画を見るリクエストサイト" />
+    <meta name="twitter:description" content="動画をリクエストして、みんなで一緒に動画を見よう。YouTube・ニコニコ動画・Vimeoに対応した視聴者参加型の動画リクエストサイト。" />
+    <meta property="og:image" content="https://request.tokyo/apple-touch-icon.png" />
+    <meta name="twitter:image" content="https://request.tokyo/apple-touch-icon.png" />
+
+    <!-- Structured data (a data block, not a script that runs, so the CSP's
+         script-src doesn't affect it). -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "動画リクエストキュー",
+        "alternateName": ["動画リクエスト", "みんなで一緒に動画を見るリクエストサイト"],
+        "url": "https://request.tokyo/",
+        "inLanguage": "ja",
+        "description": "動画リクエストキューは、リクエスタ(リクエスター)がYouTube・ニコニコ動画・Vimeoの動画をリクエストして、みんなで一緒に動画を見られる視聴者参加型の動画リクエストサイトです。いいね・bad投票でリクエストの再生順が変わります。"
+      }
+    </script>
 
     <!-- Google tag (gtag.js)
          Init code lives in /boot.js (not inline, and deliberately not named
@@ -42,6 +61,10 @@
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <h1>動画リクエストキュー</h1>
+      <p>動画リクエストキューは、リクエスタがYouTube・ニコニコ動画・Vimeoの動画をリクエストして、みんなで一緒に動画を見られる視聴者参加型の動画リクエストサイトです。ご利用にはJavaScriptを有効にしてください。</p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
