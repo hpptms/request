@@ -24,6 +24,7 @@ import PlaylistPlayIcon from "@mui/icons-material/PlaylistPlay";
 import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ShieldIcon from "@mui/icons-material/Shield";
+import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import { api } from "../api";
 import { AdminLoginForm } from "../components/AdminLoginForm";
 
@@ -76,6 +77,7 @@ const adminTabs = [
   { value: "bans", path: "/admin", label: "BAN管理", icon: <ShieldIcon fontSize="small" /> },
   { value: "playlist", path: "/admin/playlist", label: "プレイリスト", icon: <PlaylistPlayIcon fontSize="small" /> },
   { value: "keywords", path: "/admin/keywords", label: "禁止ワード", icon: <FilterAltIcon fontSize="small" /> },
+  { value: "safewords", path: "/admin/safewords", label: "セーフワード", icon: <VerifiedUserIcon fontSize="small" /> },
   {
     value: "keywordlimits",
     path: "/admin/keywordlimits",
