@@ -5,6 +5,8 @@ import { trackEvent } from "./analytics";
 import { markMyRequest } from "./myRequestStorage";
 
 const POLL_INTERVAL_MS = 4000;
+// How many just-finished requests the board keeps open for like/bad.
+const RECENT_DONE_COUNT = 5;
 const DEFAULT_CANCEL_VOTE_THRESHOLD = 5;
 const DEFAULT_LIKE_PRIORITY_THRESHOLD = 5;
 // Mirrors the backend's default store.CancelVoteTiers (internal/store/store.go)
@@ -175,6 +177,13 @@ export function useRequestQueue(source: string) {
 
   const nowPlaying = requests.find((r) => r.status === "playing") ?? null;
   const pending = requests.filter((r) => r.status === "pending");
+  // Newest finish first; requests without a finishedAt (finished before the
+  // backend tracked it) fall back to their creation time.
+  const finishedTime = (r: VideoRequest) => Date.parse(r.finishedAt ?? "") || Date.parse(r.createdAt) || 0;
+  const recentDone = requests
+    .filter((r) => r.status === "done")
+    .sort((a, b) => finishedTime(b) - finishedTime(a))
+    .slice(0, RECENT_DONE_COUNT);
 
   return {
     requests,
@@ -191,6 +200,7 @@ export function useRequestQueue(source: string) {
     isAdmin,
     nowPlaying,
     pending,
+    recentDone,
     handleCreate,
     handleCancelMine,
     handlePlay,

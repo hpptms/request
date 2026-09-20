@@ -130,7 +130,7 @@ interface LikeIconButtonProps {
   onLike: (id: string) => Promise<void>;
 }
 
-function LikeIconButton({ request, onLike }: LikeIconButtonProps) {
+export function LikeIconButton({ request, onLike }: LikeIconButtonProps) {
   const [liking, setLiking] = useState(false);
   const liked = hasLiked(request.id);
   const own = isMyRequest(request.id);
@@ -166,7 +166,7 @@ interface CancelVoteIconButtonProps {
   onVoteCancel: (id: string) => Promise<void>;
 }
 
-function CancelVoteIconButton({ request, onVoteCancel }: CancelVoteIconButtonProps) {
+export function CancelVoteIconButton({ request, onVoteCancel }: CancelVoteIconButtonProps) {
   const [voting, setVoting] = useState(false);
   const voted = hasVoted(request.id);
 
