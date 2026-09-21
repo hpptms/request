@@ -31,7 +31,7 @@ interface Props {
   newRequestNotice: { id: string; title: string; videoId: string } | null;
   // Vote-status badge (😊 likes) for whatever's playing.
   voteStatusVisible: boolean;
-  voteStatusContent: { cancelVotes: number; likes: number } | null;
+  voteStatusContent: { cancelVotes: number; likes: number; superLikes: number } | null;
   // 管理者パネルの「意思表示」機能 (see useBroadcastOverlay) — a one-off
   // message or image shown centered, semi-transparent, for 10 seconds.
   broadcastState: BroadcastState;
@@ -172,6 +172,20 @@ export function PlayerOverlays({
             {voteStatusContent && voteStatusContent.likes > 0 && (
               <Chip
                 label={`😊+${voteStatusContent.likes}`}
+                sx={{
+                  bgcolor: "rgba(0,0,0,0.7)",
+                  color: "white",
+                  fontWeight: 700,
+                  height: { xs: 36, sm: 64, md: 144 },
+                  borderRadius: { xs: 2.5, sm: 4, md: 6 },
+                  "& .MuiChip-label": { fontSize: { xs: "1.1rem", sm: "2rem", md: "4.8rem" }, px: { xs: 1, sm: 2, md: 5 } },
+                }}
+              />
+            )}
+            {/* スーパーいいね(😍): each is already counted as two in the 😊 tally. */}
+            {voteStatusContent && voteStatusContent.superLikes > 0 && (
+              <Chip
+                label={`😍+${voteStatusContent.superLikes}`}
                 sx={{
                   bgcolor: "rgba(0,0,0,0.7)",
                   color: "white",

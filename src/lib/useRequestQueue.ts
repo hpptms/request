@@ -3,6 +3,7 @@ import { api } from "../api";
 import type { CancelVoteTier, VideoRequest } from "../types";
 import { trackEvent } from "./analytics";
 import { markMyRequest } from "./myRequestStorage";
+import { setVoteQuota } from "./voteQuota";
 
 const POLL_INTERVAL_MS = 4000;
 // How many just-finished requests the board keeps open for like/bad.
@@ -86,6 +87,17 @@ export function useRequestQueue(source: string) {
     return () => clearInterval(interval);
   }, []);
 
+  // The remaining hourly like/bad allowance recovers with time, so poll it
+  // (votes also update it directly from their responses).
+  useEffect(() => {
+    const fetchQuota = () => {
+      api.getMyVoteQuota().then(setVoteQuota).catch(() => {});
+    };
+    fetchQuota();
+    const interval = setInterval(fetchQuota, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     api.adminSession().then((session) => setIsAdmin(session.authenticated)).catch(() => {});
   }, []);
@@ -148,30 +160,41 @@ export function useRequestQueue(source: string) {
     }
   };
 
-  const handleVoteCancel = async (id: string) => {
+  // The vote handlers resolve true only when the server accepted the vote,
+  // so the buttons don't mark a request as voted after a failure (e.g. the
+  // hourly allowance being used up).
+  const handleVoteCancel = async (id: string): Promise<boolean> => {
     try {
-      await api.voteCancel(id);
+      const result = await api.voteCancel(id);
+      if (result.quota) setVoteQuota(result.quota);
       trackEvent("video_request_bad_vote", {
         request_id: id,
         source,
       });
       await refresh();
+      return true;
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "投票に失敗しました");
+      api.getMyVoteQuota().then(setVoteQuota).catch(() => {});
+      return false;
     }
   };
 
-  const handleLike = async (id: string) => {
+  const handleLike = async (id: string, isSuper = false): Promise<boolean> => {
     try {
-      const result = await api.likeRequest(id);
-      trackEvent("video_request_like", {
+      const result = await api.likeRequest(id, isSuper);
+      if (result.quota) setVoteQuota(result.quota);
+      trackEvent(isSuper ? "video_request_super_like" : "video_request_like", {
         request_id: id,
         like_count: result.likeCount,
         source,
       });
       await refresh();
+      return true;
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "いいねに失敗しました");
+      api.getMyVoteQuota().then(setVoteQuota).catch(() => {});
+      return false;
     }
   };
 

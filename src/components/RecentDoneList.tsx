@@ -12,12 +12,12 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import type { VideoRequest } from "../types";
 import { searchKeyword } from "../lib/affiliate";
 import { AffiliateNotice, StoreLinksInline } from "./MusicLinks";
-import { CancelVoteIconButton, LikeIconButton } from "./QueueList";
+import { CancelVoteIconButton, LikeIconButton, SuperLikeIconButton } from "./QueueList";
 
 interface Props {
   requests: VideoRequest[];
-  onVoteCancel: (id: string) => Promise<void>;
-  onLike: (id: string) => Promise<void>;
+  onVoteCancel: (id: string) => Promise<boolean>;
+  onLike: (id: string, isSuper?: boolean) => Promise<boolean>;
 }
 
 // The watch-page URL of the video a request was made for.
@@ -85,6 +85,7 @@ export function RecentDoneList({ requests, onVoteCancel, onLike }: Props) {
                 元の動画に飛ぶ
               </Button>
               <LikeIconButton request={r} onLike={onLike} />
+              <SuperLikeIconButton request={r} onLike={onLike} />
               <Typography variant="body2" color="text.secondary" sx={{ minWidth: 20 }} aria-label="いいね数">
                 {r.likes}
               </Typography>

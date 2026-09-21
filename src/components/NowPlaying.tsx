@@ -12,10 +12,11 @@ import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
 import { formatDuration } from "../lib/formatDuration";
-import { hasLiked, markLiked } from "../lib/likeStorage";
+import { hasLiked, hasSuperLiked, markLiked, markSuperLiked } from "../lib/likeStorage";
 import { isMyRequest } from "../lib/myRequestStorage";
 import type { CancelVoteTier, VideoRequest } from "../types";
 import { MusicLinks } from "./MusicLinks";
+import { VoteQuotaLabel } from "./VoteQuotaChip";
 
 // Watch-page URL for the request's original video, by platform. videoId is
 // the bare id the backend extracted from whatever URL the requester
@@ -45,8 +46,8 @@ interface Props {
   likePriorityThreshold: number;
   isAdmin: boolean;
   onMarkDone: (id: string) => void;
-  onVoteCancel: (id: string) => Promise<void>;
-  onLike: (id: string) => Promise<void>;
+  onVoteCancel: (id: string) => Promise<boolean>;
+  onLike: (id: string, isSuper?: boolean) => Promise<boolean>;
   onCancelMine: (id: string) => Promise<void>;
 }
 
@@ -76,6 +77,7 @@ export function NowPlaying({
 
   const voted = hasVoted(nowPlaying.id);
   const liked = hasLiked(nowPlaying.id);
+  const superLiked = hasSuperLiked(nowPlaying.id);
 
   // The next not-yet-reached rung, so the button counts up through 2:00 →
   // 1:30 → 1:00 → 0:30 as votes come in instead of freezing on the first
@@ -89,8 +91,7 @@ export function NowPlaying({
   const handleVote = async () => {
     setVoting(true);
     try {
-      await onVoteCancel(nowPlaying.id);
-      markVoted(nowPlaying.id);
+      if (await onVoteCancel(nowPlaying.id)) markVoted(nowPlaying.id);
     } finally {
       setVoting(false);
     }
@@ -99,8 +100,16 @@ export function NowPlaying({
   const handleLike = async () => {
     setLiking(true);
     try {
-      await onLike(nowPlaying.id);
-      markLiked(nowPlaying.id);
+      if (await onLike(nowPlaying.id)) markLiked(nowPlaying.id);
+    } finally {
+      setLiking(false);
+    }
+  };
+
+  const handleSuperLike = async () => {
+    setLiking(true);
+    try {
+      if (await onLike(nowPlaying.id, true)) markSuperLiked(nowPlaying.id);
     } finally {
       setLiking(false);
     }
@@ -161,6 +170,15 @@ export function NowPlaying({
             </Button>
             <Button
               variant="outlined"
+              color={superLiked ? "primary" : "inherit"}
+              onClick={handleSuperLike}
+              disabled={liking || superLiked || isMyRequest(nowPlaying.id)}
+              sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
+            >
+              {superLiked ? "😍 スーパーいいね済み" : "😍 スーパーいいね(2票分)"}
+            </Button>
+            <Button
+              variant="outlined"
               color="error"
               startIcon={<ThumbDownAltIcon />}
               onClick={handleVote}
@@ -192,6 +210,7 @@ export function NowPlaying({
               </Button>
             )}
           </Stack>
+          <VoteQuotaLabel />
           <MusicLinks title={nowPlaying.title} />
         </Stack>
       </Box>
