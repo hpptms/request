@@ -20,9 +20,16 @@ import type { InquiryThread } from "../types";
 function AdminMessagesPage() {
   const [threads, setThreads] = useState<InquiryThread[]>([]);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [bannedIPs, setBannedIPs] = useState<Set<string>>(new Set());
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
+    // BAN中のIPからのメッセージも届く。一覧で見分けられるように取得する
+    // (失敗してもメッセージ表示自体には影響しない)。
+    api
+      .adminListBans()
+      .then((bans) => setBannedIPs(new Set(bans.map((b) => b.ip))))
+      .catch(() => {});
     try {
       const { threads } = await api.adminListInquiries();
       setThreads(threads);
@@ -65,7 +72,7 @@ function AdminMessagesPage() {
     <Stack spacing={3}>
       {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
       <Typography variant="body2" color="text.secondary">
-        返信は、同じIPのブラウザが次にページを開いたときに表示されます。IPが変わった相手には届きません。メッセージは30日で、10日以上表示されなかった(届かなかった)返信は10日で自動的に削除されます。
+        BAN中のIPからもメッセージは届き、返信も表示されます。返信は、同じIPのブラウザが次にページを開いたときに表示されます。IPが変わった相手には届きません。メッセージは30日で、10日以上表示されなかった(届かなかった)返信は10日で自動的に削除されます。
       </Typography>
 
       {threads.length === 0 ? (
@@ -79,6 +86,7 @@ function AdminMessagesPage() {
               <Typography variant="subtitle1" sx={{ fontFamily: "monospace", flexGrow: 1, wordBreak: "break-all" }}>
                 {t.ip}
               </Typography>
+              {bannedIPs.has(t.ip) && <Chip size="small" color="warning" label="BAN中" />}
               {t.unread > 0 && <Chip size="small" color="error" label={`未読 ${t.unread}`} />}
               <Tooltip title="このスレッドを削除">
                 <IconButton size="small" onClick={() => handleDelete(t.ip)}>
