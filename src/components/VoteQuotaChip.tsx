@@ -7,6 +7,10 @@ export function VoteQuotaLabel({ light = false, compact = false }: { light?: boo
   const quota = useVoteQuota();
   if (!quota) return null;
   const resetMinutes = (seconds: number) => Math.max(1, Math.ceil(seconds / 60));
+  // Both counters run on the same kind of window, but each starts at its own
+  // first vote — show the later of the two so "全回復" is never too early.
+  const resetSeconds = Math.max(quota.likeResetSeconds, quota.badResetSeconds);
+  const resetNote = resetSeconds > 0 ? `あと${resetMinutes(resetSeconds)}分で全回復` : "";
   const hint = [
     "最初に投票してから1時間たつと、いいね・bad・超いいねの票がすべて回復します。",
     quota.likeResetSeconds > 0 ? `いいね: あと${resetMinutes(quota.likeResetSeconds)}分で全回復` : "",
@@ -26,10 +30,17 @@ export function VoteQuotaLabel({ light = false, compact = false }: { light?: boo
             いいね {quota.likeRemaining}/{quota.likeLimit}
             <br />
             bad {quota.badRemaining}/{quota.badLimit}
+            {resetNote && (
+              <>
+                <br />
+                {resetNote}
+              </>
+            )}
           </>
         ) : (
           <>
             残り票数(1時間): いいね {quota.likeRemaining}/{quota.likeLimit} ・ bad {quota.badRemaining}/{quota.badLimit}
+            {resetNote && ` ・ ${resetNote}`}
           </>
         )}
       </Typography>
