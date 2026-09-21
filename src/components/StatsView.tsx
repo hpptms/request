@@ -291,7 +291,7 @@ function ChannelTable({
                   {row.channelTitle}
                   {storeLinks && (
                     <Box sx={{ mt: 0.25 }}>
-                      <StoreLinksInline keyword={row.channelTitle} />
+                      <StoreLinksInline keyword={row.channelTitle} withStreaming />
                     </Box>
                   )}
                 </TableCell>
@@ -363,7 +363,7 @@ function VideoTable({
                     {row.channelTitle}
                   </Typography>
                   <Box sx={{ mt: 0.25 }}>
-                    <StoreLinksInline keyword={searchKeyword(row.title)} />
+                    <StoreLinksInline keyword={searchKeyword(row.title)} withStreaming />
                   </Box>
                 </TableCell>
                 <TableCell sx={channelCellSx}>{row.channelTitle}</TableCell>
