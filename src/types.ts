@@ -401,3 +401,11 @@ export interface NowLiveItem {
   label: string;
   url: string;
 }
+
+// backend/internal/safeip.Entry — an IP that keeps working (requests,
+// votes, ...) even while banned, and is never auto-banned.
+export interface SafeIP {
+  ip: string;
+  note: string;
+  addedAt: string;
+}
