@@ -114,7 +114,7 @@ export const api = {
   voteCancel: (id: string) =>
     request<CancelVoteResult>(`/requests/${id}/cancel-vote`, { method: "POST" }),
 
-  // isSuper: スーパーいいね(😍) — counts as two likes and spends two of the
+  // isSuper: 超いいね(😍) — counts as two likes and spends two of the
   // hourly like points.
   likeRequest: (id: string, isSuper = false) =>
     request<LikeResult>(`/requests/${id}/${isSuper ? "super-like" : "like"}`, { method: "POST" }),

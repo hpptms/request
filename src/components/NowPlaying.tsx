@@ -175,7 +175,7 @@ export function NowPlaying({
               disabled={liking || superLiked || isMyRequest(nowPlaying.id)}
               sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
             >
-              {superLiked ? "😍 スーパーいいね済み" : "😍 スーパーいいね"}
+              {superLiked ? "😍 超いいね済み" : "😍 超いいね"}
             </Button>
             <Button
               variant="outlined"

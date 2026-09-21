@@ -182,7 +182,7 @@ export function PlayerOverlays({
                 }}
               />
             )}
-            {/* スーパーいいね(😍): each is already counted as two in the 😊 tally. */}
+            {/* 超いいね(😍): each is already counted as two in the 😊 tally. */}
             {voteStatusContent && voteStatusContent.superLikes > 0 && (
               <Chip
                 label={`😍+${voteStatusContent.superLikes}`}
