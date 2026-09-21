@@ -65,7 +65,7 @@ function AdminMessagesPage() {
     <Stack spacing={3}>
       {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
       <Typography variant="body2" color="text.secondary">
-        返信は、同じIPのブラウザが次にページを開いたときに表示されます。IPが変わった相手には届きません。メッセージは30日で自動的に削除されます。
+        返信は、同じIPのブラウザが次にページを開いたときに表示されます。IPが変わった相手には届きません。メッセージは30日で、10日以上表示されなかった(届かなかった)返信は10日で自動的に削除されます。
       </Typography>
 
       {threads.length === 0 ? (
