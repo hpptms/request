@@ -331,7 +331,7 @@ export function RequestSidePlayer({
               </Button>
             </span>
           </Tooltip>
-          <Tooltip title={superLiked ? "スーパーいいね済み" : "スーパーいいね"}>
+          <Tooltip title={superLiked ? "超いいね済み" : "超いいね"}>
             <span>
               <Button
                 variant="contained"

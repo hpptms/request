@@ -161,7 +161,7 @@ export function LikeIconButton({ request, onLike }: LikeIconButtonProps) {
   );
 }
 
-// スーパーいいね: いいね2票分(1時間の上限も2票消費)。
+// 超いいね: いいね2票分(1時間の上限も2票消費)。
 export function SuperLikeIconButton({ request, onLike }: LikeIconButtonProps) {
   const [liking, setLiking] = useState(false);
   const superLiked = hasSuperLiked(request.id);
@@ -179,12 +179,12 @@ export function SuperLikeIconButton({ request, onLike }: LikeIconButtonProps) {
   return (
     <Tooltip
       title={
-        own ? "自分のリクエストにはいいねできません" : superLiked ? "スーパーいいね済み" : "スーパーいいね"
+        own ? "自分のリクエストにはいいねできません" : superLiked ? "超いいね済み" : "超いいね"
       }
     >
       <span>
         <IconButton edge="end" onClick={handleClick} disabled={liking || superLiked || own} sx={{ fontSize: "1.1rem" }}>
-          <span role="img" aria-label="スーパーいいね">
+          <span role="img" aria-label="超いいね">
             😍
           </span>
         </IconButton>
