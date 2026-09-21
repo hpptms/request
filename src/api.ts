@@ -24,6 +24,7 @@ import type {
   StatsSummary,
   SuspiciousFingerprint,
   BanEvasion,
+  SafeIP,
   TimeSlot,
   VideoRequest,
   VoteOnlyVoter,
@@ -265,6 +266,19 @@ export const api = {
 
   adminRemoveSafeWord: (word: string) =>
     request<void>(`/admin/safewords/${encodeURIComponent(word)}`, { method: "DELETE" }),
+
+  // Safe IPs: keep working even while banned and are never auto-banned
+  // (backend/internal/safeip).
+  adminListSafeIPs: () => request<SafeIP[]>("/admin/safe-ips"),
+
+  adminAddSafeIP: (ip: string, note: string) =>
+    request<{ ok: boolean }>("/admin/safe-ips", {
+      method: "POST",
+      body: JSON.stringify({ ip, note }),
+    }),
+
+  adminRemoveSafeIP: (ip: string) =>
+    request<void>(`/admin/safe-ips/${encodeURIComponent(ip)}`, { method: "DELETE" }),
 
   adminListKeywordLimits: () => request<KeywordLimit[]>("/admin/keywordlimits"),
 
