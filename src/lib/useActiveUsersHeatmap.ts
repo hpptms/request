@@ -6,6 +6,7 @@ import {
   type ActiveUsersByPrefecture,
   type ActiveUsersByCountry,
 } from "./activeUsersHeatmap";
+import { visibleInterval } from "./visibleInterval";
 
 const POLL_INTERVAL_MS = 60000;
 
@@ -76,10 +77,10 @@ export function useActiveUsersHeatmap(): Result {
     };
 
     poll();
-    const interval = setInterval(poll, POLL_INTERVAL_MS);
+    const stop = visibleInterval(poll, POLL_INTERVAL_MS);
     return () => {
       cancelled = true;
-      clearInterval(interval);
+      stop();
     };
   }, []);
 
