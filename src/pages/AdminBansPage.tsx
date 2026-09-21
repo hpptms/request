@@ -572,7 +572,7 @@ function AdminBansPage() {
             プロクシっぽいユーザー ({suspiciousFingerprints.length})
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-            同じ端末の特徴を持ちながら、短時間に複数の異なるIPアドレスからアクセスしています。プロクシ/VPNでIPを切り替えながら多重にリクエストしている可能性があります。ネットワークの切り替え(Wi-Fi/モバイル回線など)で誤検知することもあるため、内容を確認した上で手動でBANしてください。
+            同じ端末の特徴を持ちながら、短時間に複数の異なるIPアドレスからアクセスしています。プロクシ/VPNでIPを切り替えながら多重にリクエストしている可能性があります。検知した時点で自動的に永久BANされます。ネットワークの切り替え(Wi-Fi/モバイル回線など)で誤検知することもあるため、誤りの場合は「BAN中のIP」から解除してください。
           </Typography>
           <Paper elevation={2}>
             <List disablePadding>
@@ -618,7 +618,7 @@ function AdminBansPage() {
             複数端末から投稿しているIP ({multiDeviceUsers.length})
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-            同じIPアドレスから、PCとスマホなど異なる種類の端末でのアクセスが検出されています。同じ家庭/オフィスのネットワークを複数人が共有しているだけの場合もあるため、内容を確認した上で手動でBANしてください。
+            同じIPアドレスから、PCとスマホなど異なる種類の端末でのアクセスが検出されています。検知した時点で自動的に永久BANされます。同じ家庭/オフィスのネットワークを複数人が共有しているだけの場合もあるため、誤りの場合は「BAN中のIP」から解除してください。
           </Typography>
           <Paper elevation={2}>
             <List disablePadding>
