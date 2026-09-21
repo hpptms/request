@@ -10,7 +10,10 @@ export interface VideoRequest {
   status: RequestStatus;
   createdAt: string;
   cancelVotes: number;
+  // Includes 2 per super like (see superLikes).
   likes: number;
+  // How many of the likes are super likes (😍, worth two likes each).
+  superLikes: number;
   // When the request became "done" (ISO string). Zero-value
   // ("0001-01-01T00:00:00Z") for requests that finished before the backend
   // tracked this.
@@ -90,13 +93,27 @@ export type BroadcastState = {
   triggeredAt: string;
 } | null;
 
+// This IP's remaining hourly like/bad allowance (backend store.VoteQuota).
+// A super like costs 2 like points. The reset fields are seconds until the
+// oldest spent point frees up again (0 while nothing is spent).
+export interface VoteQuota {
+  likeLimit: number;
+  likeRemaining: number;
+  likeResetSeconds: number;
+  badLimit: number;
+  badRemaining: number;
+  badResetSeconds: number;
+}
+
 export interface CancelVoteResult {
   threshold: number;
+  quota: VoteQuota;
 }
 
 export interface LikeResult {
   likeCount: number;
   priorityThreshold: number;
+  quota: VoteQuota;
 }
 
 export interface SearchResult {

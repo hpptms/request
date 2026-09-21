@@ -9,7 +9,7 @@ import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { PlayerOverlays } from "./PlayerOverlays";
 import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
 import { formatDuration } from "../lib/formatDuration";
-import { hasLiked, markLiked } from "../lib/likeStorage";
+import { hasLiked, hasSuperLiked, markLiked, markSuperLiked } from "../lib/likeStorage";
 import {
   DURATION_BADGE_DELAY_MS,
   DURATION_BADGE_VISIBLE_MS,
@@ -21,6 +21,7 @@ import { useBroadcastOverlay } from "../lib/useBroadcastOverlay";
 import { useFastForwardPacingPopups } from "../lib/useFastForwardPacingPopups";
 import type { CancelVoteTier, VideoRequest } from "../types";
 import { LANDSCAPE_PHONE } from "../lib/layout";
+import { VoteQuotaLabel } from "./VoteQuotaChip";
 
 interface Props {
   requests: VideoRequest[];
@@ -34,8 +35,8 @@ interface Props {
   // Current per-video pacing target while fastForwardActive — see
   // useFastForwardPacingPopups.
   fastForwardCapSeconds: number;
-  onLike: (id: string) => Promise<void>;
-  onVoteCancel: (id: string) => Promise<void>;
+  onLike: (id: string, isSuper?: boolean) => Promise<boolean>;
+  onVoteCancel: (id: string) => Promise<boolean>;
 }
 
 // The public request board's own video screen: shows the same title/duration
@@ -70,7 +71,7 @@ export function RequestSidePlayer({
   const [newRequestVisible, setNewRequestVisible] = useState(false);
   const [newRequestNotice, setNewRequestNotice] = useState<{ id: string; title: string; videoId: string } | null>(null);
   const [voteStatusVisible, setVoteStatusVisible] = useState(false);
-  const [voteStatusContent, setVoteStatusContent] = useState<{ cancelVotes: number; likes: number } | null>(null);
+  const [voteStatusContent, setVoteStatusContent] = useState<{ cancelVotes: number; likes: number; superLikes: number } | null>(null);
   const broadcastState = useBroadcastOverlay();
 
   // Which request's title/duration card has already been shown, so a poll
@@ -84,7 +85,7 @@ export function RequestSidePlayer({
   const knownRequestIdsRef = useRef<Set<string> | null>(null);
   const newRequestQueueRef = useRef<{ id: string; title: string; videoId: string }[]>([]);
   const newRequestTimerRef = useRef<number | null>(null);
-  const lastShownVoteCountsRef = useRef<{ id: string; cancelVotes: number; likes: number } | null>(null);
+  const lastShownVoteCountsRef = useRef<{ id: string; cancelVotes: number; likes: number; superLikes: number } | null>(null);
   const voteStatusHideTimerRef = useRef<number | null>(null);
 
   const nowPlaying = requests.find((r) => r.status === "playing") ?? null;
@@ -99,6 +100,7 @@ export function RequestSidePlayer({
   const [liking, setLiking] = useState(false);
   const [voting, setVoting] = useState(false);
   const liked = nowPlaying !== null && hasLiked(nowPlaying.id);
+  const superLiked = nowPlaying !== null && hasSuperLiked(nowPlaying.id);
   const voted = nowPlaying !== null && hasVoted(nowPlaying.id);
   const activeTiers = fastForwardActive ? fastForwardCancelVoteTiers : cancelVoteTiers;
   const nextTier = nowPlaying
@@ -109,8 +111,17 @@ export function RequestSidePlayer({
     if (!nowPlaying) return;
     setLiking(true);
     try {
-      await onLike(nowPlaying.id);
-      markLiked(nowPlaying.id);
+      if (await onLike(nowPlaying.id)) markLiked(nowPlaying.id);
+    } finally {
+      setLiking(false);
+    }
+  };
+
+  const handleSuperLikeClick = async () => {
+    if (!nowPlaying) return;
+    setLiking(true);
+    try {
+      if (await onLike(nowPlaying.id, true)) markSuperLiked(nowPlaying.id);
     } finally {
       setLiking(false);
     }
@@ -120,16 +131,15 @@ export function RequestSidePlayer({
     if (!nowPlaying) return;
     setVoting(true);
     try {
-      await onVoteCancel(nowPlaying.id);
-      markVoted(nowPlaying.id);
+      if (await onVoteCancel(nowPlaying.id)) markVoted(nowPlaying.id);
     } finally {
       setVoting(false);
     }
   };
 
-  const showVoteStatus = (cancelVotes: number, likes: number) => {
+  const showVoteStatus = (cancelVotes: number, likes: number, superLikes: number) => {
     if (voteStatusHideTimerRef.current !== null) window.clearTimeout(voteStatusHideTimerRef.current);
-    setVoteStatusContent({ cancelVotes, likes });
+    setVoteStatusContent({ cancelVotes, likes, superLikes });
     setVoteStatusVisible(true);
     voteStatusHideTimerRef.current = window.setTimeout(() => {
       setVoteStatusVisible(false);
@@ -211,15 +221,15 @@ export function RequestSidePlayer({
     if (!nowPlaying) return;
     const last = lastShownVoteCountsRef.current;
     if (!last || last.id !== nowPlaying.id) {
-      lastShownVoteCountsRef.current = { id: nowPlaying.id, cancelVotes: nowPlaying.cancelVotes, likes: nowPlaying.likes };
+      lastShownVoteCountsRef.current = { id: nowPlaying.id, cancelVotes: nowPlaying.cancelVotes, likes: nowPlaying.likes, superLikes: nowPlaying.superLikes ?? 0 };
       if (nowPlaying.likes > 0) {
-        showVoteStatus(nowPlaying.cancelVotes, nowPlaying.likes);
+        showVoteStatus(nowPlaying.cancelVotes, nowPlaying.likes, nowPlaying.superLikes ?? 0);
       }
       return;
     }
     if (nowPlaying.likes > last.likes) {
-      lastShownVoteCountsRef.current = { id: nowPlaying.id, cancelVotes: nowPlaying.cancelVotes, likes: nowPlaying.likes };
-      showVoteStatus(nowPlaying.cancelVotes, nowPlaying.likes);
+      lastShownVoteCountsRef.current = { id: nowPlaying.id, cancelVotes: nowPlaying.cancelVotes, likes: nowPlaying.likes, superLikes: nowPlaying.superLikes ?? 0 };
+      showVoteStatus(nowPlaying.cancelVotes, nowPlaying.likes, nowPlaying.superLikes ?? 0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nowPlaying]);
@@ -321,6 +331,28 @@ export function RequestSidePlayer({
               </Button>
             </span>
           </Tooltip>
+          <Tooltip title={superLiked ? "スーパーいいね済み" : "スーパーいいね(いいね2票分)"}>
+            <span>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={handleSuperLikeClick}
+                disabled={liking || superLiked}
+                sx={{
+                  minWidth: 44,
+                  minHeight: 44,
+                  px: 1.5,
+                  fontSize: "1.25rem",
+                  bgcolor: superLiked ? "primary.main" : "rgba(0,0,0,0.6)",
+                  color: "white",
+                  "&:hover": { bgcolor: superLiked ? "primary.main" : "rgba(0,0,0,0.75)" },
+                  "&.Mui-disabled": { color: "white", opacity: superLiked ? 1 : 0.5 },
+                }}
+              >
+                😍
+              </Button>
+            </span>
+          </Tooltip>
           <Tooltip
             title={
               voted
@@ -348,6 +380,7 @@ export function RequestSidePlayer({
               </Button>
             </span>
           </Tooltip>
+          <VoteQuotaLabel light compact />
         </Stack>
       )}
     </Box>

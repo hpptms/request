@@ -17,7 +17,7 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
-import { hasLiked, markLiked } from "../lib/likeStorage";
+import { hasLiked, hasSuperLiked, markLiked, markSuperLiked } from "../lib/likeStorage";
 import { isMyRequest } from "../lib/myRequestStorage";
 import type { VideoRequest } from "../types";
 
@@ -27,8 +27,8 @@ interface Props {
   isAdmin: boolean;
   onPlay: (id: string) => void;
   onDelete: (id: string) => void;
-  onVoteCancel: (id: string) => Promise<void>;
-  onLike: (id: string) => Promise<void>;
+  onVoteCancel: (id: string) => Promise<boolean>;
+  onLike: (id: string, isSuper?: boolean) => Promise<boolean>;
   onCancelMine: (id: string) => Promise<void>;
 }
 
@@ -61,6 +61,7 @@ export function QueueList({
             secondaryAction={
               <Stack direction="row" spacing={0}>
                 <LikeIconButton request={r} onLike={onLike} />
+                <SuperLikeIconButton request={r} onLike={onLike} />
                 <Box sx={{ width: { xs: 12, sm: 16 } }} />
                 <CancelVoteIconButton request={r} onVoteCancel={onVoteCancel} />
                 {isMyRequest(r.id) && (
@@ -127,7 +128,7 @@ export function QueueList({
 
 interface LikeIconButtonProps {
   request: VideoRequest;
-  onLike: (id: string) => Promise<void>;
+  onLike: (id: string, isSuper?: boolean) => Promise<boolean>;
 }
 
 export function LikeIconButton({ request, onLike }: LikeIconButtonProps) {
@@ -138,8 +139,7 @@ export function LikeIconButton({ request, onLike }: LikeIconButtonProps) {
   const handleClick = async () => {
     setLiking(true);
     try {
-      await onLike(request.id);
-      markLiked(request.id);
+      if (await onLike(request.id)) markLiked(request.id);
     } finally {
       setLiking(false);
     }
@@ -161,9 +161,41 @@ export function LikeIconButton({ request, onLike }: LikeIconButtonProps) {
   );
 }
 
+// スーパーいいね: いいね2票分(1時間の上限も2票消費)。
+export function SuperLikeIconButton({ request, onLike }: LikeIconButtonProps) {
+  const [liking, setLiking] = useState(false);
+  const superLiked = hasSuperLiked(request.id);
+  const own = isMyRequest(request.id);
+
+  const handleClick = async () => {
+    setLiking(true);
+    try {
+      if (await onLike(request.id, true)) markSuperLiked(request.id);
+    } finally {
+      setLiking(false);
+    }
+  };
+
+  return (
+    <Tooltip
+      title={
+        own ? "自分のリクエストにはいいねできません" : superLiked ? "スーパーいいね済み" : "スーパーいいね(いいね2票分)"
+      }
+    >
+      <span>
+        <IconButton edge="end" onClick={handleClick} disabled={liking || superLiked || own} sx={{ fontSize: "1.1rem" }}>
+          <span role="img" aria-label="スーパーいいね">
+            😍
+          </span>
+        </IconButton>
+      </span>
+    </Tooltip>
+  );
+}
+
 interface CancelVoteIconButtonProps {
   request: VideoRequest;
-  onVoteCancel: (id: string) => Promise<void>;
+  onVoteCancel: (id: string) => Promise<boolean>;
 }
 
 export function CancelVoteIconButton({ request, onVoteCancel }: CancelVoteIconButtonProps) {
@@ -173,8 +205,7 @@ export function CancelVoteIconButton({ request, onVoteCancel }: CancelVoteIconBu
   const handleClick = async () => {
     setVoting(true);
     try {
-      await onVoteCancel(request.id);
-      markVoted(request.id);
+      if (await onVoteCancel(request.id)) markVoted(request.id);
     } finally {
       setVoting(false);
     }

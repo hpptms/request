@@ -26,6 +26,7 @@ import type {
   TimeSlot,
   VideoRequest,
   VoteOnlyVoter,
+  VoteQuota,
 } from "./types";
 import { getDeviceFingerprint } from "./lib/deviceFingerprint";
 
@@ -113,8 +114,13 @@ export const api = {
   voteCancel: (id: string) =>
     request<CancelVoteResult>(`/requests/${id}/cancel-vote`, { method: "POST" }),
 
-  likeRequest: (id: string) =>
-    request<LikeResult>(`/requests/${id}/like`, { method: "POST" }),
+  // isSuper: スーパーいいね(😍) — counts as two likes and spends two of the
+  // hourly like points.
+  likeRequest: (id: string, isSuper = false) =>
+    request<LikeResult>(`/requests/${id}/${isSuper ? "super-like" : "like"}`, { method: "POST" }),
+
+  // Remaining hourly like/bad allowance for the caller's IP.
+  getMyVoteQuota: () => request<VoteQuota>("/my-vote-quota"),
 
   search: (query: string) =>
     request<SearchResult[]>(`/search?q=${encodeURIComponent(query)}`),

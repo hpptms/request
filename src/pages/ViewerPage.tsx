@@ -195,7 +195,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // votes, and again every time either count goes up while it's still
   // playing — see the effect watching `requests` for lastShownVoteCountsRef.
   const [voteStatusVisible, setVoteStatusVisible] = useState(false);
-  const [voteStatusContent, setVoteStatusContent] = useState<{ cancelVotes: number; likes: number } | null>(null);
+  const [voteStatusContent, setVoteStatusContent] = useState<{ cancelVotes: number; likes: number; superLikes: number } | null>(null);
   const broadcastState = useBroadcastOverlay();
   const { scheduledVisible, scheduledSeconds, oneMinuteLeftVisible } = useFastForwardPacingPopups(
     requests.find((r) => r.status === "playing")?.id ?? null,
@@ -269,7 +269,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // request this refers to, so the watcher effect can tell "just started
   // playing" (id differs) apart from "a vote came in" (id matches, a count
   // went up) — see the effect below and showVoteStatus.
-  const lastShownVoteCountsRef = useRef<{ id: string; cancelVotes: number; likes: number } | null>(null);
+  const lastShownVoteCountsRef = useRef<{ id: string; cancelVotes: number; likes: number; superLikes: number } | null>(null);
   const voteStatusHideTimerRef = useRef<number | null>(null);
 
   const refresh = useCallback(async () => {
@@ -471,9 +471,9 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     nonYouTubeStartRef.current = null;
   };
 
-  const showVoteStatus = (cancelVotes: number, likes: number) => {
+  const showVoteStatus = (cancelVotes: number, likes: number, superLikes: number) => {
     if (voteStatusHideTimerRef.current !== null) window.clearTimeout(voteStatusHideTimerRef.current);
-    setVoteStatusContent({ cancelVotes, likes });
+    setVoteStatusContent({ cancelVotes, likes, superLikes });
     setVoteStatusVisible(true);
     voteStatusHideTimerRef.current = window.setTimeout(() => {
       setVoteStatusVisible(false);
@@ -724,15 +724,15 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
 
     const last = lastShownVoteCountsRef.current;
     if (!last || last.id !== requestId) {
-      lastShownVoteCountsRef.current = { id: requestId, cancelVotes: current.cancelVotes, likes: current.likes };
+      lastShownVoteCountsRef.current = { id: requestId, cancelVotes: current.cancelVotes, likes: current.likes, superLikes: current.superLikes ?? 0 };
       if (current.likes > 0) {
-        showVoteStatus(current.cancelVotes, current.likes);
+        showVoteStatus(current.cancelVotes, current.likes, current.superLikes ?? 0);
       }
       return;
     }
     if (current.likes > last.likes) {
-      lastShownVoteCountsRef.current = { id: requestId, cancelVotes: current.cancelVotes, likes: current.likes };
-      showVoteStatus(current.cancelVotes, current.likes);
+      lastShownVoteCountsRef.current = { id: requestId, cancelVotes: current.cancelVotes, likes: current.likes, superLikes: current.superLikes ?? 0 };
+      showVoteStatus(current.cancelVotes, current.likes, current.superLikes ?? 0);
     }
   }, [requests]);
 
