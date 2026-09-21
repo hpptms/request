@@ -29,6 +29,7 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { api } from "../api";
 import type {
   AdminVideoRequest,
+  BanEvasion,
   BannedIP,
   MultiDeviceIP,
   RecentBadVoter,
@@ -95,6 +96,7 @@ function AdminBansPage() {
   const [voteOnlyVoters, setVoteOnlyVoters] = useState<VoteOnlyVoter[]>([]);
   const [recentBadVoters, setRecentBadVoters] = useState<RecentBadVoter[]>([]);
   const [multiDeviceIPs, setMultiDeviceIPs] = useState<MultiDeviceIP[]>([]);
+  const [banEvasions, setBanEvasions] = useState<BanEvasion[]>([]);
   const [manualIP, setManualIP] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   // Which flagged IP's request history is currently expanded (see
@@ -120,6 +122,7 @@ function AdminBansPage() {
       voteOnlyVotersResult,
       recentBadVotersResult,
       multiDeviceIPsResult,
+      banEvasionResult,
     ] = await Promise.allSettled([
       api.adminListRequests(),
       api.adminListBans(),
@@ -127,6 +130,7 @@ function AdminBansPage() {
       api.adminListVoteOnlyVoters(),
       api.adminListRecentBadVoters(),
       api.adminListMultiDeviceIPs(),
+      api.adminListBanEvasion(),
     ]);
     if (requestsResult.status === "fulfilled") setRequests(requestsResult.value);
     if (bansResult.status === "fulfilled") setBans(bansResult.value);
@@ -134,6 +138,7 @@ function AdminBansPage() {
     if (voteOnlyVotersResult.status === "fulfilled") setVoteOnlyVoters(voteOnlyVotersResult.value);
     if (recentBadVotersResult.status === "fulfilled") setRecentBadVoters(recentBadVotersResult.value);
     if (multiDeviceIPsResult.status === "fulfilled") setMultiDeviceIPs(multiDeviceIPsResult.value);
+    if (banEvasionResult.status === "fulfilled") setBanEvasions(banEvasionResult.value);
 
     const firstFailure = [
       requestsResult,
@@ -142,6 +147,7 @@ function AdminBansPage() {
       voteOnlyVotersResult,
       recentBadVotersResult,
       multiDeviceIPsResult,
+      banEvasionResult,
     ].find((r): r is PromiseRejectedResult => r.status === "rejected");
     setErrorMessage(
       firstFailure
@@ -159,6 +165,9 @@ function AdminBansPage() {
   }, [refresh]);
 
   const bannedIPs = new Set(bans.map((b) => b.ip));
+  // Ban-evasion suspects still worth a look: at least one matching IP isn't
+  // banned yet.
+  const evasionSuspects = banEvasions.filter((e) => e.matches.some((m) => !bannedIPs.has(m.ip)));
 
   const handleBan = async (ip: string, temporary = false) => {
     try {
@@ -247,6 +256,58 @@ function AdminBansPage() {
   return (
     <Stack spacing={3}>
       {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+
+      {evasionSuspects.length > 0 && (
+        <Box>
+          <Typography variant="h6" color="error" sx={{ mb: 1.5 }}>
+            BAN回避の疑い ({evasionSuspects.length})
+          </Typography>
+          <Alert severity="error" sx={{ mb: 1.5 }}>
+            BAN(1時間・永久)された端末と同じ特徴の端末が、別のIPアドレスからアクセスしています。VPNやモバイル回線、別の回線でBANを回避している可能性があります。端末の特徴は大まかなため、同機種の別人が一致することもあります。内容を確認した上で手動でBANしてください。
+          </Alert>
+          <Paper elevation={2}>
+            <List disablePadding>
+              {evasionSuspects.map((e, i) => (
+                <ListItem key={e.fingerprint} divider={i < evasionSuspects.length - 1} sx={{ alignItems: "flex-start" }}>
+                  <ListItemText
+                    primary={
+                      <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                        <VpnLockIcon color="error" fontSize="small" />
+                        <span>最終検知: {new Date(e.lastSeen).toLocaleString("ja-JP")}</span>
+                      </Stack>
+                    }
+                    secondary={
+                      <Stack spacing={1} sx={{ mt: 1 }}>
+                        <Typography variant="caption" color="text.secondary" component="div">
+                          BANされた端末:{" "}
+                          {e.banned
+                            .map((b) => `${b.ip} (${new Date(b.bannedAt).toLocaleString("ja-JP")}${b.reason ? ` / ${b.reason}` : ""})`)
+                            .join("、")}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" component="div">
+                          別のIPからのアクセス:
+                        </Typography>
+                        <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
+                          {e.matches.map((m) =>
+                            bannedIPs.has(m.ip) ? (
+                              <Chip key={m.ip} label={`${m.ip} (BAN中)`} color="error" size="small" />
+                            ) : (
+                              <Stack key={m.ip} direction="row" spacing={0.25} sx={{ alignItems: "center" }}>
+                                <Chip label={`${m.ip} ・ ${new Date(m.lastSeen).toLocaleString("ja-JP")}`} size="small" variant="outlined" />
+                                <BanButtons ip={m.ip} onBan={handleBan} size="small" />
+                              </Stack>
+                            ),
+                          )}
+                        </Stack>
+                      </Stack>
+                    }
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </Paper>
+        </Box>
+      )}
 
       <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
         <Typography variant="h6" gutterBottom>

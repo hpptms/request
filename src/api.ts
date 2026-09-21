@@ -23,6 +23,7 @@ import type {
   SearchResult,
   StatsSummary,
   SuspiciousFingerprint,
+  BanEvasion,
   TimeSlot,
   VideoRequest,
   VoteOnlyVoter,
@@ -220,6 +221,10 @@ export const api = {
   // (see backend/internal/fingerprint). Never banned automatically.
   adminListSuspiciousFingerprints: () =>
     request<SuspiciousFingerprint[]>("/admin/suspicious-fingerprints"),
+
+  // Banned devices seen again from a different IP (BAN回避の疑い — see
+  // backend/internal/banevasion). Never banned automatically.
+  adminListBanEvasion: () => request<BanEvasion[]>("/admin/ban-evasion"),
 
   // IPs currently sighted with more than one device class (desktop vs.
   // mobile) in a short span — a heuristic for more than one physical
