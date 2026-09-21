@@ -179,7 +179,7 @@ export function SuperLikeIconButton({ request, onLike }: LikeIconButtonProps) {
   return (
     <Tooltip
       title={
-        own ? "自分のリクエストにはいいねできません" : superLiked ? "スーパーいいね済み" : "スーパーいいね(いいね2票分)"
+        own ? "自分のリクエストにはいいねできません" : superLiked ? "スーパーいいね済み" : "スーパーいいね"
       }
     >
       <span>

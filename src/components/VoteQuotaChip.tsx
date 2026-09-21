@@ -8,7 +8,7 @@ export function VoteQuotaLabel({ light = false, compact = false }: { light?: boo
   if (!quota) return null;
   const resetMinutes = (seconds: number) => Math.max(1, Math.ceil(seconds / 60));
   const hint = [
-    "最初に投票してから1時間たつと、いいね・bad・スーパーいいねの票がすべて回復します。スーパーいいね(😍)はいいね2票分です。",
+    "最初に投票してから1時間たつと、いいね・bad・スーパーいいねの票がすべて回復します。",
     quota.likeResetSeconds > 0 ? `いいね: あと${resetMinutes(quota.likeResetSeconds)}分で全回復` : "",
     quota.badResetSeconds > 0 ? `bad: あと${resetMinutes(quota.badResetSeconds)}分で全回復` : "",
   ]
