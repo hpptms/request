@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import type { BroadcastState } from "../types";
 import { playChime } from "./playChime";
+import { visibleInterval } from "./visibleInterval";
 
 const POLL_INTERVAL_MS = 4000;
 const OVERLAY_DURATION_MS = 10000;
@@ -45,9 +46,9 @@ export function useBroadcastOverlay(): BroadcastState {
     };
 
     poll();
-    const interval = setInterval(poll, POLL_INTERVAL_MS);
+    const stop = visibleInterval(poll, POLL_INTERVAL_MS);
     return () => {
-      clearInterval(interval);
+      stop();
       if (hideTimerRef.current !== null) window.clearTimeout(hideTimerRef.current);
     };
   }, []);

@@ -4,6 +4,7 @@ import type { CancelVoteTier, VideoRequest } from "../types";
 import { trackEvent } from "./analytics";
 import { markMyRequest } from "./myRequestStorage";
 import { setVoteQuota } from "./voteQuota";
+import { visibleInterval } from "./visibleInterval";
 
 const POLL_INTERVAL_MS = 4000;
 // How many just-finished requests the board keeps open for like/bad.
@@ -83,8 +84,7 @@ export function useRequestQueue(source: string) {
         .catch(() => {});
     };
     fetchConfig();
-    const interval = setInterval(fetchConfig, 30000);
-    return () => clearInterval(interval);
+    return visibleInterval(fetchConfig, 30000);
   }, []);
 
   // The remaining hourly like/bad allowance recovers with time, so poll it
@@ -94,8 +94,7 @@ export function useRequestQueue(source: string) {
       api.getMyVoteQuota().then(setVoteQuota).catch(() => {});
     };
     fetchQuota();
-    const interval = setInterval(fetchQuota, 30000);
-    return () => clearInterval(interval);
+    return visibleInterval(fetchQuota, 30000);
   }, []);
 
   useEffect(() => {
@@ -104,8 +103,7 @@ export function useRequestQueue(source: string) {
 
   useEffect(() => {
     refresh();
-    const interval = setInterval(refresh, POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
+    return visibleInterval(refresh, POLL_INTERVAL_MS);
   }, [refresh]);
 
   const handleCreate = async (url: string, twoMinuteRequest: boolean) => {
