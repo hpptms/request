@@ -179,6 +179,18 @@ export interface SuspiciousFingerprint {
   lastSeen: string;
 }
 
+// A banned device (1-hour or permanent ban, backend/internal/banevasion)
+// that has since been seen from other IPs — likely the same person back via
+// a VPN / mobile data / another line. The fingerprint is coarse, so an
+// unrelated visitor with the same device model can match; shown on the admin
+// BAN page for review, never banned automatically.
+export interface BanEvasion {
+  fingerprint: string;
+  banned: { ip: string; reason: string; bannedAt: string }[];
+  matches: { ip: string; lastSeen: string }[];
+  lastSeen: string;
+}
+
 // An IP (backend/internal/devicemix) currently sighted with more than one
 // device class (desktop vs. mobile, by User-Agent) in a short span — a
 // heuristic for more than one physical device (e.g. a PC and a phone)
