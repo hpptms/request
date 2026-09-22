@@ -10,6 +10,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import type { VideoRequest } from "../types";
+import { trackEvent } from "../lib/analytics";
 import { searchKeyword } from "../lib/affiliate";
 import { AffiliateNotice, StoreLinksInline } from "./MusicLinks";
 import { CancelVoteIconButton, LikeIconButton, SuperLikeIconButton } from "./QueueList";
@@ -80,6 +81,14 @@ export function RecentDoneList({ requests, onVoteCancel, onLike }: Props) {
                 variant="outlined"
                 color="inherit"
                 startIcon={<OpenInNewIcon fontSize="small" />}
+                onClick={() =>
+                  trackEvent("video_request_open_original", {
+                    request_id: r.id,
+                    video_title: r.title,
+                    platform: r.platform,
+                    source: "recent_done",
+                  })
+                }
                 sx={{ whiteSpace: "nowrap", borderRadius: 999, px: 2 }}
               >
                 元の動画に飛ぶ

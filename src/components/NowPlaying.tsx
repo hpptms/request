@@ -10,6 +10,7 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
+import { trackEvent } from "../lib/analytics";
 import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
 import { formatDuration } from "../lib/formatDuration";
 import { hasLiked, hasSuperLiked, markLiked, markSuperLiked } from "../lib/likeStorage";
@@ -154,6 +155,14 @@ export function NowPlaying({
               href={originalVideoUrl(nowPlaying)}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() =>
+                trackEvent("video_request_open_original", {
+                  request_id: nowPlaying.id,
+                  video_title: nowPlaying.title,
+                  platform: nowPlaying.platform,
+                  source: "now_playing",
+                })
+              }
               sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
             >
               元の動画に飛ぶ
