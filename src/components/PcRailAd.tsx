@@ -22,7 +22,10 @@ import { useLocation } from "react-router-dom";
 // "sticky" format unit, requesting it through the plain snippet endpoint
 // may render blank — check the admax dashboard and swap in a standard
 // 160x600 tag_id if so.
-const AD_SRC = "/ad/banner.html?tag=23ae35e7e86013ef2c89b228df7e3ea3";
+// Cloudflare Pages 308-redirects "*.html" to the extensionless path (still
+// serving the same file/headers either way — confirmed via curl against
+// production), so this skips straight to that path to avoid the extra hop.
+const AD_SRC = "/ad/banner?tag=23ae35e7e86013ef2c89b228df7e3ea3";
 
 export function PcRailAd() {
   const isDesktop = useMediaQuery("(min-width:1024px)");

@@ -14,7 +14,10 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 // sandbox attribute (no allow-same-origin) is what keeps it safe even so —
 // it gives that document a unique opaque origin, unable to touch
 // request.tokyo's real cookies/storage/DOM.
-const AD_SRC = "/ad/banner.html?tag=940ac14e3724561e7b4a65c797fdbcd2";
+// Cloudflare Pages 308-redirects "*.html" to the extensionless path (still
+// serving the same file/headers either way — confirmed via curl against
+// production), so this skips straight to that path to avoid the extra hop.
+const AD_SRC = "/ad/banner?tag=940ac14e3724561e7b4a65c797fdbcd2";
 
 export function FooterAd() {
   const theme = useTheme();
