@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>広告</title>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      // This page exists so admax's RTB pipeline (its own scripts, plus
+      // whichever exchange/advertiser wins each auction — Criteo, PubMatic,
+      // AdStir, ... with their own inline <script> blocks) can run without
+      // request.tokyo's site-wide CSP growing a new entry every time a
+      // different ad happens to win (see nginx.conf / _headers, where this
+      // path has no Content-Security-Policy of its own at all). Safety
+      // instead comes from how the embedding <iframe> is sandboxed
+      // (sandbox="allow-scripts allow-popups ...", no allow-same-origin —
+      // see FooterAd.tsx / PcRailAd.tsx): this document runs with a unique
+      // opaque origin, so nothing here can read request.tokyo's real
+      // cookies/localStorage or reach into the parent document.
+      //
+      // The tag id is only ever a bare admax hex id, and it ends up
+      // directly in a <script src>, so it's validated against a strict
+      // allow-list pattern before use — this check is the only guard left
+      // against this page being (ab)used as an open script loader via a
+      // crafted query string, now that its own CSP is gone.
+      var match = /^[a-f0-9]{16,64}$/.exec(new URLSearchParams(location.search).get("tag") || "");
+      if (match) {
+        var s = document.createElement("script");
+        s.src = "https://adm.shinobi.jp/s/" + match[0];
+        document.body.appendChild(s);
+      }
+    </script>
+  </body>
+</html>

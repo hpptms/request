@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import AdminReplyDialog from "./components/AdminReplyDialog";
 import LikeRankDialog from "./components/LikeRankDialog";
+import { PcRailAd } from "./components/PcRailAd";
 import BoardPage from "./pages/BoardPage";
 import { api } from "./api";
 import { usePageViewTracking } from "./lib/usePageViewTracking";
@@ -92,6 +93,7 @@ function AppRoutes() {
     <Suspense fallback={<LazyPageFallback />}>
       {showLikeRank && <LikeRankDialog />}
       {showReplies && <AdminReplyDialog />}
+      <PcRailAd />
       <Routes>
         <Route path="/" element={<BoardPage />} />
         <Route path="/play" element={<PlayPage />} />
