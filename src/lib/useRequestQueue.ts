@@ -106,11 +106,20 @@ export function useRequestQueue(source: string) {
     return visibleInterval(refresh, POLL_INTERVAL_MS);
   }, [refresh]);
 
+  // Looks up a request's title/platform (as of this render) so trackEvent
+  // calls below can show *which video* an action happened on in GA reports
+  // instead of just an opaque request_id.
+  const videoTrackingParams = (id: string): Record<string, string> => {
+    const r = requests.find((req) => req.id === id);
+    return r ? { video_title: r.title, platform: r.platform } : {};
+  };
+
   const handleCreate = async (url: string, twoMinuteRequest: boolean) => {
     const created = await api.createRequest(url, "", twoMinuteRequest);
     markMyRequest(created.id);
     trackEvent("video_request_submit", {
       request_id: created.id,
+      video_title: created.title,
       platform: created.platform,
       source,
       two_minute_request: twoMinuteRequest,
@@ -119,9 +128,10 @@ export function useRequestQueue(source: string) {
   };
 
   const handleCancelMine = async (id: string) => {
+    const trackingParams = videoTrackingParams(id);
     try {
       await api.cancelMyRequest(id);
-      trackEvent("video_request_cancel_mine", { request_id: id, source });
+      trackEvent("video_request_cancel_mine", { request_id: id, source, ...trackingParams });
       await refresh();
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "キャンセルに失敗しました");
@@ -129,9 +139,10 @@ export function useRequestQueue(source: string) {
   };
 
   const handlePlay = async (id: string) => {
+    const trackingParams = videoTrackingParams(id);
     try {
       await api.playRequest(id);
-      trackEvent("video_request_admin_play", { request_id: id, source });
+      trackEvent("video_request_admin_play", { request_id: id, source, ...trackingParams });
       await refresh();
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "操作に失敗しました");
@@ -139,9 +150,10 @@ export function useRequestQueue(source: string) {
   };
 
   const handleDone = async (id: string) => {
+    const trackingParams = videoTrackingParams(id);
     try {
       await api.doneRequest(id);
-      trackEvent("video_request_admin_done", { request_id: id, source });
+      trackEvent("video_request_admin_done", { request_id: id, source, ...trackingParams });
       await refresh();
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "操作に失敗しました");
@@ -149,9 +161,10 @@ export function useRequestQueue(source: string) {
   };
 
   const handleDelete = async (id: string) => {
+    const trackingParams = videoTrackingParams(id);
     try {
       await api.deleteRequest(id);
-      trackEvent("video_request_admin_delete", { request_id: id, source });
+      trackEvent("video_request_admin_delete", { request_id: id, source, ...trackingParams });
       await refresh();
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "操作に失敗しました");
@@ -162,12 +175,14 @@ export function useRequestQueue(source: string) {
   // so the buttons don't mark a request as voted after a failure (e.g. the
   // hourly allowance being used up).
   const handleVoteCancel = async (id: string): Promise<boolean> => {
+    const trackingParams = videoTrackingParams(id);
     try {
       const result = await api.voteCancel(id);
       if (result.quota) setVoteQuota(result.quota);
       trackEvent("video_request_bad_vote", {
         request_id: id,
         source,
+        ...trackingParams,
       });
       await refresh();
       return true;
@@ -179,6 +194,7 @@ export function useRequestQueue(source: string) {
   };
 
   const handleLike = async (id: string, isSuper = false): Promise<boolean> => {
+    const trackingParams = videoTrackingParams(id);
     try {
       const result = await api.likeRequest(id, isSuper);
       if (result.quota) setVoteQuota(result.quota);
@@ -186,6 +202,7 @@ export function useRequestQueue(source: string) {
         request_id: id,
         like_count: result.likeCount,
         source,
+        ...trackingParams,
       });
       await refresh();
       return true;
