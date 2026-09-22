@@ -263,7 +263,7 @@ function AdminBansPage() {
             BAN回避の疑い ({evasionSuspects.length})
           </Typography>
           <Alert severity="error" sx={{ mb: 1.5 }}>
-            BAN(1時間・永久)された端末と同じ特徴の端末が、別のIPアドレスからアクセスしています。VPNやモバイル回線、別の回線でBANを回避している可能性があります。別のIP数が少ない(3件以下)場合は自動で永久BANされます。端末の特徴は大まかなため、同機種の別人が一致することもあります。誤りの場合は「BAN中のIP」から解除してください。件数が多い場合は自動BANされないので、内容を確認した上で手動でBANしてください。
+            BAN(1時間・永久)された端末と同じ特徴の端末が、別のIPアドレスからアクセスしています。VPNやモバイル回線、別の回線でBANを回避している可能性があります。別のIP数が少ない(3件以下)場合は自動で1時間BAN(繰り返す毎に+1時間)されます。端末の特徴は大まかなため、同機種の別人が一致することもあります。誤りの場合は「BAN中のIP」から解除してください。件数が多い場合は自動BANされないので、内容を確認した上で手動でBANしてください。
           </Alert>
           <Paper elevation={2}>
             <List disablePadding>
@@ -618,7 +618,7 @@ function AdminBansPage() {
             複数端末から投稿しているIP ({multiDeviceUsers.length})
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-            同じIPアドレスから、PCとスマホなど異なる種類の端末でのアクセスが検出されています。検知した時点で自動的に永久BANされます。同じ家庭/オフィスのネットワークを複数人が共有しているだけの場合もあるため、誤りの場合は「BAN中のIP」から解除してください。
+            同じIPアドレスから、PCとスマホなど異なる種類の端末でのアクセスが検出されています。検知した時点で自動的にBANされますが、永久ではなく1時間BAN(繰り返す毎に+1時間)です。同じ家庭/オフィスのネットワークを複数人が共有しているだけの場合もあるため、誤りの場合は「BAN中のIP」から解除してください。
           </Typography>
           <Paper elevation={2}>
             <List disablePadding>
