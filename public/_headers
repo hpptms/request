@@ -27,8 +27,17 @@
 # NOT widening img-src/frame-src further for the winning ad's own creative
 # domain, since that rotates per-advertiser and isn't a fixed, enumerable
 # set like the domains above; see boot.js.
+# Also admax infra, found in a second devtools pass after the fix above:
+# pb.shinobi.jp (script-src) is admax's passback loader — when the RTB
+# auction has no winner, the /b/ response's tag_text loads
+# pb.shinobi.jp/st/r.js + /t/<id> into the ad's about:blank iframe, which
+# inherits this page's CSP, so it was blocked there. audiencedata.im-apps.net
+# (connect-src) is the endpoint dmp.im-apps.net's im-uid.js SDK fetches the
+# user id from. The passback waterfall pb.shinobi.jp returns (Criteo /
+# PubMatic / AdStir scripts plus inline <script> blocks) is the rotating
+# creative side and is intentionally NOT listed here either.
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.youtube.com https://www.googletagmanager.com https://adm.shinobi.jp https://cnobi.jp https://dmp.im-apps.net https://sync.shinobi.jp 'sha256-wAJZvpYF7i/hQGqXEF66seLFmPkYlUnRF1/om9+msWg='; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ytimg.com https://*.ytimg.com https://*.nimg.jp https://*.vimeocdn.com https://api.request.tokyo https://adm.shinobi.jp https://x.bidswitch.net https://bypass.ad-stir.com https://tr.dsp.bance.jp https://sync.fout.jp; frame-src https://www.youtube.com https://embed.nicovideo.jp https://player.vimeo.com; connect-src 'self' https://api.request.tokyo https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://www.google.com https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.youtube.com https://www.googletagmanager.com https://adm.shinobi.jp https://cnobi.jp https://dmp.im-apps.net https://sync.shinobi.jp https://pb.shinobi.jp 'sha256-wAJZvpYF7i/hQGqXEF66seLFmPkYlUnRF1/om9+msWg='; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ytimg.com https://*.ytimg.com https://*.nimg.jp https://*.vimeocdn.com https://api.request.tokyo https://adm.shinobi.jp https://x.bidswitch.net https://bypass.ad-stir.com https://tr.dsp.bance.jp https://sync.fout.jp; frame-src https://www.youtube.com https://embed.nicovideo.jp https://player.vimeo.com; connect-src 'self' https://audiencedata.im-apps.net https://api.request.tokyo https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://www.google.com https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
