@@ -572,7 +572,7 @@ function AdminBansPage() {
             プロクシっぽいユーザー ({suspiciousFingerprints.length})
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-            同じ端末の特徴を持ちながら、短時間に複数の異なるIPアドレスからアクセスしています。プロクシ/VPNでIPを切り替えながら多重にリクエストしている可能性があります。検知した時点で自動的に永久BANされます。ネットワークの切り替え(Wi-Fi/モバイル回線など)で誤検知することもあるため、誤りの場合は「BAN中のIP」から解除してください。
+            同じ端末の特徴を持ちながら、短時間に複数の異なるIPアドレスからアクセスしています。プロクシ/VPNでIPを切り替えながら多重にリクエストしている可能性があります。検知した時点で自動的にBANされますが、永久ではなく1時間BAN(繰り返す毎に+1時間)です。ネットワークの切り替え(Wi-Fi/モバイル回線、IPv6アドレスの自動更新など)で誤検知することもあるため、誤りの場合は「BAN中のIP」から解除してください。
           </Typography>
           <Paper elevation={2}>
             <List disablePadding>
