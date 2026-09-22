@@ -66,6 +66,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const api = {
   getConfig: () => request<AppConfig>("/config"),
 
+  // Whether the caller's own IP is currently banned — used to redirect a
+  // banned visitor to /notice (see App.tsx's BanRedirect). Never cached
+  // (per-IP), unlike getConfig above.
+  getBanStatus: () => request<{ banned: boolean }>("/ban-status"),
+
   // Public request/like/bad-vote rankings (backend/internal/analytics) for
   // one day, one week, or all recorded history — shown on both the public
   // board page and the admin panel's stats screen.
