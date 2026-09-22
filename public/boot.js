@@ -11,19 +11,7 @@ gtag('js', new Date());
 // link) is counted too.
 gtag('config', 'G-8L7G9DTTF8', { send_page_view: false });
 
-// admax (Shinobi Tools) sticky-right ad: PC only — narrow/mobile viewports
-// have no spare room beside the board's content for a 160px-wide sticky
-// rail without it overlapping. Gated here (not just via CSS) so phones/
-// tablets never even fetch the ad script. Loaded as a real script element
-// (rather than the vendor snippet's document.write) since this file runs
-// as an ordinary external script, not an inline one during initial parse.
-// Also skipped on /viewer, the admin-only OBS capture screen (opened as
-// its own URL, never client-side-navigated to from the public board — see
-// ViewerPage.tsx) — a floating ad has no business on a stream capture.
-if (window.location.pathname !== '/viewer' && window.matchMedia('(min-width: 1024px)').matches) {
-  window.admaxaction = { tag_id: '23ae35e7e86013ef2c89b228df7e3ea3', type: 'a', width: 160, height: 600, action: 'sticky.right' };
-  var admaxScript = document.createElement('script');
-  admaxScript.src = 'https://adm.shinobi.jp/st/s.js';
-  admaxScript.charset = 'utf-8';
-  document.head.appendChild(admaxScript);
-}
+// The admax (Shinobi Tools) PC-only rail ad used to be loaded here via
+// admax's own `sticky.right` JS action, running directly in this document.
+// It's now rendered by src/components/PcRailAd.tsx instead, inside a
+// sandboxed iframe pointed at /ad/banner.html — see that file for why.

@@ -3,19 +3,18 @@ import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
 // admax banner ad, tag 940ac14e3724561e7b4a65c797fdbcd2 — mobile only (the
-// desktop sticky-right unit lives in boot.js/index.html instead; see that
-// file's comment for the CSP script-src additions both units share).
-// Rendered inside a srcDoc iframe rather than injected straight into the
-// page: the vendor snippet chain-loads a second script via document.write,
-// and Footer mounts long after DOMContentLoaded, so calling document.write
-// on the live SPA document at that point would wipe the whole page. A
-// freshly created srcDoc document is still mid-parse, so document.write
-// behaves normally there.
-const AD_HTML = `<!doctype html><html><head><style>body{margin:0;display:flex;justify-content:center;align-items:center}</style></head><body>
-<!-- admax -->
-<script src="https://adm.shinobi.jp/s/940ac14e3724561e7b4a65c797fdbcd2"></script>
-<!-- admax -->
-</body></html>`;
+// desktop rail unit lives in PcRailAd.tsx instead). Loaded via a same-origin
+// but sandboxed iframe pointing at the static /ad/banner.html page, rather
+// than run directly in this document (or a srcDoc iframe, which inherits
+// this page's own CSP just the same): admax's RTB pipeline — its own
+// scripts, plus whichever exchange/advertiser wins each auction — kept
+// needing new script-src/img-src/connect-src CSP entries every time it hit
+// a domain this site hadn't allowed yet (see nginx.conf/_headers' history).
+// /ad/banner.html has no CSP of its own, so that whack-a-mole is gone; the
+// sandbox attribute (no allow-same-origin) is what keeps it safe even so —
+// it gives that document a unique opaque origin, unable to touch
+// request.tokyo's real cookies/storage/DOM.
+const AD_SRC = "/ad/banner.html?tag=940ac14e3724561e7b4a65c797fdbcd2";
 
 export function FooterAd() {
   const theme = useTheme();
@@ -27,7 +26,8 @@ export function FooterAd() {
       <Box
         component="iframe"
         title="広告"
-        srcDoc={AD_HTML}
+        src={AD_SRC}
+        sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
         sx={{ border: 0, width: "100%", maxWidth: 336, height: 100 }}
       />
     </Box>
