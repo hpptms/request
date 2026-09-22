@@ -1,10 +1,11 @@
-import { lazy, Suspense } from "react";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { lazy, Suspense, useEffect } from "react";
+import { BrowserRouter, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import AdminReplyDialog from "./components/AdminReplyDialog";
 import LikeRankDialog from "./components/LikeRankDialog";
 import BoardPage from "./pages/BoardPage";
+import { api } from "./api";
 import { usePageViewTracking } from "./lib/usePageViewTracking";
 
 // Lazy-loaded: BoardPage ("/") is the landing page almost every visitor
@@ -36,6 +37,37 @@ const AdminInterruptPage = lazy(() => import("./pages/AdminInterruptPage"));
 const AdminMessagesPage = lazy(() => import("./pages/AdminMessagesPage"));
 const AdminNowLivePage = lazy(() => import("./pages/AdminNowLivePage"));
 
+// /admin has its own login-gated pages (an admin needs to reach them to
+// manage bans in the first place), and /viewer is the OBS capture output —
+// never redirect either away no matter what the visitor's IP looks like.
+function isExemptFromBanRedirect(pathname: string) {
+  return pathname === "/notice" || pathname === "/viewer" || pathname.startsWith("/admin");
+}
+
+// Banned visitors can still load the site (nothing here requires auth), but
+// every write they'd try already gets rejected server-side — so redirect
+// them straight to /notice, which explains the ban and lets them message an
+// admin, instead of letting them browse a board they can't act on.
+function useBanRedirect(pathname: string) {
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (isExemptFromBanRedirect(pathname)) return;
+    let cancelled = false;
+    api
+      .getBanStatus()
+      .then(({ banned }) => {
+        if (!cancelled && banned) navigate("/notice", { replace: true });
+      })
+      .catch(() => {
+        // Network hiccup / API unreachable: fail open rather than trap an
+        // unbanned visitor on an error.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname, navigate]);
+}
+
 function LazyPageFallback() {
   return (
     <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
@@ -48,6 +80,7 @@ function AppRoutes() {
   usePageViewTracking();
 
   const { pathname } = useLocation();
+  useBanRedirect(pathname);
   // Not on the OBS capture page (it would end up on stream). The admin
   // section is included so the admin sees their own ranking too.
   const showLikeRank = pathname !== "/viewer";
