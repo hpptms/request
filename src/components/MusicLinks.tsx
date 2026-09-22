@@ -5,7 +5,15 @@ import Link from "@mui/material/Link";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import type { ComponentType } from "react";
 import { AmazonMark, AppleMusicMark, RakutenMark, SpotifyMark } from "./BrandIcons";
-import { hasAffiliateLinks, hasAmazonAffiliate, musicLinks, storeLinks } from "../lib/affiliate";
+import { hasAffiliateLinks, hasAmazonAffiliate, musicLinks, storeLinks, type MusicLink } from "../lib/affiliate";
+import { trackEvent } from "../lib/analytics";
+
+// Fired when a viewer clicks one of the Amazon/楽天/Apple Music/Spotify
+// buttons, so GA can show which store and which song/artist keyword it was
+// searched for (source distinguishes the two call sites below).
+function trackMusicLinkClick(l: MusicLink, keyword: string, source: string) {
+  trackEvent("music_link_click", { store: l.key, keyword, affiliate: l.affiliate, source });
+}
 
 // Each store's brand colours and mark, so a button reads as that service.
 const BRANDS: Record<string, { bg: string; hover: string; fg: string; Icon: ComponentType<SvgIconProps> }> = {
@@ -37,6 +45,7 @@ export function MusicLinks({ title }: { title: string }) {
               href={l.href}
               target="_blank"
               rel={l.affiliate ? "sponsored noopener noreferrer" : "noopener noreferrer"}
+              onClick={() => trackMusicLinkClick(l, title, "music_links")}
               size="small"
               variant="contained"
               startIcon={brand ? <brand.Icon /> : undefined}
@@ -84,6 +93,7 @@ export function StoreLinksInline({ keyword, withStreaming = false }: { keyword: 
             href={l.href}
             target="_blank"
             rel={l.affiliate ? "sponsored noopener noreferrer" : "noopener noreferrer"}
+            onClick={() => trackMusicLinkClick(l, keyword, "store_links_inline")}
             underline="none"
             sx={{
               display: "inline-flex",
