@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import AdminReplyDialog from "./components/AdminReplyDialog";
 import LikeRankDialog from "./components/LikeRankDialog";
+import { MobileAnchorAd } from "./components/MobileAnchorAd";
 import { PcRailAd } from "./components/PcRailAd";
 import BoardPage from "./pages/BoardPage";
 import { api } from "./api";
@@ -94,6 +95,7 @@ function AppRoutes() {
       {showLikeRank && <LikeRankDialog />}
       {showReplies && <AdminReplyDialog />}
       <PcRailAd />
+      <MobileAnchorAd />
       <Routes>
         <Route path="/" element={<BoardPage />} />
         <Route path="/play" element={<PlayPage />} />
