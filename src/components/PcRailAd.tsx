@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useLocation } from "react-router-dom";
 
-// admax banner ad, tag 23ae35e7e86013ef2c89b228df7e3ea3 — desktop only
+// admax banner ad, tag cd45827394e2a2c014eb20d9bfe1c51a — desktop only
 // (>=1024px; narrower viewports have no spare room beside the board's
 // content for a 160px-wide rail without overlapping it), fixed to the
 // right edge of the viewport. Skipped on /viewer, the admin-only OBS
@@ -11,21 +11,19 @@ import { useLocation } from "react-router-dom";
 // Previously loaded via boot.js using admax's own `sticky.right` JS action,
 // which injects a position:fixed element directly into this page's <body>
 // — something a sandboxed iframe fundamentally can't do (an iframe can
-// only position elements within its own document). Switched to loading the
-// plain per-tag snippet (same mechanism as FooterAd) inside a sandboxed
-// same-origin iframe pointed at /ad/banner.html, with our own CSS
+// only position elements within its own document), and which the admax SDK
+// itself refuses to even attempt once it detects it's running inside an
+// iframe. Switched to a plain "インライン" 160x600 tag (registered as such
+// in the admax dashboard, unlike the old "固定表示/右サイド" tag this
+// replaced) loaded via the same per-tag snippet as FooterAd, inside a
+// sandboxed same-origin iframe pointed at /ad/banner, with our own CSS
 // providing the fixed positioning instead of admax's JS — see
 // FooterAd.tsx / _headers for why that page needs to be sandboxed rather
 // than run directly in this document.
-//
-// If this tag_id was registered in the admax dashboard specifically as a
-// "sticky" format unit, requesting it through the plain snippet endpoint
-// may render blank — check the admax dashboard and swap in a standard
-// 160x600 tag_id if so.
 // Cloudflare Pages 308-redirects "*.html" to the extensionless path (still
 // serving the same file/headers either way — confirmed via curl against
 // production), so this skips straight to that path to avoid the extra hop.
-const AD_SRC = "/ad/banner?tag=23ae35e7e86013ef2c89b228df7e3ea3";
+const AD_SRC = "/ad/banner?tag=cd45827394e2a2c014eb20d9bfe1c51a";
 
 export function PcRailAd() {
   const isDesktop = useMediaQuery("(min-width:1024px)");
