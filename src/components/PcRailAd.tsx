@@ -15,11 +15,12 @@ import { useLocation } from "react-router-dom";
 // itself refuses to even attempt once it detects it's running inside an
 // iframe. Switched to a plain "インライン" 160x600 tag (registered as such
 // in the admax dashboard, unlike the old "固定表示/右サイド" tag this
-// replaced) loaded via the same per-tag snippet as FooterAd, from the
-// dedicated ads.request.tokyo origin, with our own CSS providing the fixed
-// positioning instead of admax's JS — see FooterAd.tsx for why that origin
-// (and allow-same-origin on the iframe) is needed for admax's SDK to
-// render anything at all, and why it's safe despite allow-same-origin.
+// replaced) loaded via the same per-tag snippet as MobileAnchorAd, from
+// the dedicated ads.request.tokyo origin, with our own CSS providing the
+// fixed positioning instead of admax's JS — see MobileAnchorAd.tsx for why
+// that origin (and allow-same-origin on the iframe) is needed for admax's
+// SDK to render anything at all, and why it's safe despite
+// allow-same-origin.
 const AD_SRC = "https://ads.request.tokyo/ad/banner?tag=cd45827394e2a2c014eb20d9bfe1c51a";
 
 export function PcRailAd() {

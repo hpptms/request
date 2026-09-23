@@ -1,19 +1,25 @@
 import Box from "@mui/material/Box";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import { useLocation } from "react-router-dom";
 
 // admax banner ad, tag 23aa468c68dd9f337c4c77c42e885ffa (320x100, インライン
 // — not the SP overlay/fixed format, which like the old PC 固定表示/右サイド
 // tag would refuse to fire its ad request once the admax SDK detects it's
-// running inside an iframe) — mobile only (the
-// desktop rail unit lives in PcRailAd.tsx instead). Loaded from the
-// dedicated ads.request.tokyo origin (a second custom domain on the same
-// Cloudflare Pages deployment — see _headers) rather than run directly in
-// this document: admax's RTB pipeline — its own scripts, plus whichever
-// exchange/advertiser wins each auction — kept needing new script-src/
-// img-src/connect-src CSP entries every time it hit a domain this site
-// hadn't allowed yet (see nginx.conf/_headers' history). /ad/* has no CSP
-// of its own on that origin, so that whack-a-mole is gone.
+// running inside an iframe). Mobile only (the desktop rail unit lives in
+// PcRailAd.tsx instead); pinned to the bottom of the viewport at full
+// device width, like PcRailAd's fixed rail — our own CSS provides that
+// positioning rather than admax's JS, for the same reason PcRailAd does
+// (see that file). Skipped on /viewer for the same reason as PcRailAd — a
+// floating ad has no business on a stream capture.
+//
+// Loaded from the dedicated ads.request.tokyo origin (a second custom
+// domain on the same Cloudflare Pages deployment — see _headers) rather
+// than run directly in this document: admax's RTB pipeline — its own
+// scripts, plus whichever exchange/advertiser wins each auction — kept
+// needing new script-src/img-src/connect-src CSP entries every time it hit
+// a domain this site hadn't allowed yet (see nginx.conf/_headers' history).
+// /ad/* has no CSP of its own on that origin, so that whack-a-mole is gone.
 //
 // The iframe is sandboxed WITH allow-same-origin — safe here specifically
 // because the framed content is on a genuinely different origin
@@ -30,19 +36,31 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 // window.parent.document freely, defeating the sandbox entirely.
 const AD_SRC = "https://ads.request.tokyo/ad/banner?tag=23aa468c68dd9f337c4c77c42e885ffa";
 
-export function FooterAd() {
+export function MobileAnchorAd() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  if (!isMobile) return null;
+  const { pathname } = useLocation();
+  if (!isMobile || pathname === "/viewer") return null;
 
   return (
-    <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+    <Box
+      sx={{
+        position: "fixed",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        display: "flex",
+        justifyContent: "center",
+        bgcolor: "background.paper",
+        zIndex: (theme) => theme.zIndex.appBar - 1,
+      }}
+    >
       <Box
         component="iframe"
         title="広告"
         src={AD_SRC}
         sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
-        sx={{ border: 0, width: "100%", maxWidth: 320, height: 100 }}
+        sx={{ border: 0, width: "100%", height: 100 }}
       />
     </Box>
   );
