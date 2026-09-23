@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
-// admax banner ad, tag 940ac14e3724561e7b4a65c797fdbcd2 — mobile only (the
+// admax banner ad, tag 23f070accfb8dd38032bed25fa438843 — mobile only (the
 // desktop rail unit lives in PcRailAd.tsx instead). Loaded from the
 // dedicated ads.request.tokyo origin (a second custom domain on the same
 // Cloudflare Pages deployment — see _headers) rather than run directly in
@@ -25,7 +25,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 // on a same-origin URL (e.g. plain /ad/banner) — allow-scripts +
 // allow-same-origin together on same-origin content lets it reach
 // window.parent.document freely, defeating the sandbox entirely.
-const AD_SRC = "https://ads.request.tokyo/ad/banner?tag=940ac14e3724561e7b4a65c797fdbcd2";
+const AD_SRC = "https://ads.request.tokyo/ad/banner?tag=23f070accfb8dd38032bed25fa438843";
 
 export function FooterAd() {
   const theme = useTheme();
