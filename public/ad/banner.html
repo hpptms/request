@@ -34,10 +34,17 @@
       // against this page being (ab)used as an open script loader via a
       // crafted query string, now that its own CSP is gone.
       var match = /^[a-f0-9]{16,64}$/.exec(new URLSearchParams(location.search).get("tag") || "");
+      //
+      // Written with document.write (not createElement + appendChild) on
+      // purpose: admax's /s/<tag> snippet itself chain-loads st/s.js via
+      // document.write, and Chrome silently ignores document.write from a
+      // dynamically inserted (= async) script — the snippet would run, set
+      // window.admaxbanner/admaxaction, and then never load the SDK, leaving
+      // the frame blank with no error. A script written in during this
+      // inline script's parse is parser-inserted, so the snippet's own
+      // document.write works as in admax's stock embed code.
       if (match) {
-        var s = document.createElement("script");
-        s.src = "https://adm.shinobi.jp/s/" + match[0];
-        document.body.appendChild(s);
+        document.write('<script src="https://adm.shinobi.jp/s/' + match[0] + '"><\/script>');
       }
     </script>
   </body>
