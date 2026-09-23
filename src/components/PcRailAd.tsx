@@ -6,7 +6,8 @@ import { useLocation } from "react-router-dom";
 // (>=1024px; narrower viewports have no spare room beside the board's
 // content for a 160px-wide rail without overlapping it), fixed to the
 // right edge of the viewport. Skipped on /viewer, the admin-only OBS
-// capture screen — a floating ad has no business on a stream capture.
+// capture screen — a floating ad has no business on a stream capture —
+// and on /play, the public playback screen.
 //
 // Previously loaded via boot.js using admax's own `sticky.right` JS action,
 // which injects a position:fixed element directly into this page's <body>
@@ -26,7 +27,7 @@ const AD_SRC = "https://ads.request.tokyo/ad/banner?tag=cd45827394e2a2c014eb20d9
 export function PcRailAd() {
   const isDesktop = useMediaQuery("(min-width:1024px)");
   const { pathname } = useLocation();
-  if (!isDesktop || pathname === "/viewer") return null;
+  if (!isDesktop || pathname === "/viewer" || pathname === "/play") return null;
 
   return (
     <Box

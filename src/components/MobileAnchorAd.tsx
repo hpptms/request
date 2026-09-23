@@ -11,7 +11,8 @@ import { useLocation } from "react-router-dom";
 // device width, like PcRailAd's fixed rail — our own CSS provides that
 // positioning rather than admax's JS, for the same reason PcRailAd does
 // (see that file). Skipped on /viewer for the same reason as PcRailAd — a
-// floating ad has no business on a stream capture.
+// floating ad has no business on a stream capture — and on /play, the
+// public playback screen.
 //
 // Loaded from the dedicated ads.request.tokyo origin (a second custom
 // domain on the same Cloudflare Pages deployment — see _headers) rather
@@ -44,12 +45,13 @@ const AD_SRC = "https://ads.request.tokyo/ad/banner?tag=23aa468c68dd9f337c4c77c4
 export const MOBILE_ANCHOR_AD_HEIGHT = 100;
 
 // Shared with App.tsx so the reserved padding above exactly matches when
-// this component actually renders itself (mobile widths, not /viewer).
+// this component actually renders itself (mobile widths, not /viewer or
+// /play).
 export function useMobileAnchorAdVisible() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { pathname } = useLocation();
-  return isMobile && pathname !== "/viewer";
+  return isMobile && pathname !== "/viewer" && pathname !== "/play";
 }
 
 export function MobileAnchorAd() {
