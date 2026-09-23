@@ -10,20 +10,17 @@ import { useLocation } from "react-router-dom";
 //
 // Previously loaded via boot.js using admax's own `sticky.right` JS action,
 // which injects a position:fixed element directly into this page's <body>
-// — something a sandboxed iframe fundamentally can't do (an iframe can
-// only position elements within its own document), and which the admax SDK
+// — something an iframe fundamentally can't do (an iframe can only
+// position elements within its own document), and which the admax SDK
 // itself refuses to even attempt once it detects it's running inside an
 // iframe. Switched to a plain "インライン" 160x600 tag (registered as such
 // in the admax dashboard, unlike the old "固定表示/右サイド" tag this
-// replaced) loaded via the same per-tag snippet as FooterAd, inside a
-// sandboxed same-origin iframe pointed at /ad/banner, with our own CSS
-// providing the fixed positioning instead of admax's JS — see
-// FooterAd.tsx / _headers for why that page needs to be sandboxed rather
-// than run directly in this document.
-// Cloudflare Pages 308-redirects "*.html" to the extensionless path (still
-// serving the same file/headers either way — confirmed via curl against
-// production), so this skips straight to that path to avoid the extra hop.
-const AD_SRC = "/ad/banner?tag=cd45827394e2a2c014eb20d9bfe1c51a";
+// replaced) loaded via the same per-tag snippet as FooterAd, from the
+// dedicated ads.request.tokyo origin, with our own CSS providing the fixed
+// positioning instead of admax's JS — see FooterAd.tsx for why that origin
+// (and allow-same-origin on the iframe) is needed for admax's SDK to
+// render anything at all, and why it's safe despite allow-same-origin.
+const AD_SRC = "https://ads.request.tokyo/ad/banner?tag=cd45827394e2a2c014eb20d9bfe1c51a";
 
 export function PcRailAd() {
   const isDesktop = useMediaQuery("(min-width:1024px)");
@@ -44,7 +41,7 @@ export function PcRailAd() {
         component="iframe"
         title="広告"
         src={AD_SRC}
-        sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
+        sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
         sx={{ border: 0, width: 160, height: 600 }}
       />
     </Box>

@@ -18,27 +18,34 @@
 # domains and inline <script> blocks — kept needing new script-src/img-src/
 # connect-src entries here every time a different ad happened to win, since
 # an about:blank iframe (which is how admax renders a creative) inherits
-# the CSP of whatever page created it. Both ad units now load in a
-# sandboxed same-origin iframe pointed at /ad/banner.html instead (see that
-# file, and FooterAd.tsx/PcRailAd.tsx) — that page has no CSP of its own
-# (see the /ad/* rule below), so this policy no longer needs any
-# admax-specific entries at all. frame-src 'self' below is so the main
-# document is allowed to embed that page.
+# the CSP of whatever page created it. Both ad units now load /ad/banner
+# from a dedicated ads.request.tokyo origin instead (a second custom domain
+# pointed at this same Cloudflare Pages deployment — see FooterAd.tsx/
+# PcRailAd.tsx) — that path has no CSP of its own there (see the /ad/* rule
+# below), so this policy no longer needs any admax-specific entries at all.
+# frame-src below allows ads.request.tokyo so the main document can embed
+# it (a sandboxed iframe WITH allow-same-origin — safe here only because
+# the origins genuinely differ; see FooterAd.tsx for why allow-same-origin
+# is required at all).
 /*
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.youtube.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ytimg.com https://*.ytimg.com https://*.nimg.jp https://*.vimeocdn.com https://api.request.tokyo; frame-src 'self' https://www.youtube.com https://embed.nicovideo.jp https://player.vimeo.com; connect-src 'self' https://api.request.tokyo https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://www.google.com https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.youtube.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ytimg.com https://*.ytimg.com https://*.nimg.jp https://*.vimeocdn.com https://api.request.tokyo; frame-src https://ads.request.tokyo https://www.youtube.com https://embed.nicovideo.jp https://player.vimeo.com; connect-src 'self' https://api.request.tokyo https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://www.google.com https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
 
 # admax's ad tags (script-src-elem, inline scripts, img-src beacons, ...)
 # need to run without this site's CSP restricting them (see the comment on
-# the /* rule above) — this page is only ever embedded via a sandboxed
-# iframe with no allow-same-origin (FooterAd.tsx/PcRailAd.tsx), so it never
-# runs with request.tokyo's real origin regardless of what it's allowed to
-# load. X-Frame-Options is relaxed to SAMEORIGIN (from the site-wide DENY)
-# only so request.tokyo itself can embed this one path; frame-ancestors
-# 'none' from the negated CSP would otherwise block that too.
+# the /* rule above) — safe to leave unrestricted because this whole
+# ads.request.tokyo origin exists only to host this path; nothing sensitive
+# of request.tokyo's ever lives here for a compromised ad script to reach.
+# frame-ancestors replaces the site-wide 'none' with request.tokyo
+# specifically, so only our own site (not arbitrary third parties) can
+# embed this path; X-Frame-Options is dropped entirely rather than set to
+# SAMEORIGIN, since SAMEORIGIN would (correctly, but unhelpfully) block
+# request.tokyo from framing this now-different origin — frame-ancestors
+# is the modern replacement and is honored over X-Frame-Options by all
+# current browsers.
 /ad/*
   ! Content-Security-Policy
+  Content-Security-Policy: frame-ancestors https://request.tokyo
   ! X-Frame-Options
-  X-Frame-Options: SAMEORIGIN
