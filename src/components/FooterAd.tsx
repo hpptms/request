@@ -2,7 +2,10 @@ import Box from "@mui/material/Box";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
-// admax banner ad, tag 23f070accfb8dd38032bed25fa438843 — mobile only (the
+// admax banner ad, tag 23aa468c68dd9f337c4c77c42e885ffa (320x100, インライン
+// — not the SP overlay/fixed format, which like the old PC 固定表示/右サイド
+// tag would refuse to fire its ad request once the admax SDK detects it's
+// running inside an iframe) — mobile only (the
 // desktop rail unit lives in PcRailAd.tsx instead). Loaded from the
 // dedicated ads.request.tokyo origin (a second custom domain on the same
 // Cloudflare Pages deployment — see _headers) rather than run directly in
@@ -25,7 +28,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 // on a same-origin URL (e.g. plain /ad/banner) — allow-scripts +
 // allow-same-origin together on same-origin content lets it reach
 // window.parent.document freely, defeating the sandbox entirely.
-const AD_SRC = "https://ads.request.tokyo/ad/banner?tag=23f070accfb8dd38032bed25fa438843";
+const AD_SRC = "https://ads.request.tokyo/ad/banner?tag=23aa468c68dd9f337c4c77c42e885ffa";
 
 export function FooterAd() {
   const theme = useTheme();
@@ -39,7 +42,7 @@ export function FooterAd() {
         title="広告"
         src={AD_SRC}
         sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
-        sx={{ border: 0, width: "100%", maxWidth: 336, height: 100 }}
+        sx={{ border: 0, width: "100%", maxWidth: 320, height: 100 }}
       />
     </Box>
   );
