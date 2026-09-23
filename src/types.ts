@@ -62,6 +62,10 @@ export interface AppConfig {
   // ViewerPage's playback-capping effect.
   fastForwardActive: boolean;
   fastForwardCapSeconds: number;
+  // Seconds each like on a request adds to fastForwardCapSeconds while
+  // fastForwardActive — nonzero only in a likeExtend window (see
+  // FastForwardWindow).
+  fastForwardPerLikeSeconds: number;
   // Used instead of cancelVoteTiers while fastForwardActive is true —
   // tighter than the normal ladder, so a bad-voted request cuts shorter
   // than the plain fastForwardCapSeconds guarantee. See ViewerPage's
@@ -263,10 +267,13 @@ export interface DurationLimit {
 // A daily fast-forward window (see backend/internal/fastforward): starting
 // at hour (0-23, JST) and running for durationMinutes, during which a
 // backed-up queue plays each request for only fastForwardCapSeconds
-// (AppConfig) instead of the normal minimum.
+// (AppConfig) instead of the normal minimum. likeExtend windows use a
+// shorter base that each like on the request extends
+// (fastForwardPerLikeSeconds).
 export interface FastForwardWindow {
   hour: number;
   durationMinutes: number;
+  likeExtend: boolean;
 }
 
 // A single entry in the admin-curated playlist the viewer screen plays, in

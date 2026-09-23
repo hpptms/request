@@ -148,6 +148,9 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // while this screen stays open for hours at a time.
   const [fastForwardActive, setFastForwardActive] = useState(false);
   const [fastForwardCapSeconds, setFastForwardCapSeconds] = useState(60);
+  // Added to fastForwardCapSeconds per like on the playing request — see
+  // AppConfig.fastForwardPerLikeSeconds.
+  const [fastForwardPerLikeSeconds, setFastForwardPerLikeSeconds] = useState(0);
   // Used instead of cancelVoteTiers while fastForwardActive is true — see
   // AppConfig.fastForwardCancelVoteTiers.
   const [fastForwardCancelVoteTiers, setFastForwardCancelVoteTiers] = useState<CancelVoteTier[]>(
@@ -197,10 +200,11 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   const [voteStatusVisible, setVoteStatusVisible] = useState(false);
   const [voteStatusContent, setVoteStatusContent] = useState<{ cancelVotes: number; likes: number; superLikes: number } | null>(null);
   const broadcastState = useBroadcastOverlay();
+  const playingRequest = requests.find((r) => r.status === "playing") ?? null;
   const { scheduledVisible, scheduledSeconds, oneMinuteLeftVisible } = useFastForwardPacingPopups(
-    requests.find((r) => r.status === "playing")?.id ?? null,
+    playingRequest?.id ?? null,
     fastForwardActive,
-    fastForwardCapSeconds,
+    fastForwardCapSeconds + fastForwardPerLikeSeconds * (playingRequest?.likes ?? 0),
   );
   const [fallbackNowPlayingId, setFallbackNowPlayingId] = useState<string | null>(null);
   // World/Japan Top 100 tracks from the backend; empty until resolved (or
@@ -309,6 +313,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
           setCancelVoteTiers(config.cancelVoteTiers);
           setFastForwardActive(config.fastForwardActive);
           setFastForwardCapSeconds(config.fastForwardCapSeconds);
+          setFastForwardPerLikeSeconds(config.fastForwardPerLikeSeconds ?? 0);
           setFastForwardCancelVoteTiers(config.fastForwardCancelVoteTiers);
           setDurationLimitThresholdSeconds(config.durationLimitThresholdSeconds);
           setDurationLimitCapSeconds(config.durationLimitCapSeconds);
@@ -738,8 +743,8 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
 
   // Caps the currently playing request's remaining runtime once any
   // applicable condition is met, instead of letting it run to the end.
-  // During a backlog fast-forward window (fastForwardCapSeconds — see
-  // AppConfig), every request is guaranteed that much playback as a
+  // During a backlog fast-forward window (fastForwardCapSeconds, plus
+  // fastForwardPerLikeSeconds per like — see AppConfig), every request is guaranteed that much playback as a
   // baseline — but enough cancel votes (the tightest reached rung of
   // fastForwardCancelVoteTiers) can still cut it shorter than that
   // guarantee, since a bad-voted request should work through the backlog
@@ -770,7 +775,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
 
     const caps: number[] = [];
     if (fastForwardActive) {
-      caps.push(fastForwardCapSeconds);
+      caps.push(fastForwardCapSeconds + fastForwardPerLikeSeconds * current.likes);
       for (const tier of fastForwardCancelVoteTiers) {
         if (current.cancelVotes >= tier.votes) caps.push(tier.capSeconds);
       }
@@ -822,6 +827,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     cancelVoteTiers,
     fastForwardActive,
     fastForwardCapSeconds,
+    fastForwardPerLikeSeconds,
     fastForwardCancelVoteTiers,
     durationLimitThresholdSeconds,
     durationLimitCapSeconds,

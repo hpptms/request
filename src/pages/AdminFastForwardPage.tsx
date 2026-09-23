@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
@@ -22,6 +24,7 @@ const hourOptions = Array.from({ length: 24 }, (_, h) => h);
 // 早送りウィンドウ管理画面 (/admin/fastforward): ここで設定した時刻(JST)から
 // 指定した時間だけ、キューが滞留している間に限り1本あたりの再生時間を短く
 // 切り上げる(backend/internal/fastforward, store.FastForwardMinPlayback)。
+// 「いいね延長」をONにした枠は基本1分 + いいね1票につき30秒になる。
 function AdminFastForwardPage() {
   const [windows, setWindows] = useState<FastForwardWindow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +32,7 @@ function AdminFastForwardPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [newHour, setNewHour] = useState(0);
   const [newDuration, setNewDuration] = useState("60");
+  const [newLikeExtend, setNewLikeExtend] = useState(false);
 
   useEffect(() => {
     api
@@ -61,7 +65,11 @@ function AdminFastForwardPage() {
       setErrorMessage(`${newHour}時のウィンドウは既に設定されています。先に削除してください`);
       return;
     }
-    await saveWindows([...windows, { hour: newHour, durationMinutes }]);
+    await saveWindows([...windows, { hour: newHour, durationMinutes, likeExtend: newLikeExtend }]);
+  };
+
+  const handleToggleLikeExtend = async (hour: number) => {
+    await saveWindows(windows.map((w) => (w.hour === hour ? { ...w, likeExtend: !w.likeExtend } : w)));
   };
 
   const handleRemove = async (hour: number) => {
@@ -77,7 +85,8 @@ function AdminFastForwardPage() {
           早送りウィンドウを追加
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          指定した時刻(JST)から指定した時間だけ、リクエストが滞留している場合に限り再生時間を短く切り上げます。
+          指定した時刻(JST)から指定した時間だけ、リクエストが滞留している場合に限り再生時間を短く切り上げます(1本2分)。「いいね延長」をONにすると基本1分
+          + いいね1票につき30秒延長になります。
         </Typography>
         <Box component="form" onSubmit={handleAdd}>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
@@ -104,6 +113,10 @@ function AdminFastForwardPage() {
               slotProps={{ htmlInput: { min: 1 } }}
               sx={{ minWidth: 140 }}
             />
+            <FormControlLabel
+              control={<Checkbox checked={newLikeExtend} onChange={(e) => setNewLikeExtend(e.target.checked)} />}
+              label="いいね延長"
+            />
             <Button type="submit" variant="contained" startIcon={<AddIcon />} disabled={loading || saving}>
               追加
             </Button>
@@ -127,18 +140,32 @@ function AdminFastForwardPage() {
                   key={w.hour}
                   divider={i < windows.length - 1}
                   secondaryAction={
-                    <Tooltip title="削除">
-                      <span>
-                        <IconButton edge="end" onClick={() => handleRemove(w.hour)} disabled={saving}>
-                          <DeleteIcon />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
+                    <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={w.likeExtend}
+                            onChange={() => handleToggleLikeExtend(w.hour)}
+                            disabled={saving}
+                            size="small"
+                          />
+                        }
+                        label="いいね延長"
+                      />
+                      <Tooltip title="削除">
+                        <span>
+                          <IconButton edge="end" onClick={() => handleRemove(w.hour)} disabled={saving}>
+                            <DeleteIcon />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                    </Stack>
                   }
                 >
                   <ListItemText
-                    sx={{ pr: 6 }}
+                    sx={{ pr: 20 }}
                     primary={`${String(w.hour).padStart(2, "0")}:00 から ${w.durationMinutes}分間`}
+                    secondary={w.likeExtend ? "基本1分 + いいね1票につき30秒" : "1本2分"}
                   />
                 </ListItem>
               ))}
