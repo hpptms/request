@@ -756,8 +756,9 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // way, the video being at least durationLimitThresholdSeconds
   // long (durationLimitCapSeconds — an admin opt-in for unusually long
   // requests, see AdminFeaturesPage) can still cap it further; whichever
-  // applicable cap is smallest wins. Requests are never removed from the
-  // queue outright; this cap is the only consequence. Runs off the same
+  // applicable cap is smallest wins, and in a like-extended fast-forward
+  // window fastForwardPerLikeSeconds per like is added on top. Requests are
+  // never removed from the queue outright; this cap is the only consequence. Runs off the same
   // poll that refreshes `requests`, so the cutoff lands within one
   // POLL_INTERVAL_MS of the cap rather than exactly on it. Same rules for
   // every platform: YouTube uses playerRef.getCurrentTime() for elapsed
@@ -775,7 +776,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
 
     const caps: number[] = [];
     if (fastForwardActive) {
-      caps.push(fastForwardCapSeconds + fastForwardPerLikeSeconds * current.likes);
+      caps.push(fastForwardCapSeconds);
       for (const tier of fastForwardCancelVoteTiers) {
         if (current.cancelVotes >= tier.votes) caps.push(tier.capSeconds);
       }
@@ -791,7 +792,9 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
       caps.push(durationLimitCapSeconds);
     }
     if (caps.length === 0) return;
-    const capSeconds = Math.min(...caps);
+    // Likes extend whichever cap won (see store.playbackFloorLocked), so a
+    // bad-voted or overlong request still gets its likes' extra time.
+    const capSeconds = Math.min(...caps) + (fastForwardActive ? fastForwardPerLikeSeconds * current.likes : 0);
 
     const elapsed = nonYouTubeEmbedUrl
       ? nonYouTubeStartRef.current !== null
