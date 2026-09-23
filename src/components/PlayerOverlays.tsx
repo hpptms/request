@@ -169,9 +169,12 @@ export function PlayerOverlays({
             every increase. ~6x a normal small Chip on the md+ TV screen. */}
         <Grow in={voteStatusVisible} timeout={250} style={{ pointerEvents: "none" }}>
           <Stack direction="row" spacing={{ xs: 0.75, sm: 1.5 }}>
-            {voteStatusContent && voteStatusContent.likes > 0 && (
+            {/* voteStatusContent.likes is the total (super likes count as two in
+                it), so subtract the super-like share to show only plain likes
+                here — otherwise a super-liker shows up in both chips at once. */}
+            {voteStatusContent && voteStatusContent.likes - voteStatusContent.superLikes * 2 > 0 && (
               <Chip
-                label={`😊+${voteStatusContent.likes}`}
+                label={`😊+${voteStatusContent.likes - voteStatusContent.superLikes * 2}`}
                 sx={{
                   bgcolor: "rgba(0,0,0,0.7)",
                   color: "white",
@@ -182,7 +185,6 @@ export function PlayerOverlays({
                 }}
               />
             )}
-            {/* 超いいね(😍): each is already counted as two in the 😊 tally. */}
             {voteStatusContent && voteStatusContent.superLikes > 0 && (
               <Chip
                 label={`😍+${voteStatusContent.superLikes}`}
