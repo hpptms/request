@@ -36,11 +36,25 @@ import { useLocation } from "react-router-dom";
 // window.parent.document freely, defeating the sandbox entirely.
 const AD_SRC = "https://ads.request.tokyo/ad/banner?tag=23aa468c68dd9f337c4c77c42e885ffa";
 
-export function MobileAnchorAd() {
+// Exported so App.tsx can reserve this much bottom padding on page content
+// — otherwise this fixed-position bar covers whatever was at the bottom of
+// the page (e.g. Footer's links) since fixed elements are taken out of
+// normal document flow and don't push other content out of the way on
+// their own.
+export const MOBILE_ANCHOR_AD_HEIGHT = 100;
+
+// Shared with App.tsx so the reserved padding above exactly matches when
+// this component actually renders itself (mobile widths, not /viewer).
+export function useMobileAnchorAdVisible() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { pathname } = useLocation();
-  if (!isMobile || pathname === "/viewer") return null;
+  return isMobile && pathname !== "/viewer";
+}
+
+export function MobileAnchorAd() {
+  const visible = useMobileAnchorAdVisible();
+  if (!visible) return null;
 
   return (
     <Box
@@ -60,7 +74,7 @@ export function MobileAnchorAd() {
         title="広告"
         src={AD_SRC}
         sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
-        sx={{ border: 0, width: "100%", height: 100 }}
+        sx={{ border: 0, width: "100%", height: MOBILE_ANCHOR_AD_HEIGHT }}
       />
     </Box>
   );
