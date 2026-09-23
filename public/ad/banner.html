@@ -22,11 +22,18 @@
       // request.tokyo's site-wide CSP growing a new entry every time a
       // different ad happens to win (see nginx.conf / _headers, where this
       // path has no Content-Security-Policy of its own at all). Safety
-      // instead comes from how the embedding <iframe> is sandboxed
-      // (sandbox="allow-scripts allow-popups ...", no allow-same-origin —
-      // see FooterAd.tsx / PcRailAd.tsx): this document runs with a unique
-      // opaque origin, so nothing here can read request.tokyo's real
-      // cookies/localStorage or reach into the parent document.
+      // instead comes from this page being served from a dedicated
+      // ads.request.tokyo origin (a second custom domain on the same
+      // Cloudflare Pages deployment — see FooterAd.tsx / PcRailAd.tsx /
+      // _headers) rather than request.tokyo: ordinary same-origin-policy
+      // keeps anything running here from touching request.tokyo's real
+      // cookies/localStorage/DOM, regardless of what CSP does or doesn't
+      // restrict. The embedding iframe is sandboxed WITH allow-same-origin
+      // (safe specifically because the origins genuinely differ) — admax's
+      // SDK needs that to render creatives at all, since it works by
+      // creating further nested iframes and writing into them via
+      // contentWindow.document, which throws once the outer frame is
+      // opaque-origin.
       //
       // The tag id is only ever a bare admax hex id, and it ends up
       // directly in a <script src>, so it's validated against a strict
