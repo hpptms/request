@@ -4,7 +4,7 @@ import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import AdminReplyDialog from "./components/AdminReplyDialog";
 import LikeRankDialog from "./components/LikeRankDialog";
-import { MobileAnchorAd } from "./components/MobileAnchorAd";
+import { MobileAnchorAd, MOBILE_ANCHOR_AD_HEIGHT, useMobileAnchorAdVisible } from "./components/MobileAnchorAd";
 import { PcRailAd } from "./components/PcRailAd";
 import BoardPage from "./pages/BoardPage";
 import { api } from "./api";
@@ -89,6 +89,11 @@ function AppRoutes() {
   // Replies are for visitors: not on the OBS page, and not in the admin
   // section (the admin's own IP would otherwise pop up their own replies).
   const showReplies = pathname !== "/viewer" && !pathname.startsWith("/admin");
+  // MobileAnchorAd is fixed-position, so it doesn't push page content out
+  // of its way on its own — reserve the same height as bottom padding so
+  // it doesn't cover whatever would otherwise be at the bottom of the page
+  // (e.g. Footer's links).
+  const showMobileAnchorAd = useMobileAnchorAdVisible();
 
   return (
     <Suspense fallback={<LazyPageFallback />}>
@@ -96,33 +101,35 @@ function AppRoutes() {
       {showReplies && <AdminReplyDialog />}
       <PcRailAd />
       <MobileAnchorAd />
-      <Routes>
-        <Route path="/" element={<BoardPage />} />
-        <Route path="/play" element={<PlayPage />} />
-        <Route path="/stats" element={<StatsPage />} />
-        <Route path="/heatmap" element={<HeatmapPage />} />
-        <Route path="/notice" element={<NoticePage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/privacy" element={<PrivacyPolicyPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/viewer" element={<ViewerPage />} />
-        <Route path="/admin" element={<AdminPage />}>
-          <Route index element={<AdminBansPage />} />
-          <Route path="playlist" element={<AdminPlaylistPage />} />
-          <Route path="keywords" element={<AdminKeywordsPage />} />
-          <Route path="safewords" element={<AdminSafeWordsPage />} />
-          <Route path="safeips" element={<AdminSafeIPsPage />} />
-          <Route path="keywordlimits" element={<AdminKeywordLimitsPage />} />
-          <Route path="fastforward" element={<AdminFastForwardPage />} />
-          <Route path="features" element={<AdminFeaturesPage />} />
-          <Route path="stats" element={<AdminStatsPage />} />
-          <Route path="heatmap" element={<AdminHeatmapPage />} />
-          <Route path="broadcast" element={<AdminBroadcastPage />} />
-          <Route path="interrupt" element={<AdminInterruptPage />} />
-          <Route path="messages" element={<AdminMessagesPage />} />
-          <Route path="live" element={<AdminNowLivePage />} />
-        </Route>
-      </Routes>
+      <Box sx={{ pb: showMobileAnchorAd ? `${MOBILE_ANCHOR_AD_HEIGHT}px` : 0 }}>
+        <Routes>
+          <Route path="/" element={<BoardPage />} />
+          <Route path="/play" element={<PlayPage />} />
+          <Route path="/stats" element={<StatsPage />} />
+          <Route path="/heatmap" element={<HeatmapPage />} />
+          <Route path="/notice" element={<NoticePage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/viewer" element={<ViewerPage />} />
+          <Route path="/admin" element={<AdminPage />}>
+            <Route index element={<AdminBansPage />} />
+            <Route path="playlist" element={<AdminPlaylistPage />} />
+            <Route path="keywords" element={<AdminKeywordsPage />} />
+            <Route path="safewords" element={<AdminSafeWordsPage />} />
+            <Route path="safeips" element={<AdminSafeIPsPage />} />
+            <Route path="keywordlimits" element={<AdminKeywordLimitsPage />} />
+            <Route path="fastforward" element={<AdminFastForwardPage />} />
+            <Route path="features" element={<AdminFeaturesPage />} />
+            <Route path="stats" element={<AdminStatsPage />} />
+            <Route path="heatmap" element={<AdminHeatmapPage />} />
+            <Route path="broadcast" element={<AdminBroadcastPage />} />
+            <Route path="interrupt" element={<AdminInterruptPage />} />
+            <Route path="messages" element={<AdminMessagesPage />} />
+            <Route path="live" element={<AdminNowLivePage />} />
+          </Route>
+        </Routes>
+      </Box>
     </Suspense>
   );
 }
