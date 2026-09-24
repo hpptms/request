@@ -269,7 +269,7 @@ export interface DurationLimit {
 // backed-up queue plays each request for only fastForwardCapSeconds
 // (AppConfig) instead of the normal minimum, extended by
 // fastForwardPerLikeSeconds per like on the request. likeExtend windows
-// use a shorter base (1 minute instead of 2).
+// use a shorter base (90 seconds instead of 2 minutes).
 export interface FastForwardWindow {
   hour: number;
   durationMinutes: number;

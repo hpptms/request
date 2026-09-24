@@ -24,7 +24,7 @@ const hourOptions = Array.from({ length: 24 }, (_, h) => h);
 // 早送りウィンドウ管理画面 (/admin/fastforward): ここで設定した時刻(JST)から
 // 指定した時間だけ、キューが滞留している間に限り1本あたりの再生時間を短く
 // 切り上げる(backend/internal/fastforward, store.FastForwardMinPlayback)。
-// どの枠でもいいね1票につき30秒延長され、「基本1分」をONにした枠は基本が2分ではなく1分になる。
+// どの枠でもいいね1票につき30秒延長され、「基本1分30秒」をONにした枠は基本が2分ではなく1分30秒になる。
 function AdminFastForwardPage() {
   const [windows, setWindows] = useState<FastForwardWindow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,7 +86,7 @@ function AdminFastForwardPage() {
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           指定した時刻(JST)から指定した時間だけ、リクエストが滞留している場合に限り再生時間を短く切り上げます(基本2分
-          + いいね1票につき30秒延長)。「基本1分」をONにすると基本が1分になります。
+          + いいね1票につき30秒延長)。「基本1分30秒」をONにすると基本が1分30秒になります。
         </Typography>
         <Box component="form" onSubmit={handleAdd}>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
@@ -115,7 +115,7 @@ function AdminFastForwardPage() {
             />
             <FormControlLabel
               control={<Checkbox checked={newLikeExtend} onChange={(e) => setNewLikeExtend(e.target.checked)} />}
-              label="基本1分"
+              label="基本1分30秒"
             />
             <Button type="submit" variant="contained" startIcon={<AddIcon />} disabled={loading || saving}>
               追加
@@ -150,7 +150,7 @@ function AdminFastForwardPage() {
                             size="small"
                           />
                         }
-                        label="基本1分"
+                        label="基本1分30秒"
                       />
                       <Tooltip title="削除">
                         <span>
