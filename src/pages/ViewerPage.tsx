@@ -756,8 +756,8 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // way, the video being at least durationLimitThresholdSeconds
   // long (durationLimitCapSeconds — an admin opt-in for unusually long
   // requests, see AdminFeaturesPage) can still cap it further; whichever
-  // applicable cap is smallest wins, and in a like-extended fast-forward
-  // window fastForwardPerLikeSeconds per like is added on top. Requests are
+  // applicable cap is smallest wins, and in a fast-forward window
+  // fastForwardPerLikeSeconds per like is added on top. Requests are
   // never removed from the queue outright; this cap is the only consequence. Runs off the same
   // poll that refreshes `requests`, so the cutoff lands within one
   // POLL_INTERVAL_MS of the cap rather than exactly on it. Same rules for

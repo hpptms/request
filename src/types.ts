@@ -63,7 +63,7 @@ export interface AppConfig {
   fastForwardActive: boolean;
   fastForwardCapSeconds: number;
   // Seconds each like on a request adds to fastForwardCapSeconds while
-  // fastForwardActive — nonzero only in a likeExtend window (see
+  // fastForwardActive (any window; 0 when inactive — see
   // FastForwardWindow).
   fastForwardPerLikeSeconds: number;
   // Used instead of cancelVoteTiers while fastForwardActive is true —
@@ -267,9 +267,9 @@ export interface DurationLimit {
 // A daily fast-forward window (see backend/internal/fastforward): starting
 // at hour (0-23, JST) and running for durationMinutes, during which a
 // backed-up queue plays each request for only fastForwardCapSeconds
-// (AppConfig) instead of the normal minimum. likeExtend windows use a
-// shorter base that each like on the request extends
-// (fastForwardPerLikeSeconds).
+// (AppConfig) instead of the normal minimum, extended by
+// fastForwardPerLikeSeconds per like on the request. likeExtend windows
+// use a shorter base (1 minute instead of 2).
 export interface FastForwardWindow {
   hour: number;
   durationMinutes: number;
