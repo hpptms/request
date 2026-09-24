@@ -24,7 +24,7 @@ const hourOptions = Array.from({ length: 24 }, (_, h) => h);
 // 早送りウィンドウ管理画面 (/admin/fastforward): ここで設定した時刻(JST)から
 // 指定した時間だけ、キューが滞留している間に限り1本あたりの再生時間を短く
 // 切り上げる(backend/internal/fastforward, store.FastForwardMinPlayback)。
-// 「いいね延長」をONにした枠は基本1分 + いいね1票につき30秒になる。
+// どの枠でもいいね1票につき30秒延長され、「基本1分」をONにした枠は基本が2分ではなく1分になる。
 function AdminFastForwardPage() {
   const [windows, setWindows] = useState<FastForwardWindow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,8 +85,8 @@ function AdminFastForwardPage() {
           早送りウィンドウを追加
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          指定した時刻(JST)から指定した時間だけ、リクエストが滞留している場合に限り再生時間を短く切り上げます(1本2分)。「いいね延長」をONにすると基本1分
-          + いいね1票につき30秒延長になります。
+          指定した時刻(JST)から指定した時間だけ、リクエストが滞留している場合に限り再生時間を短く切り上げます(基本2分
+          + いいね1票につき30秒延長)。「基本1分」をONにすると基本が1分になります。
         </Typography>
         <Box component="form" onSubmit={handleAdd}>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
@@ -115,7 +115,7 @@ function AdminFastForwardPage() {
             />
             <FormControlLabel
               control={<Checkbox checked={newLikeExtend} onChange={(e) => setNewLikeExtend(e.target.checked)} />}
-              label="いいね延長"
+              label="基本1分"
             />
             <Button type="submit" variant="contained" startIcon={<AddIcon />} disabled={loading || saving}>
               追加
@@ -150,7 +150,7 @@ function AdminFastForwardPage() {
                             size="small"
                           />
                         }
-                        label="いいね延長"
+                        label="基本1分"
                       />
                       <Tooltip title="削除">
                         <span>
@@ -165,7 +165,7 @@ function AdminFastForwardPage() {
                   <ListItemText
                     sx={{ pr: 20 }}
                     primary={`${String(w.hour).padStart(2, "0")}:00 から ${w.durationMinutes}分間`}
-                    secondary={w.likeExtend ? "基本1分 + いいね1票につき30秒" : "1本2分"}
+                    secondary={`基本${w.likeExtend ? 1 : 2}分 + いいね1票につき30秒`}
                   />
                 </ListItem>
               ))}
