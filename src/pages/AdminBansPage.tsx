@@ -44,6 +44,10 @@ import type {
 // 持たせている。
 const SUSPICIOUS_CANCEL_VOTES_THRESHOLD = 5;
 
+// 「要注意ユーザー」「最近のリクエスト送信元」は直近この時間内に作成された
+// リクエストだけを対象に表示する(DB上のデータはそのまま残る)。
+const RECENT_REQUESTS_WINDOW_MS = 60 * 60 * 1000;
+
 const STATUS_LABELS: Record<string, string> = {
   pending: "待機中",
   playing: "再生中",
@@ -194,9 +198,15 @@ function AdminBansPage() {
     setManualIP("");
   };
 
+  // Only the last RECENT_REQUESTS_WINDOW_MS of requests feed the
+  // 要注意ユーザー / 最近のリクエスト送信元 lists below; older ones stay
+  // stored server-side but aren't shown. Re-evaluated on every 5s refresh.
+  const recentCutoff = Date.now() - RECENT_REQUESTS_WINDOW_MS;
+  const recentRequests = requests.filter((r) => new Date(r.createdAt).getTime() >= recentCutoff);
+
   // Most recent requester per IP, so the admin can tell who they'd be banning.
   const recentRequesterByIP = new Map<string, AdminVideoRequest>();
-  for (const r of requests) {
+  for (const r of recentRequests) {
     if (!r.requesterIP) continue;
     const existing = recentRequesterByIP.get(r.requesterIP);
     if (!existing || r.createdAt > existing.createdAt) {
@@ -213,7 +223,7 @@ function AdminBansPage() {
   // last restart are included here — done requests aren't persisted to
   // disk (see store.Store.SaveToFile), so history older than that is gone.
   const requestsByIP = new Map<string, AdminVideoRequest[]>();
-  for (const r of requests) {
+  for (const r of recentRequests) {
     if (!r.requesterIP) continue;
     const list = requestsByIP.get(r.requesterIP);
     if (list) list.push(r);
@@ -506,7 +516,7 @@ function AdminBansPage() {
             要注意ユーザー ({suspiciousUsers.length})
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-            リクエストへのキャンセル投票(BAD投票)が累計{SUSPICIOUS_CANCEL_VOTES_THRESHOLD}件以上たまっているIPです。BANはこの一覧からは行われず、内容を確認した上で手動で行ってください。
+            過去1時間以内のリクエストへのキャンセル投票(BAD投票)が累計{SUSPICIOUS_CANCEL_VOTES_THRESHOLD}件以上たまっているIPです。BANはこの一覧からは行われず、内容を確認した上で手動で行ってください。
           </Typography>
           <Paper elevation={2}>
             <List disablePadding>
@@ -702,9 +712,12 @@ function AdminBansPage() {
         <Typography variant="h6" sx={{ mb: 1.5 }}>
           最近のリクエスト送信元
         </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+          過去1時間以内にリクエストを送信したIPです。
+        </Typography>
         {uniqueRequesterIPs.length === 0 ? (
           <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 }, textAlign: "center" }}>
-            <Typography color="text.secondary">リクエスト履歴はありません</Typography>
+            <Typography color="text.secondary">過去1時間以内のリクエストはありません</Typography>
           </Paper>
         ) : (
           <Paper elevation={2}>
