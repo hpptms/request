@@ -269,11 +269,13 @@ export interface DurationLimit {
 // backed-up queue plays each request for only fastForwardCapSeconds
 // (AppConfig) instead of the normal minimum, extended by
 // fastForwardPerLikeSeconds per like on the request. likeExtend windows
-// use a shorter base (90 seconds instead of 2 minutes).
+// use a shorter base (90 seconds instead of 2 minutes). The window only
+// applies while at least minPending requests are pending.
 export interface FastForwardWindow {
   hour: number;
   durationMinutes: number;
   likeExtend: boolean;
+  minPending: number;
 }
 
 // A single entry in the admin-curated playlist the viewer screen plays, in
