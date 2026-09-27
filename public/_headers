@@ -8,6 +8,13 @@
 # collect hits to those exact hosts — a wildcard like *.analytics.google.com
 # does NOT match the bare analytics.google.com, so without these gtag.js/
 # boot.js loaded fine but every hit was silently dropped by the CSP.
+# (www.google.com is now covered by *.google.com in connect-src.)
+# script-src/img-src/connect-src also carry the GA4 + Google signals set
+# from Google's CSP guide (*.googletagmanager.com, *.google-analytics.com,
+# *.g.doubleclick.net, and the country domain *.google.co.jp — CSP can't
+# wildcard a TLD like google.*, so any other country domain GA's tag
+# diagnostics reports as blocked has to be listed individually). Without
+# these, GA4's tag diagnostics flagged the tag as blocked by CSP.
 # img-src includes https://api.request.tokyo for the same cross-origin-API
 # reason as connect-src above — the 意思表示 broadcast image is served
 # from GET /api/broadcast/image, and without this the <img> tag showing it
@@ -31,7 +38,7 @@
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.youtube.com https://www.googletagmanager.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.adtrafficquality.google; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ytimg.com https://*.ytimg.com https://*.nimg.jp https://*.vimeocdn.com https://api.request.tokyo https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.adtrafficquality.google; frame-src https://ads.request.tokyo https://www.youtube.com https://embed.nicovideo.jp https://player.vimeo.com https://googleads.g.doubleclick.net https://*.googlesyndication.com https://www.google.com https://*.adtrafficquality.google; connect-src 'self' https://api.request.tokyo https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://www.google.com https://www.googletagmanager.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.doubleclick.net https://*.adtrafficquality.google; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.youtube.com https://www.googletagmanager.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.adtrafficquality.google https://*.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ytimg.com https://*.ytimg.com https://*.nimg.jp https://*.vimeocdn.com https://api.request.tokyo https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.adtrafficquality.google https://*.google-analytics.com https://*.googletagmanager.com https://*.g.doubleclick.net https://*.google.co.jp; frame-src https://ads.request.tokyo https://www.youtube.com https://embed.nicovideo.jp https://player.vimeo.com https://googleads.g.doubleclick.net https://*.googlesyndication.com https://www.google.com https://*.adtrafficquality.google; connect-src 'self' https://api.request.tokyo https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://*.google.com https://www.googletagmanager.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.doubleclick.net https://*.adtrafficquality.google https://*.googletagmanager.com https://*.g.doubleclick.net https://*.google.co.jp; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
 
 # admax's ad tags (script-src-elem, inline scripts, img-src beacons, ...)
 # need to run without this site's CSP restricting them (see the comment on
