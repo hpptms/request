@@ -14,6 +14,7 @@ import ShieldIcon from "@mui/icons-material/Shield";
 import { Link as RouterLink } from "react-router-dom";
 import { MusicLinks } from "../components/MusicLinks";
 import { PlayChatForm, PlayChatOverlay } from "../components/PlayChat";
+import { PlayQueueAd } from "../components/PlayQueueAd";
 import { QueueList } from "../components/QueueList";
 import { RequestForm } from "../components/RequestForm";
 import { RequestSidePlayer } from "../components/RequestSidePlayer";
@@ -169,6 +170,7 @@ function PlayPage() {
                 <MusicLinks title={nowPlaying.title} />
               </Box>
             )}
+            <PlayQueueAd />
             <Typography variant="subtitle1" sx={{ mb: 1 }}>
               待機中のリクエスト {pending.length > 0 && `(${pending.length})`}
             </Typography>
