@@ -18,6 +18,7 @@ import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
 import { hasLiked, hasSuperLiked, markLiked, markSuperLiked } from "../lib/likeStorage";
+import { useUnlimitedLikes } from "../lib/voteQuota";
 import { isMyRequest } from "../lib/myRequestStorage";
 import type { VideoRequest } from "../types";
 
@@ -133,8 +134,9 @@ interface LikeIconButtonProps {
 
 export function LikeIconButton({ request, onLike }: LikeIconButtonProps) {
   const [liking, setLiking] = useState(false);
-  const liked = hasLiked(request.id);
-  const own = isMyRequest(request.id);
+  const unlimited = useUnlimitedLikes();
+  const liked = !unlimited && hasLiked(request.id);
+  const own = !unlimited && isMyRequest(request.id);
 
   const handleClick = async () => {
     setLiking(true);
@@ -164,8 +166,9 @@ export function LikeIconButton({ request, onLike }: LikeIconButtonProps) {
 // 超いいね: いいね2票分(1時間の上限も2票消費)。
 export function SuperLikeIconButton({ request, onLike }: LikeIconButtonProps) {
   const [liking, setLiking] = useState(false);
-  const superLiked = hasSuperLiked(request.id);
-  const own = isMyRequest(request.id);
+  const unlimited = useUnlimitedLikes();
+  const superLiked = !unlimited && hasSuperLiked(request.id);
+  const own = !unlimited && isMyRequest(request.id);
 
   const handleClick = async () => {
     setLiking(true);

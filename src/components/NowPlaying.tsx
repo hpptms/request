@@ -18,6 +18,7 @@ import { isMyRequest } from "../lib/myRequestStorage";
 import type { CancelVoteTier, VideoRequest } from "../types";
 import { MusicLinks } from "./MusicLinks";
 import { VoteQuotaLabel } from "./VoteQuotaChip";
+import { useUnlimitedLikes } from "../lib/voteQuota";
 
 // Watch-page URL for the request's original video, by platform. videoId is
 // the bare id the backend extracted from whatever URL the requester
@@ -67,6 +68,7 @@ export function NowPlaying({
   const [voting, setVoting] = useState(false);
   const [liking, setLiking] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const unlimitedLikes = useUnlimitedLikes();
 
   if (!nowPlaying) {
     return (
@@ -77,8 +79,9 @@ export function NowPlaying({
   }
 
   const voted = hasVoted(nowPlaying.id);
-  const liked = hasLiked(nowPlaying.id);
-  const superLiked = hasSuperLiked(nowPlaying.id);
+  const liked = !unlimitedLikes && hasLiked(nowPlaying.id);
+  const superLiked = !unlimitedLikes && hasSuperLiked(nowPlaying.id);
+  const ownRequest = !unlimitedLikes && isMyRequest(nowPlaying.id);
 
   // The next not-yet-reached rung, so the button counts up through 2:00 →
   // 1:30 → 1:00 → 0:30 as votes come in instead of freezing on the first
@@ -172,7 +175,7 @@ export function NowPlaying({
               color={liked ? "primary" : "inherit"}
               startIcon={<ThumbUpAltIcon />}
               onClick={handleLike}
-              disabled={liking || liked || isMyRequest(nowPlaying.id)}
+              disabled={liking || liked || ownRequest}
               sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
             >
               {liked ? "いいね済み" : "いいね"} ({nowPlaying.likes}/{likePriorityThreshold})
@@ -181,7 +184,7 @@ export function NowPlaying({
               variant="outlined"
               color={superLiked ? "primary" : "inherit"}
               onClick={handleSuperLike}
-              disabled={liking || superLiked || isMyRequest(nowPlaying.id)}
+              disabled={liking || superLiked || ownRequest}
               sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
             >
               {superLiked ? "😍 超いいね済み" : "😍 超いいね"}

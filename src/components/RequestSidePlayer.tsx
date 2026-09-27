@@ -12,6 +12,7 @@ import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
 import { formatDuration } from "../lib/formatDuration";
 import { loadYouTubeIframeApi } from "../lib/loadYouTubeIframeApi";
 import { hasLiked, hasSuperLiked, markLiked, markSuperLiked } from "../lib/likeStorage";
+import { useUnlimitedLikes } from "../lib/voteQuota";
 import {
   DURATION_BADGE_DELAY_MS,
   DURATION_BADGE_VISIBLE_MS,
@@ -226,8 +227,9 @@ export function RequestSidePlayer({
   // "already voted" tracking as NowPlaying/QueueList's buttons.
   const [liking, setLiking] = useState(false);
   const [voting, setVoting] = useState(false);
-  const liked = nowPlaying !== null && hasLiked(nowPlaying.id);
-  const superLiked = nowPlaying !== null && hasSuperLiked(nowPlaying.id);
+  const unlimitedLikes = useUnlimitedLikes();
+  const liked = !unlimitedLikes && nowPlaying !== null && hasLiked(nowPlaying.id);
+  const superLiked = !unlimitedLikes && nowPlaying !== null && hasSuperLiked(nowPlaying.id);
   const voted = nowPlaying !== null && hasVoted(nowPlaying.id);
   const activeTiers = fastForwardActive ? fastForwardCancelVoteTiers : cancelVoteTiers;
   const nextTier = nowPlaying
