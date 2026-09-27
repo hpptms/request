@@ -107,58 +107,99 @@ export function RequestSidePlayer({
   const nowPlayingId = nowPlaying?.id ?? null;
   const nowPlayingPlatform = nowPlaying?.platform ?? null;
 
+  // niconico/vimeo only — YouTube plays in the persistent player below.
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  // One YouTube player for the whole page, reused across requests via
+  // loadVideoById rather than a fresh iframe per request: browsers judge
+  // autoplay per media element, so a new iframe for every song meant the
+  // visitor had to tap again each time, while the same player keeps
+  // playing (with sound, once they've tapped once) from song to song.
+  const ytHostRef = useRef<HTMLDivElement | null>(null);
   const ytPlayerRef = useRef<YT.Player | null>(null);
-  // True while the current video had to fall back to muted autoplay.
-  const [needsUnmute, setNeedsUnmute] = useState(false);
+  const [ytReady, setYtReady] = useState(false);
+  // Set when the browser blocked sound-on autoplay for the current video:
+  // "muted" = playing muted instead, "paused" = even muted play was blocked.
+  const [autoplayBlocked, setAutoplayBlocked] = useState<"muted" | "paused" | null>(null);
 
-  // Attaches the IFrame API to the (enablejsapi=1) YouTube iframe rendered
-  // below for each new request, so autoplay can be verified and, if the
-  // browser blocked it with sound, retried muted.
   useEffect(() => {
-    setNeedsUnmute(false);
-    if (!nowPlayingId || nowPlayingPlatform !== "youtube") return;
     let cancelled = false;
-    let checkTimer: number | null = null;
     loadYouTubeIframeApi().then((YTApi) => {
-      const iframe = iframeRef.current;
-      if (cancelled || !iframe) return;
-      ytPlayerRef.current = new YTApi.Player(iframe, {
+      const host = ytHostRef.current;
+      if (cancelled || !host) return;
+      // The API replaces this element with its iframe, so it's created
+      // here rather than rendered by React.
+      const target = document.createElement("div");
+      host.appendChild(target);
+      ytPlayerRef.current = new YTApi.Player(target, {
+        width: "100%",
+        height: "100%",
+        playerVars: { autoplay: 1, rel: 0, playsinline: 1, modestbranding: 1 },
         events: {
-          onReady: (event) => {
-            if (cancelled) return;
-            event.target.playVideo();
-            checkTimer = window.setTimeout(() => {
-              const player = ytPlayerRef.current;
-              if (cancelled || !player) return;
-              const state = player.getPlayerState();
-              if (state === YTApi.PlayerState.PLAYING || state === YTApi.PlayerState.BUFFERING) {
-                if (player.isMuted()) setNeedsUnmute(true);
-                return;
-              }
-              player.mute();
-              player.playVideo();
-              setNeedsUnmute(true);
-            }, AUTOPLAY_CHECK_DELAY_MS);
+          onReady: () => {
+            if (!cancelled) setYtReady(true);
+          },
+          onStateChange: (event) => {
+            // Playing unmuted (e.g. the visitor pressed YouTube's own play
+            // button or unmuted via its controls) clears the prompt.
+            if (event.data === YTApi.PlayerState.PLAYING && !event.target.isMuted()) setAutoplayBlocked(null);
           },
         },
       });
     });
     return () => {
       cancelled = true;
-      if (checkTimer !== null) window.clearTimeout(checkTimer);
-      // Not destroy(): the iframe itself belongs to React (keyed per
-      // request) and is removed by it.
+      ytPlayerRef.current?.destroy();
       ytPlayerRef.current = null;
+      setYtReady(false);
     };
-  }, [nowPlayingId, nowPlayingPlatform]);
+  }, []);
+
+  const ytVideoId = nowPlayingPlatform === "youtube" ? (nowPlaying?.videoId ?? null) : null;
+  const ytStartSeconds = nowPlaying?.startSeconds;
+  const ytEndSeconds = nowPlaying?.endSeconds;
+
+  // Loads each new YouTube request into the persistent player, then checks
+  // AUTOPLAY_CHECK_DELAY_MS later whether it actually started — if not, the
+  // browser blocked sound-on autoplay, so retry muted.
+  useEffect(() => {
+    const player = ytPlayerRef.current;
+    if (!ytReady || !player) return;
+    if (!nowPlayingId || !ytVideoId) {
+      player.stopVideo();
+      setAutoplayBlocked(null);
+      return;
+    }
+    player.loadVideoById({ videoId: ytVideoId, startSeconds: ytStartSeconds, endSeconds: ytEndSeconds });
+    const isPlaying = () => {
+      const state = player.getPlayerState();
+      return state === YT.PlayerState.PLAYING || state === YT.PlayerState.BUFFERING;
+    };
+    let retryTimer: number | null = null;
+    const checkTimer = window.setTimeout(() => {
+      if (isPlaying()) {
+        setAutoplayBlocked(player.isMuted() ? "muted" : null);
+        return;
+      }
+      player.mute();
+      player.playVideo();
+      retryTimer = window.setTimeout(() => {
+        setAutoplayBlocked(isPlaying() ? "muted" : "paused");
+      }, AUTOPLAY_CHECK_DELAY_MS);
+    }, AUTOPLAY_CHECK_DELAY_MS);
+    return () => {
+      window.clearTimeout(checkTimer);
+      if (retryTimer !== null) window.clearTimeout(retryTimer);
+    };
+    // nowPlayingId (not just ytVideoId) so re-requesting the same video
+    // still restarts it.
+  }, [ytReady, nowPlayingId, ytVideoId, ytStartSeconds, ytEndSeconds]);
 
   const handleUnmuteClick = () => {
     const player = ytPlayerRef.current;
     if (!player) return;
     player.unMute();
     player.playVideo();
-    setNeedsUnmute(false);
+    setAutoplayBlocked(null);
   };
 
   const sendNiconicoPlayCommand = (requestId: string) => {
@@ -350,23 +391,32 @@ export function RequestSidePlayer({
         overflow: "hidden",
       }}
     >
-      {nowPlaying ? (
+      <Box
+        ref={ytHostRef}
+        sx={{
+          position: "absolute",
+          inset: 0,
+          display: ytVideoId ? "block" : "none",
+          "& iframe": { width: "100%", height: "100%", border: 0 },
+        }}
+      />
+      {nowPlaying && nowPlaying.platform !== "youtube" ? (
         <Box
           component="iframe"
           key={nowPlaying.id}
           ref={iframeRef}
           data-request-id={nowPlaying.id}
-          src={embedSrc(nowPlaying)}
+          src={nowPlaying.embedUrl}
           onLoad={nowPlaying.platform === "niconico" ? () => sendNiconicoPlayCommand(nowPlaying.id) : undefined}
           allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
           allowFullScreen
           sx={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }}
         />
-      ) : (
+      ) : !nowPlaying ? (
         <Box sx={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Typography sx={{ color: "grey.500" }}>再生中の動画はありません</Typography>
         </Box>
-      )}
+      ) : null}
 
       <PlayerOverlays
         introVisible={introVisible}
@@ -383,7 +433,7 @@ export function RequestSidePlayer({
         oneMinuteLeftVisible={oneMinuteLeftVisible}
       />
 
-      {needsUnmute && (
+      {autoplayBlocked && ytVideoId && (
         <Box sx={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", zIndex: 2 }}>
           <Button
             variant="contained"
@@ -397,7 +447,7 @@ export function RequestSidePlayer({
               "&:hover": { bgcolor: "rgba(0,0,0,0.9)" },
             }}
           >
-            タップして音声をON
+            {autoplayBlocked === "muted" ? "タップして音声をON" : "タップして再生"}
           </Button>
         </Box>
       )}
@@ -493,18 +543,4 @@ export function RequestSidePlayer({
       )}
     </Box>
   );
-}
-
-// YouTube gets its own embed src (enablejsapi so the effect above can attach
-// the IFrame API and verify autoplay; origin is required alongside it).
-// niconico/vimeo reuse the request's embedUrl as-is: vimeo's already
-// carries autoplay=1, and niconico is started via sendNiconicoPlayCommand.
-function embedSrc(request: VideoRequest): string | undefined {
-  if (request.platform === "youtube") {
-    const start = request.startSeconds ? `&start=${request.startSeconds}` : "";
-    const end = request.endSeconds ? `&end=${request.endSeconds}` : "";
-    const origin = encodeURIComponent(window.location.origin);
-    return `https://www.youtube.com/embed/${request.videoId}?rel=0&modestbranding=1&autoplay=1&playsinline=1&enablejsapi=1&origin=${origin}${start}${end}`;
-  }
-  return request.embedUrl;
 }
