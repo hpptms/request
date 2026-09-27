@@ -126,7 +126,10 @@ export function PlayerOverlays({
 
       {/* New-request toast: fires once per request as it's added to the
           queue. Below it sits the vote-status badge, so both transient
-          notices share one column instead of competing for space. */}
+          notices share one column instead of competing for space.
+          pointerEvents "none" on the column itself too: its hidden (but
+          still laid-out) children keep it full-width and ~200px tall, which
+          otherwise swallows clicks on the YouTube player's own top bar. */}
       <Box
         sx={{
           position: "absolute",
@@ -138,6 +141,7 @@ export function PlayerOverlays({
           alignItems: "center",
           gap: { xs: 0.75, sm: 1.5 },
           px: { xs: 1.5, sm: 3 },
+          pointerEvents: "none",
         }}
       >
         <Slide
