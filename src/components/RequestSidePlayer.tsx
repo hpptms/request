@@ -6,9 +6,11 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
+import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import { PlayerOverlays } from "./PlayerOverlays";
 import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
 import { formatDuration } from "../lib/formatDuration";
+import { loadYouTubeIframeApi } from "../lib/loadYouTubeIframeApi";
 import { hasLiked, hasSuperLiked, markLiked, markSuperLiked } from "../lib/likeStorage";
 import {
   DURATION_BADGE_DELAY_MS,
@@ -39,16 +41,29 @@ interface Props {
   onVoteCancel: (id: string) => Promise<boolean>;
 }
 
+// How long after the YouTube player reports ready to check whether the
+// sound-on autoplay actually started. Browsers (Safari always, Chrome
+// until the visitor has interacted with the site) block autoplay with
+// sound, which just leaves the player sitting unstarted — at that point
+// it's retried muted (always allowed) and an unmute button is shown.
+const AUTOPLAY_CHECK_DELAY_MS = 2000;
+// niconico's embed ignores a plain autoplay URL flag and only starts via
+// its postMessage API — see ViewerPage's NICONICO_ORIGIN comment. The
+// player id must match backend/internal/niconico.PlayerID, which the
+// request's embedUrl already carries.
+const NICONICO_ORIGIN = "https://embed.nicovideo.jp";
+const NICONICO_PLAYER_ID = "recest-viewer";
+const NICONICO_COMMAND_RETRY_DELAYS_MS = [300, 1000, 2000];
+
 // The public request board's own video screen: shows the same title/duration
 // card, new-request toast and like/bad badges as the admin ViewerPage
 // player, but is otherwise completely unrelated to the queue it's just
 // reflecting — no seek-guard, no cancel-vote/duration-cap enforcement, no
 // auto-advance on end, and no admin auth gate. It only ever watches
 // `requests` and renders whatever's currently playing; it never calls any
-// queue-control API itself. Autoplay is deliberately left off (unlike
-// ViewerPage's OBS/admin screen) since this loads on every visitor's own
-// device — forcing sound-on video for everyone who opens the board page
-// would be intrusive, and most browsers would just block it anyway.
+// queue-control API itself. Each new video autoplays: with sound where the
+// browser allows it, otherwise muted with an unmute button on top (see
+// AUTOPLAY_CHECK_DELAY_MS).
 export function RequestSidePlayer({
   requests,
   likePriorityThreshold,
@@ -89,6 +104,77 @@ export function RequestSidePlayer({
   const voteStatusHideTimerRef = useRef<number | null>(null);
 
   const nowPlaying = requests.find((r) => r.status === "playing") ?? null;
+  const nowPlayingId = nowPlaying?.id ?? null;
+  const nowPlayingPlatform = nowPlaying?.platform ?? null;
+
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const ytPlayerRef = useRef<YT.Player | null>(null);
+  // True while the current video had to fall back to muted autoplay.
+  const [needsUnmute, setNeedsUnmute] = useState(false);
+
+  // Attaches the IFrame API to the (enablejsapi=1) YouTube iframe rendered
+  // below for each new request, so autoplay can be verified and, if the
+  // browser blocked it with sound, retried muted.
+  useEffect(() => {
+    setNeedsUnmute(false);
+    if (!nowPlayingId || nowPlayingPlatform !== "youtube") return;
+    let cancelled = false;
+    let checkTimer: number | null = null;
+    loadYouTubeIframeApi().then((YTApi) => {
+      const iframe = iframeRef.current;
+      if (cancelled || !iframe) return;
+      ytPlayerRef.current = new YTApi.Player(iframe, {
+        events: {
+          onReady: (event) => {
+            if (cancelled) return;
+            event.target.playVideo();
+            checkTimer = window.setTimeout(() => {
+              const player = ytPlayerRef.current;
+              if (cancelled || !player) return;
+              const state = player.getPlayerState();
+              if (state === YTApi.PlayerState.PLAYING || state === YTApi.PlayerState.BUFFERING) {
+                if (player.isMuted()) setNeedsUnmute(true);
+                return;
+              }
+              player.mute();
+              player.playVideo();
+              setNeedsUnmute(true);
+            }, AUTOPLAY_CHECK_DELAY_MS);
+          },
+        },
+      });
+    });
+    return () => {
+      cancelled = true;
+      if (checkTimer !== null) window.clearTimeout(checkTimer);
+      // Not destroy(): the iframe itself belongs to React (keyed per
+      // request) and is removed by it.
+      ytPlayerRef.current = null;
+    };
+  }, [nowPlayingId, nowPlayingPlatform]);
+
+  const handleUnmuteClick = () => {
+    const player = ytPlayerRef.current;
+    if (!player) return;
+    player.unMute();
+    player.playVideo();
+    setNeedsUnmute(false);
+  };
+
+  const sendNiconicoPlayCommand = (requestId: string) => {
+    for (const delay of NICONICO_COMMAND_RETRY_DELAYS_MS) {
+      window.setTimeout(() => {
+        const win = iframeRef.current?.contentWindow;
+        if (!win || iframeRef.current?.dataset.requestId !== requestId) return;
+        const post = (eventName: string, data?: unknown) =>
+          win.postMessage({ sourceConnectorType: 1, playerId: NICONICO_PLAYER_ID, eventName, data }, NICONICO_ORIGIN);
+        post("play");
+        post("mute", { mute: false });
+        post("volumeChange", { volume: 1 });
+      }, delay);
+    }
+  };
+
   const { scheduledVisible, scheduledSeconds, oneMinuteLeftVisible } = useFastForwardPacingPopups(
     nowPlaying?.id ?? null,
     fastForwardActive,
@@ -268,7 +354,10 @@ export function RequestSidePlayer({
         <Box
           component="iframe"
           key={nowPlaying.id}
+          ref={iframeRef}
+          data-request-id={nowPlaying.id}
           src={embedSrc(nowPlaying)}
+          onLoad={nowPlaying.platform === "niconico" ? () => sendNiconicoPlayCommand(nowPlaying.id) : undefined}
           allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
           allowFullScreen
           sx={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }}
@@ -293,6 +382,25 @@ export function RequestSidePlayer({
         scheduledSeconds={scheduledSeconds}
         oneMinuteLeftVisible={oneMinuteLeftVisible}
       />
+
+      {needsUnmute && (
+        <Box sx={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", zIndex: 2 }}>
+          <Button
+            variant="contained"
+            startIcon={<VolumeUpIcon />}
+            onClick={handleUnmuteClick}
+            sx={{
+              pointerEvents: "auto",
+              minHeight: 44,
+              bgcolor: "rgba(0,0,0,0.75)",
+              color: "white",
+              "&:hover": { bgcolor: "rgba(0,0,0,0.9)" },
+            }}
+          >
+            タップして音声をON
+          </Button>
+        </Box>
+      )}
 
       {/* Vertically centered on the right edge (Shorts/Reels-style reaction
           rail) so these permanent controls never collide with the title
@@ -387,19 +495,16 @@ export function RequestSidePlayer({
   );
 }
 
-// Builds this player's own (non-autoplaying) embed src, instead of reusing
-// admin ViewerPage's `request.embedUrl` as-is: that URL is built for the
-// autoplay-with-sound OBS/admin screen (see backend/internal/vimeo.EmbedURL),
-// which would be intrusive here since it loads on every visitor's device.
-// niconico's embed never autoplays from a URL flag alone anyway (it needs an
-// explicit postMessage — see ViewerPage's sendNiconicoPlayCommand), so it's
-// used unmodified and simply stays paused until a visitor presses its own
-// on-screen play button.
+// YouTube gets its own embed src (enablejsapi so the effect above can attach
+// the IFrame API and verify autoplay; origin is required alongside it).
+// niconico/vimeo reuse the request's embedUrl as-is: vimeo's already
+// carries autoplay=1, and niconico is started via sendNiconicoPlayCommand.
 function embedSrc(request: VideoRequest): string | undefined {
   if (request.platform === "youtube") {
     const start = request.startSeconds ? `&start=${request.startSeconds}` : "";
     const end = request.endSeconds ? `&end=${request.endSeconds}` : "";
-    return `https://www.youtube.com/embed/${request.videoId}?rel=0&modestbranding=1${start}${end}`;
+    const origin = encodeURIComponent(window.location.origin);
+    return `https://www.youtube.com/embed/${request.videoId}?rel=0&modestbranding=1&autoplay=1&playsinline=1&enablejsapi=1&origin=${origin}${start}${end}`;
   }
-  return request.embedUrl?.replace("autoplay=1", "autoplay=0");
+  return request.embedUrl;
 }
