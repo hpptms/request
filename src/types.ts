@@ -107,6 +107,8 @@ export interface VoteQuota {
   badLimit: number;
   badRemaining: number;
   badResetSeconds: number;
+  // Set for an admin IP: likes are unlimited (no quota, no one-per-request).
+  unlimitedLikes?: boolean;
 }
 
 export interface CancelVoteResult {

@@ -22,3 +22,9 @@ export function useVoteQuota(): VoteQuota | null {
     () => current,
   );
 }
+
+// True for an admin IP, whose likes the server counts on every press with
+// no quota — so the like buttons never grey out as "already liked".
+export function useUnlimitedLikes(): boolean {
+  return useVoteQuota()?.unlimitedLikes === true;
+}

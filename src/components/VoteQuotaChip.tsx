@@ -6,6 +6,7 @@ import { useVoteQuota } from "../lib/voteQuota";
 export function VoteQuotaLabel({ light = false, compact = false }: { light?: boolean; compact?: boolean }) {
   const quota = useVoteQuota();
   if (!quota) return null;
+  const likeText = quota.unlimitedLikes ? "いいね 無制限" : `いいね ${quota.likeRemaining}/${quota.likeLimit}`;
   const resetMinutes = (seconds: number) => Math.max(1, Math.ceil(seconds / 60));
   // Everyone is restored at the top of each hour, so both counters share one
   // reset time (0 while nothing is spent).
@@ -27,7 +28,7 @@ export function VoteQuotaLabel({ light = false, compact = false }: { light?: boo
       >
         {compact ? (
           <>
-            いいね {quota.likeRemaining}/{quota.likeLimit}
+            {likeText}
             <br />
             bad {quota.badRemaining}/{quota.badLimit}
             {resetNote && (
@@ -39,7 +40,7 @@ export function VoteQuotaLabel({ light = false, compact = false }: { light?: boo
           </>
         ) : (
           <>
-            残り票数(毎時0分に回復): いいね {quota.likeRemaining}/{quota.likeLimit} ・ bad {quota.badRemaining}/{quota.badLimit}
+            残り票数(毎時0分に回復): {likeText} ・ bad {quota.badRemaining}/{quota.badLimit}
             {resetNote && ` ・ ${resetNote}`}
           </>
         )}
