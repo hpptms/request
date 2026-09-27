@@ -1,1 +1,8 @@
+# /report (the public GA4 snapshot report page) was removed, but Google
+# still had it indexed and GA4's tag coverage kept listing it as an
+# untagged page — with no matching route the SPA rendered a blank page, so
+# no page_view ever fired there. Send it (and any old links) to the board.
+/report   /  301
+/report/  /  301
+
 /*  /index.html  200
