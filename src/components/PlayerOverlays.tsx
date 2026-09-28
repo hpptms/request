@@ -77,11 +77,11 @@ export function PlayerOverlays({
       <Box sx={{ position: "absolute", left: 0, right: 0, bottom: { xs: 8, sm: 16, md: 24 }, display: "flex", flexDirection: "column", alignItems: "center", gap: { xs: 0.5, sm: 1, md: 1.5 }, px: { xs: 1.5, sm: 3 }, pointerEvents: "none" }}>
         {/* 今日のテーマ: same Zoom and same introVisible as the title card below, so both show and hide together. */}
         {todayTheme && (
-          <Zoom in={introVisible} timeout={{ enter: 350, exit: 250 }} style={{ transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" }}>
-            <Box sx={{ maxWidth: "90%", display: "flex" }}>
+          <Fade in={introVisible} timeout={{ enter: 200, exit: 250 }}>
+            <Box sx={{ maxWidth: "90%", display: "flex", px: { xs: 1, md: 2 } }}>
               <TodayThemeBadge text={todayTheme} animate={introVisible} />
             </Box>
-          </Zoom>
+          </Fade>
         )}
         <Zoom in={introVisible} timeout={{ enter: 350, exit: 250 }} style={{ transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" }}>
           <Stack
@@ -317,100 +317,117 @@ export function PlayerOverlays({
   );
 }
 
-// Candy-colored border cycled by todayThemeBorder, reused as the label pill's fill.
-const THEME_POP_GRADIENT = "linear-gradient(90deg, #FF4F9A, #FFB800, #2DD4BF, #7C5CFF, #FF4F9A)";
+// Neon accent shared by the badge's edge bar, glow and label.
+const THEME_NEON = "linear-gradient(180deg, #00E5FF, #B14DFF)";
 
-// 今日のテーマ: a white, pop-styled pill (rainbow border, tilted label, a
-// twinkling ✨). Its animations only run while animate is true, so they
-// restart from the top — jelly-bounce landing, then a gentle bob — every
-// time the title card pops in again.
+// 今日のテーマ: a slanted, dark-glass plate with a neon edge. Its animations
+// only run while animate is true, so they restart every time the title card
+// comes back: the plate wipes open left-to-right, the label and text slide
+// in after it, then a light sweep glints across it and the neon edge
+// breathes for as long as it stays up.
 function TodayThemeBadge({ text, animate }: { text: string; animate: boolean }) {
+  const run = (value: string) => (animate ? value : "none");
   return (
     <Box
       sx={{
+        position: "relative",
         minWidth: 0,
         display: "flex",
-        alignItems: "center",
-        gap: { xs: 0.75, sm: 1, md: 1.5 },
-        pl: { xs: 0.5, sm: 0.75, md: 1 },
-        pr: { xs: 1.25, sm: 2, md: 3 },
-        py: { xs: 0.4, sm: 0.6, md: 0.9 },
-        borderRadius: 999,
-        border: { xs: "2px solid transparent", md: "4px solid transparent" },
-        background: `linear-gradient(#FFFFFF, #FFFFFF) padding-box, ${THEME_POP_GRADIENT} border-box`,
-        backgroundSize: "100% 100%, 300% 100%",
-        boxShadow: { xs: "0 3px 0 rgba(255,79,154,0.45), 0 6px 16px rgba(0,0,0,0.35)", md: "0 6px 0 rgba(255,79,154,0.45), 0 10px 28px rgba(0,0,0,0.35)" },
-        animation: animate
-          ? "todayThemeJelly 0.9s 0.2s both, todayThemeBob 2.6s 1.1s ease-in-out infinite, todayThemeBorder 4s linear infinite"
-          : "none",
-        "@keyframes todayThemeJelly": {
-          "0%": { transform: "scale(1, 1)" },
-          "30%": { transform: "scale(1.12, 0.88)" },
-          "45%": { transform: "scale(0.92, 1.08)" },
-          "60%": { transform: "scale(1.05, 0.95)" },
-          "75%": { transform: "scale(0.98, 1.02)" },
-          "100%": { transform: "scale(1, 1)" },
+        overflow: "hidden",
+        transform: "skewX(-14deg)",
+        bgcolor: "rgba(6, 8, 18, 0.82)",
+        backdropFilter: "blur(6px)",
+        borderRadius: { xs: 0.5, md: 1 },
+        boxShadow: "0 0 0 1px rgba(0, 229, 255, 0.45), 0 0 22px rgba(0, 229, 255, 0.35), 0 10px 30px rgba(0, 0, 0, 0.55)",
+        pl: { xs: 2, sm: 2.75, md: 4 },
+        pr: { xs: 1.5, sm: 2.25, md: 3.5 },
+        py: { xs: 0.5, sm: 0.75, md: 1.1 },
+        animation: run("todayThemeWipe 0.6s cubic-bezier(0.22, 1, 0.36, 1) both"),
+        // Neon edge bar on the left.
+        "&::before": {
+          content: '""',
+          position: "absolute",
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: { xs: 5, sm: 7, md: 10 },
+          background: THEME_NEON,
+          boxShadow: "0 0 14px rgba(0, 229, 255, 0.9)",
+          animation: run("todayThemeBreathe 2.2s 0.6s ease-in-out infinite"),
         },
-        "@keyframes todayThemeBob": {
-          "0%, 100%": { transform: "translateY(0) rotate(0deg)" },
-          "25%": { transform: "translateY(-4px) rotate(-1deg)" },
-          "75%": { transform: "translateY(2px) rotate(1deg)" },
+        // Light sweep glinting across the plate.
+        "&::after": {
+          content: '""',
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.22) 50%, transparent 65%)",
+          transform: "translateX(-110%)",
+          animation: run("todayThemeSweep 3.6s 0.7s ease-in-out infinite"),
         },
-        "@keyframes todayThemeBorder": {
-          "0%": { backgroundPosition: "0 0, 0% 0" },
-          "100%": { backgroundPosition: "0 0, 300% 0" },
+        // Negative insets leave room for the outer neon glow once fully open.
+        "@keyframes todayThemeWipe": {
+          "0%": { clipPath: "inset(-40px 100% -40px -40px)" },
+          "100%": { clipPath: "inset(-40px -40px -40px -40px)" },
         },
-        "@media (prefers-reduced-motion: reduce)": { animation: "none" },
+        "@keyframes todayThemeBreathe": {
+          "0%, 100%": { opacity: 1, filter: "brightness(1)" },
+          "50%": { opacity: 0.65, filter: "brightness(1.6)" },
+        },
+        "@keyframes todayThemeSweep": {
+          "0%": { transform: "translateX(-110%)" },
+          "45%, 100%": { transform: "translateX(110%)" },
+        },
+        "@keyframes todayThemeSlideIn": {
+          "0%": { opacity: 0, transform: "translateX(-24px)" },
+          "100%": { opacity: 1, transform: "translateX(0)" },
+        },
+        "@keyframes todayThemeTrack": {
+          "0%": { opacity: 0, letterSpacing: "0.8em" },
+          "100%": { opacity: 1, letterSpacing: "0.28em" },
+        },
+        "@media (prefers-reduced-motion: reduce)": {
+          animation: "none",
+          "&::before, &::after": { animation: "none" },
+          "& *": { animation: "none !important" },
+        },
       }}
     >
-      <Box
-        component="span"
-        sx={{
-          flexShrink: 0,
-          px: { xs: 0.75, sm: 1, md: 1.5 },
-          py: { xs: 0.2, sm: 0.3, md: 0.4 },
-          borderRadius: 999,
-          background: "linear-gradient(135deg, #FF4F9A, #FF8A3D)",
-          color: "#FFFFFF",
-          fontWeight: 900,
-          letterSpacing: 0.5,
-          whiteSpace: "nowrap",
-          fontSize: { xs: "0.6rem", sm: "0.8rem", md: "1.15rem" },
-          transform: "rotate(-4deg)",
-          boxShadow: "0 2px 0 rgba(0,0,0,0.15)",
-        }}
-      >
-        今日のテーマ
+      {/* Undo the plate's skew so the text itself stays upright. */}
+      <Box sx={{ transform: "skewX(14deg)", minWidth: 0, display: "flex", flexDirection: "column" }}>
+        <Box
+          component="span"
+          sx={{
+            fontWeight: 800,
+            fontSize: { xs: "0.5rem", sm: "0.65rem", md: "0.95rem" },
+            letterSpacing: "0.28em",
+            lineHeight: 1.4,
+            whiteSpace: "nowrap",
+            background: "linear-gradient(90deg, #00E5FF, #B14DFF)",
+            backgroundClip: "text",
+            WebkitBackgroundClip: "text",
+            color: "transparent",
+            animation: run("todayThemeTrack 0.7s 0.25s cubic-bezier(0.22, 1, 0.36, 1) both"),
+          }}
+        >
+          TODAY&apos;S THEME ／ 今日のテーマ
+        </Box>
+        <Typography
+          component="span"
+          noWrap
+          sx={{
+            minWidth: 0,
+            color: "#FFFFFF",
+            fontWeight: 900,
+            lineHeight: 1.25,
+            letterSpacing: "0.04em",
+            fontSize: { xs: "0.9rem", sm: "1.3rem", md: "2.1rem" },
+            textShadow: "0 0 12px rgba(0, 229, 255, 0.55), 0 2px 4px rgba(0, 0, 0, 0.6)",
+            animation: run("todayThemeSlideIn 0.55s 0.35s cubic-bezier(0.22, 1, 0.36, 1) both"),
+          }}
+        >
+          {text}
+        </Typography>
       </Box>
-      <Box
-        component="span"
-        sx={{
-          flexShrink: 0,
-          fontSize: { xs: "0.85rem", sm: "1.15rem", md: "1.8rem" },
-          lineHeight: 1,
-          animation: animate ? "todayThemeTwinkle 1.4s ease-in-out infinite" : "none",
-          "@keyframes todayThemeTwinkle": {
-            "0%, 100%": { transform: "scale(1) rotate(0deg)", opacity: 1 },
-            "50%": { transform: "scale(1.3) rotate(20deg)", opacity: 0.7 },
-          },
-          "@media (prefers-reduced-motion: reduce)": { animation: "none" },
-        }}
-      >
-        ✨
-      </Box>
-      <Typography
-        component="span"
-        noWrap
-        sx={{
-          minWidth: 0,
-          color: "#2B2352",
-          fontWeight: 900,
-          lineHeight: 1.3,
-          fontSize: { xs: "0.85rem", sm: "1.2rem", md: "1.9rem" },
-        }}
-      >
-        {text}
-      </Typography>
     </Box>
   );
 }
