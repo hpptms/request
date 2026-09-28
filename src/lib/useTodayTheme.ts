@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import { visibleInterval } from "./visibleInterval";
 
-// Re-polled so the day's new theme (drawn at JST midnight) or an admin's
+// Re-polled so the day's new theme (drawn at 8:00 JST — see backend theme.DayStartHour) or an admin's
 // redraw shows up without reloading a screen that stays open for hours.
 const POLL_INTERVAL_MS = 60000;
 
