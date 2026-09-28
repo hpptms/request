@@ -14,20 +14,16 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import FastForwardIcon from "@mui/icons-material/FastForward";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
-import FilterAltOutlinedIcon from "@mui/icons-material/FilterAltOutlined";
 import LightbulbIcon from "@mui/icons-material/Lightbulb";
 import LogoutIcon from "@mui/icons-material/Logout";
-import MapIcon from "@mui/icons-material/Map";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import LiveTvIcon from "@mui/icons-material/LiveTv";
 import MailIcon from "@mui/icons-material/Mail";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import PlaylistPlayIcon from "@mui/icons-material/PlaylistPlay";
-import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ShieldIcon from "@mui/icons-material/Shield";
-import GppGoodIcon from "@mui/icons-material/GppGood";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import { api } from "../api";
 import { AdminLoginForm } from "../components/AdminLoginForm";
@@ -82,14 +78,7 @@ const adminTabs = [
   { value: "bans", path: "/admin", label: "BAN管理", icon: <ShieldIcon fontSize="small" /> },
   { value: "playlist", path: "/admin/playlist", label: "プレイリスト", icon: <PlaylistPlayIcon fontSize="small" /> },
   { value: "keywords", path: "/admin/keywords", label: "禁止ワード", icon: <FilterAltIcon fontSize="small" /> },
-  { value: "safewords", path: "/admin/safewords", label: "セーフワード", icon: <VerifiedUserIcon fontSize="small" /> },
-  { value: "safeips", path: "/admin/safeips", label: "セーフIP", icon: <GppGoodIcon fontSize="small" /> },
-  {
-    value: "keywordlimits",
-    path: "/admin/keywordlimits",
-    label: "セミ禁止ワード",
-    icon: <FilterAltOutlinedIcon fontSize="small" />,
-  },
+  { value: "safewords", path: "/admin/safewords", label: "セーフワード・IP", icon: <VerifiedUserIcon fontSize="small" /> },
   {
     value: "fastforward",
     path: "/admin/fastforward",
@@ -97,8 +86,6 @@ const adminTabs = [
     icon: <FastForwardIcon fontSize="small" />,
   },
   { value: "features", path: "/admin/features", label: "機能", icon: <SettingsIcon fontSize="small" /> },
-  { value: "stats", path: "/admin/stats", label: "集計", icon: <QueryStatsIcon fontSize="small" /> },
-  { value: "heatmap", path: "/admin/heatmap", label: "ヒートマップ", icon: <MapIcon fontSize="small" /> },
   { value: "broadcast", path: "/admin/broadcast", label: "意思表示", icon: <CampaignIcon fontSize="small" /> },
   { value: "interrupt", path: "/admin/interrupt", label: "割り込みリクエスト", icon: <PlaylistAddIcon fontSize="small" /> },
   { value: "messages", path: "/admin/messages", label: "メッセージ", icon: <MailIcon fontSize="small" /> },

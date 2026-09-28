@@ -11,7 +11,7 @@ import { SiteLogo } from "../components/SiteLogo";
 
 // 公開の集計画面 (/stats): backend/internal/analytics の日別/週別/累計
 // ランキング(GET /api/stats、認証不要)を誰でも見られる形で表示する。
-// 中身は管理画面の集計タブ(AdminStatsPage)と共通の StatsView。
+// 中身は StatsView。
 function StatsPage() {
   useSeo(
     "集計 | 動画リクエストキュー",

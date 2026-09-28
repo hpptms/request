@@ -17,7 +17,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { api } from "../api";
 import type { SafeIP } from "../types";
 
-// セーフIP管理画面 (/admin/safeips): ここに登録したIPは、BAN中であってもリクエスト・
+// セーフIP管理 (セーフワード・IPタブ /admin/safewords 内): ここに登録したIPは、BAN中であってもリクエスト・
 // 評価(いいね/bad)・チャットなどを通し、VPN判定や自動BANの対象にもならない
 // (backend/internal/safeip)。すでにあるBANの記録は消えず、セーフIPの間だけ無効になる。
 function AdminSafeIPsPage() {

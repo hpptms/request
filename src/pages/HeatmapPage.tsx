@@ -11,9 +11,8 @@ import { useSeo } from "../lib/useSeo";
 import { PublicNavButtons } from "../components/PublicNavButtons";
 import { SiteLogo } from "../components/SiteLogo";
 
-// 公開のヒートマップ画面 (/heatmap): 管理画面の同名タブ(AdminHeatmapPage)
-// と共通の ActiveUsersMap / useActiveUsersHeatmap を、認証不要で誰でも
-// 見られる形で表示する。
+// 公開のヒートマップ画面 (/heatmap): ActiveUsersMap / useActiveUsersHeatmap を、
+// 認証不要で誰でも見られる形で表示する。
 function HeatmapPage() {
   const { points, prefectures, countries, isMock } = useActiveUsersHeatmap();
   useSeo(
