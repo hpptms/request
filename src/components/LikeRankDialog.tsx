@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -6,6 +6,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import Typography from "@mui/material/Typography";
 import { api } from "../api";
+import { visibleInterval } from "../lib/visibleInterval";
 import type { LikeRank } from "../types";
 
 const STORAGE_KEY = "recest:seenLikeRanks";
@@ -16,6 +17,10 @@ const SLOT_LABELS: Record<LikeRank["slot"], string> = {
   evening: "夜(17〜22時)",
   midnight: "深夜(22〜5時)",
 };
+
+// Slots finish at fixed hours (5/11/17/22 JST), so a coarse poll is enough
+// for visitors who leave the page open across a slot boundary.
+const POLL_MS = 5 * 60 * 1000;
 
 const rankKey = (r: LikeRank) => `${r.date}|${r.slot}`;
 
@@ -38,32 +43,43 @@ function writeSeen(keys: Set<string>) {
   }
 }
 
-// On the visitor's next visit, tells them where their requests ranked by
-// likes in a finished time slot (top 5 only). The server matches by IP; this
-// browser just remembers which slots it has already announced.
+// Tells the visitor where their requests ranked by likes in a finished time
+// slot (top 5 only) — on load, and again while the page stays open (polled,
+// paused in background tabs). The server matches by IP; this browser just
+// remembers which slots it has already announced.
 export default function LikeRankDialog() {
   const [rank, setRank] = useState<LikeRank | null>(null);
+  const openRef = useRef(false);
+  openRef.current = rank !== null;
 
   useEffect(() => {
     let cancelled = false;
-    api
-      .getMyLikeRanks()
-      .then(({ ranks }) => {
-        if (cancelled) return;
-        const seen = readSeen();
-        // Newest first; announce the latest unseen one and mark every
-        // returned slot as seen so older ones don't queue up behind it.
-        const fresh = ranks.find((r) => !seen.has(rankKey(r)));
-        if (!fresh) return;
-        ranks.forEach((r) => seen.add(rankKey(r)));
-        writeSeen(seen);
-        setRank(fresh);
-      })
-      .catch(() => {
-        // Purely a nicety — ignore failures.
-      });
+    const check = () => {
+      // Don't mark new slots as seen while one is still on screen, or the
+      // newer one would be swallowed; the next poll picks it up.
+      if (openRef.current) return;
+      api
+        .getMyLikeRanks()
+        .then(({ ranks }) => {
+          if (cancelled || openRef.current) return;
+          const seen = readSeen();
+          // Newest first; announce the latest unseen one and mark every
+          // returned slot as seen so older ones don't queue up behind it.
+          const fresh = ranks.find((r) => !seen.has(rankKey(r)));
+          if (!fresh) return;
+          ranks.forEach((r) => seen.add(rankKey(r)));
+          writeSeen(seen);
+          setRank(fresh);
+        })
+        .catch(() => {
+          // Purely a nicety — ignore failures.
+        });
+    };
+    check();
+    const stop = visibleInterval(check, POLL_MS);
     return () => {
       cancelled = true;
+      stop();
     };
   }, []);
 
