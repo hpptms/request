@@ -49,8 +49,14 @@ function AdminThemesPage() {
     }
   }, []);
 
+  // Re-polled so a suggestion sent while this tab is open shows up without
+  // reloading it.
   useEffect(() => {
     run(api.adminListThemes, "取得に失敗しました");
+    const interval = setInterval(() => {
+      api.adminListThemes().then(apply).catch(() => {});
+    }, 15000);
+    return () => clearInterval(interval);
   }, [run]);
 
   const handleAdd = async (e: React.FormEvent) => {
