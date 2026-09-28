@@ -15,6 +15,7 @@ import { trackEvent } from "../lib/analytics";
 import { FALLBACK_VIDEO_IDS, pickRandomFallbackVideoId } from "../lib/fallbackPlaylist";
 import { loadYouTubeIframeApi } from "../lib/loadYouTubeIframeApi";
 import { useBroadcastOverlay } from "../lib/useBroadcastOverlay";
+import { useTodayTheme } from "../lib/useTodayTheme";
 import { useFastForwardPacingPopups } from "../lib/useFastForwardPacingPopups";
 import { getPlayableSeconds } from "../lib/playableSeconds";
 import {
@@ -202,6 +203,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   const [voteStatusVisible, setVoteStatusVisible] = useState(false);
   const [voteStatusContent, setVoteStatusContent] = useState<{ cancelVotes: number; likes: number; superLikes: number } | null>(null);
   const broadcastState = useBroadcastOverlay();
+  const todayTheme = useTodayTheme();
   const playingRequest = requests.find((r) => r.status === "playing") ?? null;
   const { scheduledVisible, scheduledSeconds, oneMinuteLeftVisible } = useFastForwardPacingPopups(
     playingRequest?.id ?? null,
@@ -1062,6 +1064,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
             <PlayerOverlays
               introVisible={introVisible}
               introContent={introContent}
+              todayTheme={todayTheme}
               durationBadgeVisible={durationBadgeVisible}
               durationBadgeSeconds={durationBadgeSeconds}
               newRequestVisible={newRequestVisible}

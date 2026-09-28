@@ -23,9 +23,11 @@ import type {
   SearchResult,
   StatsSummary,
   SuspiciousFingerprint,
+  Theme,
   BanEvasion,
   SafeIP,
   TimeSlot,
+  TodayTheme,
   VideoRequest,
   VoteOnlyVoter,
   VoteQuota,
@@ -163,6 +165,28 @@ export const api = {
   adminGetNowLive: () => request<{ items: NowLiveItem[] }>("/admin/now-live"),
   adminSetNowLive: (urls: Record<string, string>) =>
     request<{ items: NowLiveItem[] }>("/admin/now-live", { method: "PUT", body: JSON.stringify({ urls }) }),
+
+  // 今日のテーマ (backend/internal/theme): text is "" while there's no
+  // approved theme to draw from.
+  getTodayTheme: () => request<{ text: string; date: string }>("/theme/today"),
+  // Visitor suggestion, shown to the admin for approval before it can be drawn.
+  suggestTheme: (text: string) =>
+    request<{ ok: boolean }>("/themes", { method: "POST", body: JSON.stringify({ text }) }),
+  // Every admin theme call answers with the updated list and today's pick.
+  adminListThemes: () => request<{ themes: Theme[]; today: TodayTheme }>("/admin/themes"),
+  adminAddTheme: (text: string) =>
+    request<{ themes: Theme[]; today: TodayTheme }>("/admin/themes", {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    }),
+  adminApproveTheme: (id: number) =>
+    request<{ themes: Theme[]; today: TodayTheme }>(`/admin/themes/${id}/approve`, { method: "POST" }),
+  adminDeleteTheme: (id: number) =>
+    request<{ themes: Theme[]; today: TodayTheme }>(`/admin/themes/${id}`, { method: "DELETE" }),
+  adminSetTodayTheme: (id: number) =>
+    request<{ themes: Theme[]; today: TodayTheme }>(`/admin/themes/${id}/today`, { method: "POST" }),
+  adminRedrawTheme: () =>
+    request<{ themes: Theme[]; today: TodayTheme }>("/admin/themes/redraw", { method: "POST" }),
 
   // /play's throwaway chat (backend/internal/chat).
   getChat: (afterId: number) => request<{ messages: ChatMessage[] }>(`/chat?after=${afterId}`),

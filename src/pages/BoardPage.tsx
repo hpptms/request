@@ -22,6 +22,7 @@ import { NowPlaying } from "../components/NowPlaying";
 import { QueueList } from "../components/QueueList";
 import { RecentDoneList } from "../components/RecentDoneList";
 import { RequestForm } from "../components/RequestForm";
+import { TodayThemeBox } from "../components/TodayThemeBox";
 import { useRequestQueue } from "../lib/useRequestQueue";
 import { useSeo } from "../lib/useSeo";
 import { SiteLogo } from "../components/SiteLogo";
@@ -135,6 +136,7 @@ function BoardPage() {
           {/* Live status first, so it is on screen as soon as the page opens;
               the rules and change log are folded into one box below it. */}
           <NowLive />
+          <TodayThemeBox />
           <NowPlaying
             nowPlaying={nowPlaying}
             cancelVoteTiers={cancelVoteTiers}

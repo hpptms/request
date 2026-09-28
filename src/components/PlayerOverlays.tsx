@@ -19,6 +19,9 @@ interface Props {
   // Music-program-style title card, shown while a video starts.
   introVisible: boolean;
   introContent: { title: string; channelTitle: string; videoId: string } | null;
+  // 今日のテーマ (see useTodayTheme): shown just above the title card, popping
+  // in and out together with it. Nothing extra is shown while null.
+  todayTheme: string | null;
   // Duration badge, shown a few seconds after the title card.
   durationBadgeVisible: boolean;
   durationBadgeSeconds: number | null;
@@ -52,6 +55,7 @@ interface Props {
 export function PlayerOverlays({
   introVisible,
   introContent,
+  todayTheme,
   durationBadgeVisible,
   durationBadgeSeconds,
   newRequestVisible,
@@ -69,8 +73,27 @@ export function PlayerOverlays({
 
   return (
     <>
-      {/* Music-program-style title card: pops in when a video starts, pops out after NOW_PLAYING_INTRO_MS. Border color varies per video (requestAccentColor) instead of always the theme red. */}
-      <Box sx={{ position: "absolute", left: 0, right: 0, bottom: { xs: 8, sm: 16, md: 24 }, display: "flex", justifyContent: "center", px: { xs: 1.5, sm: 3 }, pointerEvents: "none" }}>
+      {/* Music-program-style title card (with 今日のテーマ stacked above it): pops in when a video starts, pops out after NOW_PLAYING_INTRO_MS. Border color varies per video (requestAccentColor) instead of always the theme red. */}
+      <Box sx={{ position: "absolute", left: 0, right: 0, bottom: { xs: 8, sm: 16, md: 24 }, display: "flex", flexDirection: "column", alignItems: "center", gap: { xs: 0.5, sm: 1, md: 1.5 }, px: { xs: 1.5, sm: 3 }, pointerEvents: "none" }}>
+        {/* 今日のテーマ: same Zoom and same introVisible as the title card below, so both show and hide together. */}
+        {todayTheme && (
+          <Zoom in={introVisible} timeout={{ enter: 350, exit: 250 }} style={{ transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" }}>
+            <Chip
+              label={`今日のテーマ：${todayTheme}`}
+              sx={{
+                maxWidth: "90%",
+                height: { xs: 26, sm: 38, md: 60 },
+                borderRadius: { xs: 2, sm: 3 },
+                fontWeight: 700,
+                fontSize: { xs: "0.75rem", sm: "1.05rem", md: "1.6rem" },
+                background: "linear-gradient(135deg, #FFB347, #FF7A59)",
+                color: "#3B1600",
+                boxShadow: "0 4px 18px rgba(0,0,0,0.45)",
+                "& .MuiChip-label": { overflow: "hidden", textOverflow: "ellipsis", px: { xs: 1, sm: 1.5, md: 2.5 } },
+              }}
+            />
+          </Zoom>
+        )}
         <Zoom in={introVisible} timeout={{ enter: 350, exit: 250 }} style={{ transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" }}>
           <Stack
             direction="row"
