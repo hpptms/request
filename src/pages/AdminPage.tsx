@@ -125,6 +125,31 @@ function AdminLayout({ onLoggedOut }: { onLoggedOut: () => void }) {
     };
   }, [location.pathname]);
 
+  // Visitor theme suggestions awaiting approval, shown on the テーマ tab the
+  // same way (see AdminThemesPage).
+  const [pendingThemes, setPendingThemes] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    const poll = () =>
+      api
+        .adminListThemes()
+        .then(({ themes }) => {
+          if (!cancelled) setPendingThemes(themes.filter((t) => t.status === "pending").length);
+        })
+        .catch(() => {});
+    poll();
+    const interval = setInterval(poll, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [location.pathname]);
+
+  const tabLabel = (value: string, label: string) => {
+    const count = value === "messages" ? unreadMessages : value === "themes" ? pendingThemes : 0;
+    return count > 0 ? `${label} (${count})` : label;
+  };
+
   const handleLogout = async () => {
     try {
       await api.adminLogout();
@@ -181,7 +206,7 @@ function AdminLayout({ onLoggedOut }: { onLoggedOut: () => void }) {
             <Tab
               key={t.value}
               value={t.value}
-              label={t.value === "messages" && unreadMessages > 0 ? `${t.label} (${unreadMessages})` : t.label}
+              label={tabLabel(t.value, t.label)}
               icon={t.icon} iconPosition="start"
               sx={{ whiteSpace: "nowrap" }}
             />
