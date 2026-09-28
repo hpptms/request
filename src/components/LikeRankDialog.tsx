@@ -6,23 +6,23 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import Typography from "@mui/material/Typography";
 import { api } from "../api";
-import { visibleInterval } from "../lib/visibleInterval";
 import type { LikeRank } from "../types";
 
 const STORAGE_KEY = "recest:seenLikeRanks";
 
-const SLOT_LABELS: Record<LikeRank["slot"], string> = {
-  morning: "朝(5〜11時)",
-  daytime: "昼(11〜17時)",
-  evening: "夜(17〜22時)",
-  midnight: "深夜(22〜5時)",
-};
+// Rankings close on the hour, so check shortly after each one instead of
+// polling; the minute's slack covers clock skew against the server.
+const AFTER_HOUR_MS = 60 * 1000;
+// If a popup is still open when the check fires, try again this much later.
+const RETRY_MS = 60 * 1000;
 
-// Slots finish at fixed hours (5/11/17/22 JST), so a coarse poll is enough
-// for visitors who leave the page open across a slot boundary.
-const POLL_MS = 5 * 60 * 1000;
+const rankKey = (r: LikeRank) => `${r.date}|${r.hour}`;
 
-const rankKey = (r: LikeRank) => `${r.date}|${r.slot}`;
+function msUntilNextCheck(): number {
+  const next = new Date();
+  next.setHours(next.getHours() + 1, 0, 0, 0);
+  return next.getTime() - Date.now() + AFTER_HOUR_MS;
+}
 
 function readSeen(): Set<string> {
   try {
@@ -35,18 +35,18 @@ function readSeen(): Set<string> {
 
 function writeSeen(keys: Set<string>) {
   try {
-    // Older than the backend's 7-day lookback can never come back, so cap
-    // the list instead of growing forever.
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...keys].slice(-50)));
+    // Older than the backend's 7-day lookback (at most 7*24 hours) can never
+    // come back, so cap the list instead of growing forever.
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...keys].slice(-200)));
   } catch {
     // Ignore storage failures — worst case the popup shows again next visit.
   }
 }
 
-// Tells the visitor where their requests ranked by likes in a finished time
-// slot (top 5 only) — on load, and again while the page stays open (polled,
-// paused in background tabs). The server matches by IP; this browser just
-// remembers which slots it has already announced.
+// Tells the visitor where their requests ranked by likes in a finished hour
+// (top 5 only) — on load, and again just after every hour while the page
+// stays open. The server matches by IP; this browser just remembers which
+// hours it has already announced.
 export default function LikeRankDialog() {
   const [rank, setRank] = useState<LikeRank | null>(null);
   const openRef = useRef(false);
@@ -55,8 +55,8 @@ export default function LikeRankDialog() {
   useEffect(() => {
     let cancelled = false;
     const check = () => {
-      // Don't mark new slots as seen while one is still on screen, or the
-      // newer one would be swallowed; the next poll picks it up.
+      // Don't mark new hours as seen while one is still on screen, or the
+      // newer one would be swallowed; the retry picks it up.
       if (openRef.current) return;
       api
         .getMyLikeRanks()
@@ -64,7 +64,7 @@ export default function LikeRankDialog() {
           if (cancelled || openRef.current) return;
           const seen = readSeen();
           // Newest first; announce the latest unseen one and mark every
-          // returned slot as seen so older ones don't queue up behind it.
+          // returned hour as seen so older ones don't queue up behind it.
           const fresh = ranks.find((r) => !seen.has(rankKey(r)));
           if (!fresh) return;
           ranks.forEach((r) => seen.add(rankKey(r)));
@@ -75,11 +75,22 @@ export default function LikeRankDialog() {
           // Purely a nicety — ignore failures.
         });
     };
+    let timer: ReturnType<typeof setTimeout>;
+    const schedule = (ms: number) => {
+      timer = setTimeout(() => {
+        if (openRef.current) {
+          schedule(RETRY_MS);
+          return;
+        }
+        check();
+        schedule(msUntilNextCheck());
+      }, ms);
+    };
     check();
-    const stop = visibleInterval(check, POLL_MS);
+    schedule(msUntilNextCheck());
     return () => {
       cancelled = true;
-      stop();
+      clearTimeout(timer);
     };
   }, []);
 
@@ -93,7 +104,7 @@ export default function LikeRankDialog() {
               あなたのいいね数{rank.rank}位です。
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              {rank.date.replace(/-/g, "/")} {SLOT_LABELS[rank.slot]}のリクエスト(獲得 {rank.likes} いいね)
+              {rank.date.replace(/-/g, "/")} {rank.hour}時台に再生されたリクエスト(獲得 {rank.likes} いいね)
             </Typography>
           </DialogContent>
           <DialogActions>
