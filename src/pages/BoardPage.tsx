@@ -136,7 +136,6 @@ function BoardPage() {
           {/* Live status first, so it is on screen as soon as the page opens;
               the rules and change log are folded into one box below it. */}
           <NowLive />
-          <TodayThemeBox />
           <NowPlaying
             nowPlaying={nowPlaying}
             cancelVoteTiers={cancelVoteTiers}
@@ -149,6 +148,7 @@ function BoardPage() {
             onLike={handleLike}
             onCancelMine={handleCancelMine}
           />
+          <TodayThemeBox />
           <RequestForm onSubmit={handleCreate} />
 
           <Box>
