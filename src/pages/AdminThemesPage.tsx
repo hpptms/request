@@ -79,7 +79,7 @@ function AdminThemesPage() {
           {today ? today.text : "承認済みのテーマがありません"}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          毎日(日本時間0時で切り替え)、承認済みのテーマからランダムに1つ選ばれ、再生画面の曲名の上に曲名と同じ時間だけ表示されます。まだ選ばれていないテーマが優先され、全て選ばれると{minPicks + 1}周目の抽選になります(この周の残り: {remaining}件)。
+          毎日(日本時間の朝8時で切り替え)、承認済みのテーマからランダムに1つ選ばれ、再生画面の曲名の上に曲名と同じ時間だけ表示されます。まだ選ばれていないテーマが優先され、全て選ばれると{minPicks + 1}周目の抽選になります(この周の残り: {remaining}件)。
         </Typography>
         <Button
           variant="outlined"
