@@ -39,6 +39,11 @@ export interface VideoRequest {
   // AppConfig.twoMinuteRequestCapSeconds and ViewerPage's
   // playback-capping effect.
   twoMinuteRequest?: boolean;
+  // Set when a fast-forward window became active while this request was
+  // already playing: its playback (counted from its start) is cut at this
+  // many seconds — AppConfig.fastForwardJoinSeconds past that moment — in
+  // place of fastForwardCapSeconds. See ViewerPage's playback-capping effect.
+  fastForwardCutoffSeconds?: number;
 }
 
 // One rung of the cancel-vote escalation ladder: once a request collects at
@@ -66,6 +71,9 @@ export interface AppConfig {
   // fastForwardActive (any window; 0 when inactive — see
   // FastForwardWindow).
   fastForwardPerLikeSeconds: number;
+  // How long a request already playing when the window started keeps
+  // playing from that moment (see VideoRequest.fastForwardCutoffSeconds).
+  fastForwardJoinSeconds: number;
   // Used instead of cancelVoteTiers while fastForwardActive is true —
   // tighter than the normal ladder, so a bad-voted request cuts shorter
   // than the plain fastForwardCapSeconds guarantee. See ViewerPage's
