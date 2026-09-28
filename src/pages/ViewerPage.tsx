@@ -151,6 +151,8 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // Added to fastForwardCapSeconds per like on the playing request — see
   // AppConfig.fastForwardPerLikeSeconds.
   const [fastForwardPerLikeSeconds, setFastForwardPerLikeSeconds] = useState(0);
+  // See AppConfig.fastForwardJoinSeconds.
+  const [fastForwardJoinSeconds, setFastForwardJoinSeconds] = useState(120);
   // Used instead of cancelVoteTiers while fastForwardActive is true — see
   // AppConfig.fastForwardCancelVoteTiers.
   const [fastForwardCancelVoteTiers, setFastForwardCancelVoteTiers] = useState<CancelVoteTier[]>(
@@ -204,7 +206,9 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   const { scheduledVisible, scheduledSeconds, oneMinuteLeftVisible } = useFastForwardPacingPopups(
     playingRequest?.id ?? null,
     fastForwardActive,
-    fastForwardCapSeconds + fastForwardPerLikeSeconds * (playingRequest?.likes ?? 0),
+    playingRequest?.fastForwardCutoffSeconds
+      ? fastForwardJoinSeconds
+      : fastForwardCapSeconds + fastForwardPerLikeSeconds * (playingRequest?.likes ?? 0),
   );
   const [fallbackNowPlayingId, setFallbackNowPlayingId] = useState<string | null>(null);
   // World/Japan Top 100 tracks from the backend; empty until resolved (or
@@ -314,6 +318,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
           setFastForwardActive(config.fastForwardActive);
           setFastForwardCapSeconds(config.fastForwardCapSeconds);
           setFastForwardPerLikeSeconds(config.fastForwardPerLikeSeconds ?? 0);
+          setFastForwardJoinSeconds(config.fastForwardJoinSeconds ?? 120);
           setFastForwardCancelVoteTiers(config.fastForwardCancelVoteTiers);
           setDurationLimitThresholdSeconds(config.durationLimitThresholdSeconds);
           setDurationLimitCapSeconds(config.durationLimitCapSeconds);
@@ -757,7 +762,11 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // long (durationLimitCapSeconds — an admin opt-in for unusually long
   // requests, see AdminFeaturesPage) can still cap it further; whichever
   // applicable cap is smallest wins, and in a fast-forward window
-  // fastForwardPerLikeSeconds per like is added on top. Requests are
+  // fastForwardPerLikeSeconds per like is added on top. The exception is a
+  // request that was already playing when the window started
+  // (fastForwardCutoffSeconds set): it simply plays until that cutoff —
+  // fastForwardJoinSeconds past the window's start, no like extension —
+  // still cut shorter by the normal caps it had anyway. Requests are
   // never removed from the queue outright; this cap is the only consequence. Runs off the same
   // poll that refreshes `requests`, so the cutoff lands within one
   // POLL_INTERVAL_MS of the cap rather than exactly on it. Same rules for
@@ -775,7 +784,16 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     if (!current) return;
 
     const caps: number[] = [];
-    if (fastForwardActive) {
+    const joinedMidPlay = fastForwardActive && !!current.fastForwardCutoffSeconds;
+    if (joinedMidPlay) {
+      caps.push(current.fastForwardCutoffSeconds!);
+      for (const tier of cancelVoteTiers) {
+        if (current.cancelVotes >= tier.votes) caps.push(tier.capSeconds);
+      }
+      if (current.twoMinuteRequest) {
+        caps.push(twoMinuteRequestCapSeconds);
+      }
+    } else if (fastForwardActive) {
       caps.push(fastForwardCapSeconds);
       for (const tier of fastForwardCancelVoteTiers) {
         if (current.cancelVotes >= tier.votes) caps.push(tier.capSeconds);
@@ -794,7 +812,8 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     if (caps.length === 0) return;
     // Likes extend whichever cap won (see store.playbackFloorLocked), so a
     // bad-voted or overlong request still gets its likes' extra time.
-    const capSeconds = Math.min(...caps) + (fastForwardActive ? fastForwardPerLikeSeconds * current.likes : 0);
+    const capSeconds =
+      Math.min(...caps) + (fastForwardActive && !joinedMidPlay ? fastForwardPerLikeSeconds * current.likes : 0);
 
     const elapsed = nonYouTubeEmbedUrl
       ? nonYouTubeStartRef.current !== null
