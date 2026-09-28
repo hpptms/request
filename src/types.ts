@@ -365,11 +365,12 @@ export interface StatsSummary {
   topVideosByCancelVotes: VideoStat[];
 }
 
-// backend/internal/analytics.IPLikeRank — a finished (JST date, time slot)
-// in which the caller's IP placed in the top 5 by likes received.
+// backend/internal/analytics.IPLikeRank — a finished JST clock hour
+// (date, hour 0-23) in which the caller's IP placed in the top 5 by likes
+// received (on requests that finished playing in that hour).
 export interface LikeRank {
   date: string;
-  slot: Exclude<TimeSlot, "">;
+  hour: number;
   rank: number;
   likes: number;
 }
