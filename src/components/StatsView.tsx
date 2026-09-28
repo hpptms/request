@@ -54,8 +54,8 @@ function formatDateLabel(dateStr: string): string {
 // を、日別/週別/累計で切り替えて表示する。store.Store は再生済み(done)
 // リクエストを再起動のたびに破棄するため(store.Store.SaveToFile参照)、
 // ここに出る数字だけが再起動をまたいで残る唯一の履歴。集計自体は
-// GET /api/stats が公開エンドポイントのため、管理画面(AdminStatsPage)と
-// 公開のトップページ(StatsPage)の両方からこのコンポーネントを使う。
+// GET /api/stats が公開エンドポイントのため、公開の集計画面(StatsPage)で
+// このコンポーネントを使う。
 export function StatsView() {
   const [periodTab, setPeriodTab] = useState<StatsPeriod>("day");
   // "" means every time of day (no filter) — the pre-existing behavior.

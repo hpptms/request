@@ -16,7 +16,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { api } from "../api";
 import type { KeywordLimit } from "../types";
 
-// セミ禁止ワード管理画面 (/admin/keywordlimits): ここに登録した文字列が
+// セミ禁止ワード管理 (禁止ワードタブ /admin/keywords 内): ここに登録した文字列が
 // タイトルまたはチャンネル名に含まれる動画は、禁止ワードと違いリクエスト
 // 自体は許可されるが、待機中/再生中の件数が指定した上限に達すると
 // それ以上キューに追加できなくなる(backend/internal/keywordlimit,
