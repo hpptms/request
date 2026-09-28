@@ -422,6 +422,28 @@ export interface NowLiveItem {
   url: string;
 }
 
+// backend/internal/theme.Theme — one 今日のテーマ candidate. "pending" is a
+// visitor suggestion awaiting the admin's approval; only "approved" themes
+// are drawn.
+export interface Theme {
+  id: number;
+  text: string;
+  status: "pending" | "approved";
+  source: "admin" | "user";
+  submitterIp?: string;
+  createdAt: string;
+  pickCount: number;
+  lastPickedAt?: string;
+}
+
+// backend/internal/theme.Today — the theme drawn for one JST date (empty
+// text/date when there's no approved theme to draw from).
+export interface TodayTheme {
+  date: string;
+  themeId: number;
+  text: string;
+}
+
 // backend/internal/safeip.Entry — an IP that keeps working (requests,
 // votes, ...) even while banned, and is never auto-banned.
 export interface SafeIP {

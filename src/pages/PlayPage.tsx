@@ -18,6 +18,7 @@ import { PlayQueueAd } from "../components/PlayQueueAd";
 import { QueueList } from "../components/QueueList";
 import { RequestForm } from "../components/RequestForm";
 import { RequestSidePlayer } from "../components/RequestSidePlayer";
+import { TodayThemeBox } from "../components/TodayThemeBox";
 import { LANDSCAPE_PHONE } from "../lib/layout";
 import { usePlayChat } from "../lib/usePlayChat";
 import { useRequestQueue } from "../lib/useRequestQueue";
@@ -170,6 +171,9 @@ function PlayPage() {
                 <MusicLinks title={nowPlaying.title} />
               </Box>
             )}
+            <Box sx={{ mb: 2 }}>
+              <TodayThemeBox />
+            </Box>
             <PlayQueueAd />
             <Typography variant="subtitle1" sx={{ mb: 1 }}>
               待機中のリクエスト {pending.length > 0 && `(${pending.length})`}

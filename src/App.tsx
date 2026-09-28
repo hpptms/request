@@ -38,6 +38,7 @@ const AdminBroadcastPage = lazy(() => import("./pages/AdminBroadcastPage"));
 const AdminInterruptPage = lazy(() => import("./pages/AdminInterruptPage"));
 const AdminMessagesPage = lazy(() => import("./pages/AdminMessagesPage"));
 const AdminNowLivePage = lazy(() => import("./pages/AdminNowLivePage"));
+const AdminThemesPage = lazy(() => import("./pages/AdminThemesPage"));
 
 // /admin has its own login-gated pages (an admin needs to reach them to
 // manage bans in the first place), and /viewer is the OBS capture output —
@@ -127,6 +128,7 @@ function AppRoutes() {
             <Route path="interrupt" element={<AdminInterruptPage />} />
             <Route path="messages" element={<AdminMessagesPage />} />
             <Route path="live" element={<AdminNowLivePage />} />
+            <Route path="themes" element={<AdminThemesPage />} />
           </Route>
         </Routes>
       </Box>

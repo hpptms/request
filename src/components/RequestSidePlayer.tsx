@@ -21,6 +21,7 @@ import {
   VOTE_STATUS_VISIBLE_MS,
 } from "../lib/playerOverlayTiming";
 import { useBroadcastOverlay } from "../lib/useBroadcastOverlay";
+import { useTodayTheme } from "../lib/useTodayTheme";
 import { useFastForwardPacingPopups } from "../lib/useFastForwardPacingPopups";
 import type { CancelVoteTier, VideoRequest } from "../types";
 import { LANDSCAPE_PHONE } from "../lib/layout";
@@ -89,6 +90,7 @@ export function RequestSidePlayer({
   const [voteStatusVisible, setVoteStatusVisible] = useState(false);
   const [voteStatusContent, setVoteStatusContent] = useState<{ cancelVotes: number; likes: number; superLikes: number } | null>(null);
   const broadcastState = useBroadcastOverlay();
+  const todayTheme = useTodayTheme();
 
   // Which request's title/duration card has already been shown, so a poll
   // that just re-confirms the same one playing doesn't replay the intro.
@@ -423,6 +425,7 @@ export function RequestSidePlayer({
       <PlayerOverlays
         introVisible={introVisible}
         introContent={introContent}
+        todayTheme={todayTheme}
         durationBadgeVisible={durationBadgeVisible}
         durationBadgeSeconds={durationBadgeSeconds}
         newRequestVisible={newRequestVisible}
