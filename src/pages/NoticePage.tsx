@@ -1,7 +1,10 @@
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
 import Container from "@mui/material/Container";
+import Divider from "@mui/material/Divider";
+import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
@@ -10,7 +13,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { AdminMessageForm } from "../components/AdminMessageForm";
 import { Footer } from "../components/Footer";
 import { SiteLogo } from "../components/SiteLogo";
-import { NOTICES, RECENT_CHANGES } from "../lib/notices";
+import { NOTICE_SECTIONS, RECENT_CHANGES } from "../lib/notices";
 import { useSeo } from "../lib/useSeo";
 
 // お知らせページ (/notice): トップページに置いていた注意書き・直近の変更・
@@ -38,30 +41,64 @@ function NoticePage() {
 
       <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1.5, sm: 3 } }}>
         <Stack spacing={3}>
-          <Box>
-            <Typography variant="h6" component="h2" gutterBottom>
+          <Box component="section">
+            <Typography variant="h6" component="h2" sx={{ mb: 1.5 }}>
               お知らせ・ルール
             </Typography>
-            <Stack spacing={1}>
-              {NOTICES.map((text) => (
-                <Typography key={text} variant="body1">
-                  {text}
-                </Typography>
+            <Stack spacing={1.5}>
+              {NOTICE_SECTIONS.map((section) => (
+                <Paper key={section.title} variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2 }}>
+                  <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 1 }}>
+                    <Box component="span" aria-hidden sx={{ fontSize: "1.25rem", lineHeight: 1 }}>
+                      {section.icon}
+                    </Box>
+                    <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 700 }}>
+                      {section.title}
+                    </Typography>
+                  </Stack>
+                  <Stack component="ul" spacing={0.75} sx={{ m: 0, pl: 2.5 }}>
+                    {section.items.map((item) => (
+                      <Typography key={item} component="li" variant="body2" sx={{ lineHeight: 1.7 }}>
+                        {item}
+                      </Typography>
+                    ))}
+                  </Stack>
+                </Paper>
               ))}
             </Stack>
           </Box>
 
-          <Box>
-            <Typography variant="h6" component="h2" gutterBottom>
+          <Box component="section">
+            <Typography variant="h6" component="h2" sx={{ mb: 1.5 }}>
               直近の変更
             </Typography>
-            <Stack component="ul" spacing={0.5} sx={{ m: 0, pl: 2.5 }}>
-              {RECENT_CHANGES.map((text) => (
-                <Typography key={text} component="li" variant="body1">
-                  {text}
-                </Typography>
+            <Paper variant="outlined" sx={{ borderRadius: 2 }}>
+              {RECENT_CHANGES.map((change, i) => (
+                <Box key={change.title}>
+                  {i > 0 && <Divider />}
+                  <Box sx={{ px: { xs: 1.5, sm: 2 }, py: 1.25 }}>
+                    <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                      {i === 0 && (
+                        <Chip
+                          label="NEW"
+                          color="primary"
+                          size="small"
+                          sx={{ height: 20, fontSize: "0.7rem", fontWeight: 700, flexShrink: 0 }}
+                        />
+                      )}
+                      <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                        {change.title}
+                      </Typography>
+                    </Stack>
+                    {change.detail && (
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, lineHeight: 1.7 }}>
+                        {change.detail}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
               ))}
-            </Stack>
+            </Paper>
           </Box>
 
           <AdminMessageForm defaultOpen />
