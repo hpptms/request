@@ -8,7 +8,9 @@ import { useStableState } from "./useStableState";
 import { visibleInterval } from "./visibleInterval";
 
 const POLL_INTERVAL_MS = 4000;
-// How many just-finished requests the board keeps open for like/bad.
+// How many just-finished requests the board keeps open for like/bad. The
+// public /api/requests only carries this many (publicRecentDone in
+// backend/internal/api/api.go) — raise both together.
 const RECENT_DONE_COUNT = 5;
 const DEFAULT_CANCEL_VOTE_THRESHOLD = 5;
 const DEFAULT_LIKE_PRIORITY_THRESHOLD = 5;
