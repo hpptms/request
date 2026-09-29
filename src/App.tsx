@@ -6,6 +6,7 @@ import AdminReplyDialog from "./components/AdminReplyDialog";
 import LikeRankDialog from "./components/LikeRankDialog";
 import { MobileAnchorAd, MOBILE_ANCHOR_AD_HEIGHT, useMobileAnchorAdVisible } from "./components/MobileAnchorAd";
 import { PcRailAd } from "./components/PcRailAd";
+import { NINJA_ADS_ENABLED } from "./lib/ninjaAds";
 import BoardPage from "./pages/BoardPage";
 import { api } from "./api";
 import { usePageViewTracking } from "./lib/usePageViewTracking";
@@ -96,9 +97,9 @@ function AppRoutes() {
     <Suspense fallback={<LazyPageFallback />}>
       {showLikeRank && <LikeRankDialog />}
       {showReplies && <AdminReplyDialog />}
-      <PcRailAd />
-      <MobileAnchorAd />
-      <Box sx={{ pb: showMobileAnchorAd ? `${MOBILE_ANCHOR_AD_HEIGHT}px` : 0 }}>
+      {NINJA_ADS_ENABLED && <PcRailAd />}
+      {NINJA_ADS_ENABLED && <MobileAnchorAd />}
+      <Box sx={{ pb: NINJA_ADS_ENABLED && showMobileAnchorAd ? `${MOBILE_ANCHOR_AD_HEIGHT}px` : 0 }}>
         <Routes>
           <Route path="/" element={<BoardPage />} />
           <Route path="/play" element={<PlayPage />} />

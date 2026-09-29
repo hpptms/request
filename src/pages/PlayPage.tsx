@@ -15,6 +15,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { MusicLinks } from "../components/MusicLinks";
 import { PlayChatForm, PlayChatOverlay } from "../components/PlayChat";
 import { PlayQueueAd } from "../components/PlayQueueAd";
+import { NINJA_ADS_ENABLED } from "../lib/ninjaAds";
 import { QueueList } from "../components/QueueList";
 import { RequestForm } from "../components/RequestForm";
 import { RequestSidePlayer } from "../components/RequestSidePlayer";
@@ -174,7 +175,7 @@ function PlayPage() {
             <Box sx={{ mb: 2 }}>
               <TodayThemeBox />
             </Box>
-            <PlayQueueAd />
+            {NINJA_ADS_ENABLED && <PlayQueueAd />}
             <Typography variant="subtitle1" sx={{ mb: 1 }}>
               待機中のリクエスト {pending.length > 0 && `(${pending.length})`}
             </Typography>
