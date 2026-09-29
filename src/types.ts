@@ -333,6 +333,8 @@ export interface VideoStat {
   requestCount: number;
   totalLikes: number;
   totalCancelVotes: number;
+  // スベってる(😒) presses; missing from an older backend.
+  totalSuberu?: number;
 }
 
 // One channel/artist's request count over the same range, summed across
@@ -374,6 +376,8 @@ export interface StatsSummary {
   topVideosByRequests: VideoStat[];
   topVideosByLikes: VideoStat[];
   topVideosByCancelVotes: VideoStat[];
+  // Only videos with at least one スベってる; missing from an older backend.
+  topVideosBySuberu?: VideoStat[];
 }
 
 // backend/internal/analytics.IPLikeRank — a finished JST clock hour
