@@ -19,6 +19,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
 import TodayIcon from "@mui/icons-material/Today";
 import { api } from "../api";
+import { visibleInterval } from "../lib/visibleInterval";
 import type { Theme, TodayTheme } from "../types";
 
 // Mirrors backend theme.MaxTextRunes.
@@ -53,10 +54,9 @@ function AdminThemesPage() {
   // reloading it.
   useEffect(() => {
     run(api.adminListThemes, "取得に失敗しました");
-    const interval = setInterval(() => {
+    return visibleInterval(() => {
       api.adminListThemes().then(apply).catch(() => {});
     }, 15000);
-    return () => clearInterval(interval);
   }, [run]);
 
   const handleAdd = async (e: React.FormEvent) => {
