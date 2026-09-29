@@ -18,6 +18,7 @@ import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
 import { hasLiked, hasSuperLiked, markLiked, markSuperLiked } from "../lib/likeStorage";
+import { hasSuberu, markSuberu } from "../lib/suberuStorage";
 import { useUnlimitedLikes } from "../lib/voteQuota";
 import { isMyRequest } from "../lib/myRequestStorage";
 import type { VideoRequest } from "../types";
@@ -189,6 +190,38 @@ export function SuperLikeIconButton({ request, onLike }: LikeIconButtonProps) {
         <IconButton edge="end" onClick={handleClick} disabled={liking || superLiked || own} sx={{ fontSize: "1.1rem" }}>
           <span role="img" aria-label="超いいね">
             😍
+          </span>
+        </IconButton>
+      </span>
+    </Tooltip>
+  );
+}
+
+interface SuberuIconButtonProps {
+  request: VideoRequest;
+  onSuberu: (id: string) => Promise<boolean>;
+}
+
+// スベってる(😒): badに近いがペナルティ無しの集計のみ。1リクエスト1人1回。
+export function SuberuIconButton({ request, onSuberu }: SuberuIconButtonProps) {
+  const [pressing, setPressing] = useState(false);
+  const pressed = hasSuberu(request.id);
+
+  const handleClick = async () => {
+    setPressing(true);
+    try {
+      if (await onSuberu(request.id)) markSuberu(request.id);
+    } finally {
+      setPressing(false);
+    }
+  };
+
+  return (
+    <Tooltip title={pressed ? "スベってる済み" : "スベってる"}>
+      <span>
+        <IconButton edge="end" onClick={handleClick} disabled={pressing || pressed} sx={{ fontSize: "1.1rem" }}>
+          <span role="img" aria-label="スベってる">
+            😒
           </span>
         </IconButton>
       </span>

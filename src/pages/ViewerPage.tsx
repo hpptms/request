@@ -11,6 +11,7 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import { api } from "../api";
 import { AdminLoginForm } from "../components/AdminLoginForm";
 import { PlayerOverlays } from "../components/PlayerOverlays";
+import { hasVoteStatusIncrease, voteStatusOf, type VoteStatus } from "../lib/voteStatus";
 import { trackEvent } from "../lib/analytics";
 import { FALLBACK_VIDEO_IDS, pickRandomFallbackVideoId } from "../lib/fallbackPlaylist";
 import { loadYouTubeIframeApi } from "../lib/loadYouTubeIframeApi";
@@ -196,12 +197,12 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // color as content briefly went null mid-animation.
   const [newRequestVisible, setNewRequestVisible] = useState(false);
   const [newRequestNotice, setNewRequestNotice] = useState<{ id: string; title: string; videoId: string } | null>(null);
-  // Vote-status badge (😨 cancel votes / 😊 likes) for the currently
+  // Vote-status badge (😊 likes / 😒 スベってる) for the currently
   // playing real request: shown as soon as it starts if it already has any
   // votes, and again every time either count goes up while it's still
   // playing — see the effect watching `requests` for lastShownVoteCountsRef.
   const [voteStatusVisible, setVoteStatusVisible] = useState(false);
-  const [voteStatusContent, setVoteStatusContent] = useState<{ cancelVotes: number; likes: number; superLikes: number } | null>(null);
+  const [voteStatusContent, setVoteStatusContent] = useState<VoteStatus | null>(null);
   const broadcastState = useBroadcastOverlay();
   const todayTheme = useTodayTheme();
   const playingRequest = requests.find((r) => r.status === "playing") ?? null;
@@ -279,7 +280,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // request this refers to, so the watcher effect can tell "just started
   // playing" (id differs) apart from "a vote came in" (id matches, a count
   // went up) — see the effect below and showVoteStatus.
-  const lastShownVoteCountsRef = useRef<{ id: string; cancelVotes: number; likes: number; superLikes: number } | null>(null);
+  const lastShownVoteCountsRef = useRef<(VoteStatus & { id: string }) | null>(null);
   const voteStatusHideTimerRef = useRef<number | null>(null);
 
   const refresh = useCallback(async () => {
@@ -483,9 +484,9 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     nonYouTubeStartRef.current = null;
   };
 
-  const showVoteStatus = (cancelVotes: number, likes: number, superLikes: number) => {
+  const showVoteStatus = (status: VoteStatus) => {
     if (voteStatusHideTimerRef.current !== null) window.clearTimeout(voteStatusHideTimerRef.current);
-    setVoteStatusContent({ cancelVotes, likes, superLikes });
+    setVoteStatusContent(status);
     setVoteStatusVisible(true);
     voteStatusHideTimerRef.current = window.setTimeout(() => {
       setVoteStatusVisible(false);
@@ -735,16 +736,17 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     if (!current) return;
 
     const last = lastShownVoteCountsRef.current;
+    const status = voteStatusOf(current);
     if (!last || last.id !== requestId) {
-      lastShownVoteCountsRef.current = { id: requestId, cancelVotes: current.cancelVotes, likes: current.likes, superLikes: current.superLikes ?? 0 };
-      if (current.likes > 0) {
-        showVoteStatus(current.cancelVotes, current.likes, current.superLikes ?? 0);
+      lastShownVoteCountsRef.current = { id: requestId, ...status };
+      if (status.likes > 0 || status.suberu > 0) {
+        showVoteStatus(status);
       }
       return;
     }
-    if (current.likes > last.likes) {
-      lastShownVoteCountsRef.current = { id: requestId, cancelVotes: current.cancelVotes, likes: current.likes, superLikes: current.superLikes ?? 0 };
-      showVoteStatus(current.cancelVotes, current.likes, current.superLikes ?? 0);
+    if (hasVoteStatusIncrease(last, status)) {
+      lastShownVoteCountsRef.current = { id: requestId, ...status };
+      showVoteStatus(status);
     }
   }, [requests]);
 

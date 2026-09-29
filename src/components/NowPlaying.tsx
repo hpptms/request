@@ -14,6 +14,7 @@ import { trackEvent } from "../lib/analytics";
 import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
 import { formatDuration } from "../lib/formatDuration";
 import { hasLiked, hasSuperLiked, markLiked, markSuperLiked } from "../lib/likeStorage";
+import { hasSuberu, markSuberu } from "../lib/suberuStorage";
 import { isMyRequest } from "../lib/myRequestStorage";
 import type { CancelVoteTier, VideoRequest } from "../types";
 import { MusicLinks } from "./MusicLinks";
@@ -50,6 +51,8 @@ interface Props {
   onMarkDone: (id: string) => void;
   onVoteCancel: (id: string) => Promise<boolean>;
   onLike: (id: string, isSuper?: boolean) => Promise<boolean>;
+  // スベってる(😒): tally only, no penalty.
+  onSuberu: (id: string) => Promise<boolean>;
   onCancelMine: (id: string) => Promise<void>;
 }
 
@@ -63,9 +66,11 @@ export function NowPlaying({
   onMarkDone,
   onVoteCancel,
   onLike,
+  onSuberu,
   onCancelMine,
 }: Props) {
   const [voting, setVoting] = useState(false);
+  const [suberuPressing, setSuberuPressing] = useState(false);
   const [liking, setLiking] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const unlimitedLikes = useUnlimitedLikes();
@@ -79,6 +84,7 @@ export function NowPlaying({
   }
 
   const voted = hasVoted(nowPlaying.id);
+  const suberuPressed = hasSuberu(nowPlaying.id);
   const liked = !unlimitedLikes && hasLiked(nowPlaying.id);
   const superLiked = !unlimitedLikes && hasSuperLiked(nowPlaying.id);
   const ownRequest = !unlimitedLikes && isMyRequest(nowPlaying.id);
@@ -116,6 +122,15 @@ export function NowPlaying({
       if (await onLike(nowPlaying.id, true)) markSuperLiked(nowPlaying.id);
     } finally {
       setLiking(false);
+    }
+  };
+
+  const handleSuberu = async () => {
+    setSuberuPressing(true);
+    try {
+      if (await onSuberu(nowPlaying.id)) markSuberu(nowPlaying.id);
+    } finally {
+      setSuberuPressing(false);
     }
   };
 
@@ -198,6 +213,15 @@ export function NowPlaying({
               sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
             >
               {voted ? "投票済み" : `${formatDuration(nextTier.capSeconds)}に短縮へ投票`}
+            </Button>
+            <Button
+              variant="outlined"
+              color="inherit"
+              onClick={handleSuberu}
+              disabled={suberuPressing || suberuPressed}
+              sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
+            >
+              {suberuPressed ? "😒 スベってる済み" : "😒 スベってる"} ({nowPlaying.suberu ?? 0})
             </Button>
             {isMyRequest(nowPlaying.id) && (
               <Button
