@@ -195,6 +195,10 @@ export function StatsView() {
           <Section title="badの多い動画">
             <VideoTable rows={stats.topVideosByCancelVotes} valueKey="totalCancelVotes" valueLabel="bad数" />
           </Section>
+
+          <Section title="スベってる(😒)の多い動画">
+            <VideoTable rows={stats.topVideosBySuberu ?? []} valueKey="totalSuberu" valueLabel="スベってる数" />
+          </Section>
         </>
       ) : null}
     </Stack>
@@ -312,7 +316,7 @@ function VideoTable({
   valueLabel,
 }: {
   rows: VideoStat[];
-  valueKey: "requestCount" | "totalLikes" | "totalCancelVotes";
+  valueKey: "requestCount" | "totalLikes" | "totalCancelVotes" | "totalSuberu";
   valueLabel: string;
 }) {
   const { limit, button } = useShowMore(rows.length);
@@ -367,7 +371,7 @@ function VideoTable({
                   </Box>
                 </TableCell>
                 <TableCell sx={channelCellSx}>{row.channelTitle}</TableCell>
-                <TableCell align="right">{row[valueKey].toLocaleString("ja-JP")}</TableCell>
+                <TableCell align="right">{(row[valueKey] ?? 0).toLocaleString("ja-JP")}</TableCell>
               </TableRow>
             ))}
           </TableBody>
