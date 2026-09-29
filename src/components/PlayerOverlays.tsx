@@ -138,8 +138,7 @@ export function PlayerOverlays({
       </Box>
 
       {/* New-request toast: fires once per request as it's added to the
-          queue. Below it sits the vote-status badge, so both transient
-          notices share one column instead of competing for space.
+          queue.
           pointerEvents "none" on the column itself too: its hidden (but
           still laid-out) children keep it full-width and ~200px tall, which
           otherwise swallows clicks on the YouTube player's own top bar. */}
@@ -180,10 +179,21 @@ export function PlayerOverlays({
             }}
           />
         </Slide>
+      </Box>
 
-        {/* Vote-status badge: current like/スベってる tally for the
-            playing request, shown on start (if non-zero) and again on
-            every increase. ~6x a normal small Chip on the md+ TV screen. */}
+      {/* Vote-status badge: current like/スベってる tally for the
+          playing request, shown on start (if non-zero) and again on
+          every increase. ~6x a normal small Chip on the md+ TV screen.
+          Pinned to the left edge, just below the centered new-request
+          toast's row so a long toast title can't overlap it. */}
+      <Box
+        sx={{
+          position: "absolute",
+          top: { xs: 44, sm: 72, md: 96 },
+          left: { xs: 8, sm: 16 },
+          pointerEvents: "none",
+        }}
+      >
         <Grow in={voteStatusVisible} timeout={250} style={{ pointerEvents: "none" }}>
           <Stack direction="row" spacing={{ xs: 0.75, sm: 1.5 }}>
             {/* voteStatusContent.likes is the total (super likes count as two in
