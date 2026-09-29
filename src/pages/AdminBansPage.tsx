@@ -27,6 +27,7 @@ import TimerIcon from "@mui/icons-material/Timer";
 import VpnLockIcon from "@mui/icons-material/VpnLock";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { api } from "../api";
+import { visibleInterval } from "../lib/visibleInterval";
 import type {
   AdminVideoRequest,
   BanEvasion,
@@ -164,8 +165,7 @@ function AdminBansPage() {
 
   useEffect(() => {
     refresh();
-    const interval = setInterval(refresh, 5000);
-    return () => clearInterval(interval);
+    return visibleInterval(refresh, 5000);
   }, [refresh]);
 
   const bannedIPs = new Set(bans.map((b) => b.ip));
@@ -219,9 +219,9 @@ function AdminBansPage() {
 
   // Every request grouped by requester IP (newest first), so both the
   // cancel-vote total and the full history below can be derived from it.
-  // Note: only requests still in this server process's memory since its
-  // last restart are included here — done requests aren't persisted to
-  // disk (see store.Store.SaveToFile), so history older than that is gone.
+  // Note: the backend only keeps finished requests for 2 hours (see
+  // store.DoneRetention), and doesn't persist them across a restart at all,
+  // so history older than that is gone.
   const requestsByIP = new Map<string, AdminVideoRequest[]>();
   for (const r of recentRequests) {
     if (!r.requesterIP) continue;

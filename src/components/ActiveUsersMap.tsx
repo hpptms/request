@@ -13,10 +13,13 @@ import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps
 import type { ActiveUsersPoint, ActiveUsersByPrefecture, ActiveUsersByCountry } from "../lib/activeUsersHeatmap";
 
 // Natural Earth 1:50m admin-0 countries (public domain), via the world-atlas
-// npm package — vendored as a static asset (public/data/countries-50m.json)
-// rather than pulled in as a dependency, since only this one topojson file
-// is used.
-const JAPAN_GEO_URL = "/data/countries-50m.json";
+// npm package's countries-50m.json — vendored as a static asset rather than
+// pulled in as a dependency, and trimmed to the 9 countries whose outlines
+// reach within 5° of this map's fixed view (lon 124-150, lat 20-47, see
+// PROJECTION_* below), unused arcs and the "land" object dropped: 740KB ->
+// 110KB, and 232 fewer off-screen SVG paths to render. Widen that trim if
+// the projection ever shows more of the world.
+const JAPAN_GEO_URL = "/data/japan-region-50m.json";
 
 // Shared between ComposableMap's projectionConfig prop and the standalone
 // d3-geo projection below — the two must stay in lockstep or nearest-point

@@ -12,6 +12,7 @@ import Typography from "@mui/material/Typography";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SendIcon from "@mui/icons-material/Send";
 import { api } from "../api";
+import { visibleInterval } from "../lib/visibleInterval";
 import type { InquiryThread } from "../types";
 
 // メッセージ画面 (/admin/messages): 訪問者から届いたメッセージをIPごとのスレッド
@@ -43,8 +44,7 @@ function AdminMessagesPage() {
 
   useEffect(() => {
     refresh();
-    const interval = setInterval(refresh, 15000);
-    return () => clearInterval(interval);
+    return visibleInterval(refresh, 15000);
   }, [refresh]);
 
   const handleReply = async (ip: string) => {

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../api";
+import { visibleInterval } from "./visibleInterval";
 
 // How long each chat line stays on the /play screen.
 export const CHAT_DISPLAY_MS = 10000;
@@ -39,10 +40,7 @@ export function usePlayChat() {
 
   useEffect(() => {
     poll();
-    const interval = setInterval(() => {
-      if (!document.hidden) poll();
-    }, POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
+    return visibleInterval(poll, POLL_INTERVAL_MS);
   }, [poll]);
 
   // Drop expired lines.

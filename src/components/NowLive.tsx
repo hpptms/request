@@ -8,6 +8,7 @@ import type { SvgIconProps } from "@mui/material/SvgIcon";
 import Typography from "@mui/material/Typography";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 import { api } from "../api";
+import { visibleInterval } from "../lib/visibleInterval";
 import { Fc2Mark, NiconicoMark } from "./BrandIcons";
 import type { NowLiveItem } from "../types";
 
@@ -53,12 +54,10 @@ export function NowLive() {
           // Purely a nicety — keep whatever was shown.
         });
     load();
-    const interval = setInterval(() => {
-      if (!document.hidden) load();
-    }, REFRESH_MS);
+    const stop = visibleInterval(load, REFRESH_MS);
     return () => {
       cancelled = true;
-      clearInterval(interval);
+      stop();
     };
   }, []);
 

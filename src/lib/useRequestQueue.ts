@@ -4,6 +4,7 @@ import type { CancelVoteTier, VideoRequest } from "../types";
 import { trackEvent } from "./analytics";
 import { markMyRequest } from "./myRequestStorage";
 import { setVoteQuota } from "./voteQuota";
+import { useStableState } from "./useStableState";
 import { visibleInterval } from "./visibleInterval";
 
 const POLL_INTERVAL_MS = 4000;
@@ -32,20 +33,22 @@ const DEFAULT_FAST_FORWARD_CANCEL_VOTE_TIERS: CancelVoteTier[] = [
 // into trackEvent calls so analytics can tell which screen an action came
 // from, matching the existing "board"/"viewer" convention.
 export function useRequestQueue(source: string) {
-  const [requests, setRequests] = useState<VideoRequest[]>([]);
+  // Stable: most polls return the same queue, and re-rendering the whole
+  // board every POLL_INTERVAL_MS for nothing adds up on phones.
+  const [requests, setRequests] = useStableState<VideoRequest[]>([]);
   // Distinct from requests.length === 0: consumers that only want to render
   // once the real backlog is known (e.g. RequestSidePlayer's "seed on first
   // poll" new-request-toast logic) can gate on this instead of the
   // transient [] `requests` starts life as.
   const [requestsLoaded, setRequestsLoaded] = useState(false);
   const [cancelVoteThreshold, setCancelVoteThreshold] = useState(DEFAULT_CANCEL_VOTE_THRESHOLD);
-  const [cancelVoteTiers, setCancelVoteTiers] = useState<CancelVoteTier[]>(DEFAULT_CANCEL_VOTE_TIERS);
+  const [cancelVoteTiers, setCancelVoteTiers] = useStableState<CancelVoteTier[]>(DEFAULT_CANCEL_VOTE_TIERS);
   // Backlog fast-forward mode (see AppConfig.fastForwardActive): while
   // active, fastForwardCancelVoteTiers is used instead of cancelVoteTiers
   // for the bad-vote button's next-tier label (see NowPlaying/
   // RequestSidePlayer) — kept in sync by the same config poll below.
   const [fastForwardActive, setFastForwardActive] = useState(false);
-  const [fastForwardCancelVoteTiers, setFastForwardCancelVoteTiers] = useState<CancelVoteTier[]>(
+  const [fastForwardCancelVoteTiers, setFastForwardCancelVoteTiers] = useStableState<CancelVoteTier[]>(
     DEFAULT_FAST_FORWARD_CANCEL_VOTE_TIERS,
   );
   // Base seconds each video is currently being paced to, plus

@@ -12,7 +12,9 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     server: {
       proxy: {
-        '/api': `http://localhost:${backendPort}`,
+        // changeOrigin off keeps the browser's Host (localhost:5173), which
+        // the backend's CSRF guard compares Origin against.
+        '/api': { target: `http://localhost:${backendPort}`, changeOrigin: false },
       },
     },
   }

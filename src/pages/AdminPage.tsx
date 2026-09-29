@@ -26,6 +26,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import ShieldIcon from "@mui/icons-material/Shield";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import { api } from "../api";
+import { visibleInterval } from "../lib/visibleInterval";
 import { AdminLoginForm } from "../components/AdminLoginForm";
 import { SiteLogo } from "../components/SiteLogo";
 
@@ -53,8 +54,7 @@ function AdminPage() {
   // silently having their next action fail.
   useEffect(() => {
     checkSession();
-    const interval = setInterval(checkSession, 15000);
-    return () => clearInterval(interval);
+    return visibleInterval(checkSession, 15000);
   }, [checkSession]);
 
   if (checkingSession) {
@@ -118,10 +118,10 @@ function AdminLayout({ onLoggedOut }: { onLoggedOut: () => void }) {
         })
         .catch(() => {});
     poll();
-    const interval = setInterval(poll, 30000);
+    const stop = visibleInterval(poll, 30000);
     return () => {
       cancelled = true;
-      clearInterval(interval);
+      stop();
     };
   }, [location.pathname]);
 
@@ -138,10 +138,10 @@ function AdminLayout({ onLoggedOut }: { onLoggedOut: () => void }) {
         })
         .catch(() => {});
     poll();
-    const interval = setInterval(poll, 30000);
+    const stop = visibleInterval(poll, 30000);
     return () => {
       cancelled = true;
-      clearInterval(interval);
+      stop();
     };
   }, [location.pathname]);
 
