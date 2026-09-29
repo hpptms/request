@@ -53,6 +53,9 @@ export function TodayThemeBox() {
           {open ? "閉じる" : "テーマを提案"}
         </Button>
       </Stack>
+      <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+        ※テーマは曲探しのお題なので、関係なくてもOK
+      </Typography>
       <Collapse in={open} unmountOnExit>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5, mb: 1.5 }}>
           「今日のテーマ」にしたいお題を送ってください。管理者が承認すると、毎日のテーマ抽選の候補に入ります。
