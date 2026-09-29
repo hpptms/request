@@ -58,6 +58,7 @@ function BoardPage() {
     handleDelete,
     handleVoteCancel,
     handleLike,
+    handleSuberu,
   } = useRequestQueue("board");
 
   return (
@@ -146,6 +147,7 @@ function BoardPage() {
             onMarkDone={handleDone}
             onVoteCancel={handleVoteCancel}
             onLike={handleLike}
+            onSuberu={handleSuberu}
             onCancelMine={handleCancelMine}
           />
           <TodayThemeBox />
@@ -171,7 +173,7 @@ function BoardPage() {
             <Typography variant="h6" sx={{ mb: 1.5 }}>
               再生が終わった動画
             </Typography>
-            <RecentDoneList requests={recentDone} onVoteCancel={handleVoteCancel} onLike={handleLike} />
+            <RecentDoneList requests={recentDone} onVoteCancel={handleVoteCancel} onLike={handleLike} onSuberu={handleSuberu} />
           </Box>
         </Stack>
 

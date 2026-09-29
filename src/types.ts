@@ -14,6 +14,9 @@ export interface VideoRequest {
   likes: number;
   // How many of the likes are super likes (😍, worth two likes each).
   superLikes: number;
+  // How many visitors pressed "スベってる" (😒). Just a tally — no penalty,
+  // no quota; one press per visitor per request.
+  suberu?: number;
   // When the request became "done" (ISO string). Zero-value
   // ("0001-01-01T00:00:00Z") for requests that finished before the backend
   // tracked this.

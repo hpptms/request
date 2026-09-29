@@ -8,10 +8,12 @@ import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import { PlayerOverlays } from "./PlayerOverlays";
+import { hasVoteStatusIncrease, voteStatusOf, type VoteStatus } from "../lib/voteStatus";
 import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
 import { formatDuration } from "../lib/formatDuration";
 import { loadYouTubeIframeApi } from "../lib/loadYouTubeIframeApi";
 import { hasLiked, hasSuperLiked, markLiked, markSuperLiked } from "../lib/likeStorage";
+import { hasSuberu, markSuberu } from "../lib/suberuStorage";
 import { useUnlimitedLikes } from "../lib/voteQuota";
 import {
   DURATION_BADGE_DELAY_MS,
@@ -41,6 +43,7 @@ interface Props {
   fastForwardCapSeconds: number;
   onLike: (id: string, isSuper?: boolean) => Promise<boolean>;
   onVoteCancel: (id: string) => Promise<boolean>;
+  onSuberu: (id: string) => Promise<boolean>;
 }
 
 // How long after the YouTube player reports ready to check whether the
@@ -75,6 +78,7 @@ export function RequestSidePlayer({
   fastForwardCapSeconds,
   onLike,
   onVoteCancel,
+  onSuberu,
 }: Props) {
   const [introVisible, setIntroVisible] = useState(false);
   const [introContent, setIntroContent] = useState<{ title: string; channelTitle: string; videoId: string } | null>(null);
@@ -88,7 +92,7 @@ export function RequestSidePlayer({
   const [newRequestVisible, setNewRequestVisible] = useState(false);
   const [newRequestNotice, setNewRequestNotice] = useState<{ id: string; title: string; videoId: string } | null>(null);
   const [voteStatusVisible, setVoteStatusVisible] = useState(false);
-  const [voteStatusContent, setVoteStatusContent] = useState<{ cancelVotes: number; likes: number; superLikes: number } | null>(null);
+  const [voteStatusContent, setVoteStatusContent] = useState<VoteStatus | null>(null);
   const broadcastState = useBroadcastOverlay();
   const todayTheme = useTodayTheme();
 
@@ -103,7 +107,7 @@ export function RequestSidePlayer({
   const knownRequestIdsRef = useRef<Set<string> | null>(null);
   const newRequestQueueRef = useRef<{ id: string; title: string; videoId: string }[]>([]);
   const newRequestTimerRef = useRef<number | null>(null);
-  const lastShownVoteCountsRef = useRef<{ id: string; cancelVotes: number; likes: number; superLikes: number } | null>(null);
+  const lastShownVoteCountsRef = useRef<(VoteStatus & { id: string }) | null>(null);
   const voteStatusHideTimerRef = useRef<number | null>(null);
 
   const nowPlaying = requests.find((r) => r.status === "playing") ?? null;
@@ -233,6 +237,8 @@ export function RequestSidePlayer({
   const liked = !unlimitedLikes && nowPlaying !== null && hasLiked(nowPlaying.id);
   const superLiked = !unlimitedLikes && nowPlaying !== null && hasSuperLiked(nowPlaying.id);
   const voted = nowPlaying !== null && hasVoted(nowPlaying.id);
+  const [suberuPressing, setSuberuPressing] = useState(false);
+  const suberuPressed = nowPlaying !== null && hasSuberu(nowPlaying.id);
   const activeTiers = fastForwardActive ? fastForwardCancelVoteTiers : cancelVoteTiers;
   const nextTier = nowPlaying
     ? (activeTiers.find((tier) => nowPlaying.cancelVotes < tier.votes) ?? activeTiers[activeTiers.length - 1])
@@ -268,9 +274,19 @@ export function RequestSidePlayer({
     }
   };
 
-  const showVoteStatus = (cancelVotes: number, likes: number, superLikes: number) => {
+  const handleSuberuClick = async () => {
+    if (!nowPlaying) return;
+    setSuberuPressing(true);
+    try {
+      if (await onSuberu(nowPlaying.id)) markSuberu(nowPlaying.id);
+    } finally {
+      setSuberuPressing(false);
+    }
+  };
+
+  const showVoteStatus = (status: VoteStatus) => {
     if (voteStatusHideTimerRef.current !== null) window.clearTimeout(voteStatusHideTimerRef.current);
-    setVoteStatusContent({ cancelVotes, likes, superLikes });
+    setVoteStatusContent(status);
     setVoteStatusVisible(true);
     voteStatusHideTimerRef.current = window.setTimeout(() => {
       setVoteStatusVisible(false);
@@ -351,16 +367,17 @@ export function RequestSidePlayer({
   useEffect(() => {
     if (!nowPlaying) return;
     const last = lastShownVoteCountsRef.current;
+    const status = voteStatusOf(nowPlaying);
     if (!last || last.id !== nowPlaying.id) {
-      lastShownVoteCountsRef.current = { id: nowPlaying.id, cancelVotes: nowPlaying.cancelVotes, likes: nowPlaying.likes, superLikes: nowPlaying.superLikes ?? 0 };
-      if (nowPlaying.likes > 0) {
-        showVoteStatus(nowPlaying.cancelVotes, nowPlaying.likes, nowPlaying.superLikes ?? 0);
+      lastShownVoteCountsRef.current = { id: nowPlaying.id, ...status };
+      if (status.likes > 0 || status.suberu > 0) {
+        showVoteStatus(status);
       }
       return;
     }
-    if (nowPlaying.likes > last.likes) {
-      lastShownVoteCountsRef.current = { id: nowPlaying.id, cancelVotes: nowPlaying.cancelVotes, likes: nowPlaying.likes, superLikes: nowPlaying.superLikes ?? 0 };
-      showVoteStatus(nowPlaying.cancelVotes, nowPlaying.likes, nowPlaying.superLikes ?? 0);
+    if (hasVoteStatusIncrease(last, status)) {
+      lastShownVoteCountsRef.current = { id: nowPlaying.id, ...status };
+      showVoteStatus(status);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nowPlaying]);
@@ -540,6 +557,28 @@ export function RequestSidePlayer({
                 }}
               >
                 <ThumbDownAltIcon />
+              </Button>
+            </span>
+          </Tooltip>
+          <Tooltip title={suberuPressed ? "スベってる済み" : "スベってる"}>
+            <span>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={handleSuberuClick}
+                disabled={suberuPressing || suberuPressed}
+                sx={{
+                  minWidth: 44,
+                  minHeight: 44,
+                  px: 1.5,
+                  fontSize: "1.25rem",
+                  bgcolor: suberuPressed ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.6)",
+                  color: "white",
+                  "&:hover": { bgcolor: "rgba(0,0,0,0.75)" },
+                  "&.Mui-disabled": { color: "white", opacity: suberuPressed ? 1 : 0.5 },
+                }}
+              >
+                😒
               </Button>
             </span>
           </Tooltip>

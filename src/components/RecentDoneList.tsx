@@ -13,12 +13,13 @@ import type { VideoRequest } from "../types";
 import { trackEvent } from "../lib/analytics";
 import { searchKeyword } from "../lib/affiliate";
 import { AffiliateNotice, StoreLinksInline } from "./MusicLinks";
-import { CancelVoteIconButton, LikeIconButton, SuperLikeIconButton } from "./QueueList";
+import { CancelVoteIconButton, LikeIconButton, SuberuIconButton, SuperLikeIconButton } from "./QueueList";
 
 interface Props {
   requests: VideoRequest[];
   onVoteCancel: (id: string) => Promise<boolean>;
   onLike: (id: string, isSuper?: boolean) => Promise<boolean>;
+  onSuberu: (id: string) => Promise<boolean>;
 }
 
 // The watch-page URL of the video a request was made for.
@@ -36,7 +37,7 @@ function sourceUrl(r: VideoRequest): string {
 
 // The most recently finished requests, still open to like/bad, each with a
 // link out to the original video.
-export function RecentDoneList({ requests, onVoteCancel, onLike }: Props) {
+export function RecentDoneList({ requests, onVoteCancel, onLike, onSuberu }: Props) {
   if (requests.length === 0) {
     return (
       <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 }, textAlign: "center" }}>
@@ -104,6 +105,10 @@ export function RecentDoneList({ requests, onVoteCancel, onLike }: Props) {
               <CancelVoteIconButton request={r} onVoteCancel={onVoteCancel} />
               <Typography variant="body2" color="text.secondary" sx={{ minWidth: 20 }} aria-label="bad数">
                 {r.cancelVotes}
+              </Typography>
+              <SuberuIconButton request={r} onSuberu={onSuberu} />
+              <Typography variant="body2" color="text.secondary" sx={{ minWidth: 20 }} aria-label="スベってる数">
+                {r.suberu ?? 0}
               </Typography>
             </Stack>
             <Box sx={{ width: "100%", pl: { xs: 7.5, sm: 9.5 } }}>

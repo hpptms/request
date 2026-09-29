@@ -57,6 +57,7 @@ function PlayPage() {
     handleDelete,
     handleVoteCancel,
     handleLike,
+    handleSuberu,
   } = useRequestQueue("play");
 
   const { lines: chatLines, poll: pollChat } = usePlayChat();
@@ -149,6 +150,7 @@ function PlayPage() {
                 fastForwardCapSeconds={fastForwardCapSeconds}
                 onLike={handleLike}
                 onVoteCancel={handleVoteCancel}
+                onSuberu={handleSuberu}
               />
             )}
             <PlayChatOverlay lines={chatLines} />

@@ -222,6 +222,24 @@ export function useRequestQueue(source: string) {
     }
   };
 
+  const handleSuberu = async (id: string): Promise<boolean> => {
+    const trackingParams = videoTrackingParams(id);
+    try {
+      const result = await api.suberu(id);
+      trackEvent("video_request_suberu", {
+        request_id: id,
+        suberu_count: result.suberuCount,
+        source,
+        ...trackingParams,
+      });
+      await refresh();
+      return true;
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "スベってるの送信に失敗しました");
+      return false;
+    }
+  };
+
   const nowPlaying = requests.find((r) => r.status === "playing") ?? null;
   const pending = requests.filter((r) => r.status === "pending");
   // Newest finish first; requests without a finishedAt (finished before the
@@ -255,5 +273,6 @@ export function useRequestQueue(source: string) {
     handleDelete,
     handleVoteCancel,
     handleLike,
+    handleSuberu,
   };
 }

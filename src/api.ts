@@ -128,6 +128,10 @@ export const api = {
   likeRequest: (id: string, isSuper = false) =>
     request<LikeResult>(`/requests/${id}/${isSuper ? "super-like" : "like"}`, { method: "POST" }),
 
+  // スベってる(😒): counted once per visitor per request, no quota/penalty.
+  suberu: (id: string) =>
+    request<{ suberuCount: number }>(`/requests/${id}/suberu`, { method: "POST" }),
+
   // Remaining hourly like/bad allowance for the caller's IP.
   getMyVoteQuota: () => request<VoteQuota>("/my-vote-quota"),
 
