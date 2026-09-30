@@ -24,8 +24,12 @@ const JAPAN_GEO_URL = "/data/japan-region-50m.json";
 // Shared between ComposableMap's projectionConfig prop and the standalone
 // d3-geo projection below — the two must stay in lockstep or nearest-point
 // hover math would target the wrong screen coordinates.
-const PROJECTION_CENTER: [number, number] = [137, 34.5];
-const PROJECTION_SCALE = 1150;
+// Zoomed in as far as the viewBox allows while still fitting Naha (lon
+// 127.7, lat 26.2) and Wakkanai (lat 45.4): roughly lon 127-148, lat
+// 24.5-45.8. Tighter zoom = more screen distance between neighbouring
+// cities (Osaka/Kyoto/Kobe, Tokyo's wards), so their bubbles separate.
+const PROJECTION_CENTER: [number, number] = [137.5, 36];
+const PROJECTION_SCALE = 1400;
 const VIEWBOX_WIDTH = 520;
 const VIEWBOX_HEIGHT = 640;
 
@@ -36,8 +40,13 @@ const VIEWBOX_HEIGHT = 640;
 // step so it's the one that visually pops.
 const SEQUENTIAL_STEPS = ["#0d366b", "#1c5cab", "#2a78d6", "#6da7ec", "#b7d3f6"];
 
-const MIN_RADIUS = 5;
-const MAX_RADIUS = 28;
+// Absolute, not relative to the current max: with real traffic most
+// cities have 1-3 users, and max-relative sizing blew every one of those
+// up to near MAX_RADIUS, merging neighbouring cities into a single blob.
+// 1 user -> 8, 10 -> ~16.6, 25+ -> MAX_RADIUS.
+const MIN_RADIUS = 4;
+const RADIUS_PER_SQRT_USER = 4;
+const MAX_RADIUS = 24;
 const MAP_SURFACE = "#101014";
 
 function bucketColor(value: number, maxValue: number) {
@@ -49,9 +58,8 @@ function bucketColor(value: number, maxValue: number) {
 
 // Proportional-symbol convention: encode magnitude in *area*, not radius,
 // so a 4x value doesn't look 4x as "big" (it would if r scaled linearly).
-function radiusFor(value: number, maxValue: number) {
-  if (maxValue <= 0) return MIN_RADIUS;
-  return MIN_RADIUS + (MAX_RADIUS - MIN_RADIUS) * Math.sqrt(value / maxValue);
+function radiusFor(value: number) {
+  return Math.min(MAX_RADIUS, MIN_RADIUS + RADIUS_PER_SQRT_USER * Math.sqrt(Math.max(0, value)));
 }
 
 // Localizes an ISO 3166-1 alpha-2 code ("US" -> "アメリカ合衆国"), falling
@@ -139,7 +147,7 @@ export function ActiveUsersMap({
       }
     }
     if (!nearest) return;
-    const hitR = Math.max(radiusFor(nearest.activeUsers, maxValue) + 8, 16);
+    const hitR = Math.max(radiusFor(nearest.activeUsers) + 8, 16);
     setHovered(nearestDist <= hitR + 20 ? nearest : null);
   };
 
@@ -152,7 +160,7 @@ export function ActiveUsersMap({
       <style>{`
         @keyframes heatmap-pulse {
           0%, 100% { transform: scale(1); opacity: 0.8; }
-          50% { transform: scale(1.18); opacity: 0.5; }
+          50% { transform: scale(1.1); opacity: 0.5; }
         }
         @media (prefers-reduced-motion: reduce) {
           .heatmap-pulse-circle { animation: none !important; }
@@ -199,7 +207,7 @@ export function ActiveUsersMap({
               (nearest-point); these circles only need to carry keyboard
               focus + a11y labels. */}
           {sortedPoints.map((d) => {
-            const r = radiusFor(d.activeUsers, maxValue);
+            const r = radiusFor(d.activeUsers);
             const hitR = Math.max(r + 8, 16);
             const key = `${d.lat},${d.lng}`;
             const hash = hashString(key);
@@ -218,14 +226,14 @@ export function ActiveUsersMap({
                   onBlur={() => setHovered((h) => (h === d ? null : h))}
                   style={{ cursor: "pointer" }}
                 />
-                {/* 2px surface ring so overlapping bubbles (e.g. Tokyo/
+                {/* 1px surface ring so overlapping bubbles (e.g. Tokyo/
                     Yokohama) stay legible — marks-and-anatomy.md. */}
                 <circle
                   className="heatmap-pulse-circle"
                   r={r}
                   fill={bucketColor(d.activeUsers, maxValue)}
                   stroke={MAP_SURFACE}
-                  strokeWidth={2}
+                  strokeWidth={1}
                   pointerEvents="none"
                   style={{
                     opacity: 0.8,
