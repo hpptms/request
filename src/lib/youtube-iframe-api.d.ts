@@ -53,6 +53,8 @@ declare namespace YT {
     getVideoData(): { video_id: string; title: string };
     getDuration(): number;
     seekTo(seconds: number, allowSeekAhead: boolean): void;
+    // Undocumented but long-standing; unloadModule("captions") hides captions.
+    unloadModule(module: string): void;
   }
 }
 

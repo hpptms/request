@@ -414,10 +414,10 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
         // though YouTube's branding requirements mean a small logo
         // watermark and (briefly, right as a video ends) its
         // related-videos end screen can't be suppressed via this API at
-        // all. cc_load_policy=1 turns on the video's own captions
-        // whenever it has any (many official music videos ship synced
-        // lyrics this way) — this is YouTube's own player rendering
-        // them, not anything fetched/reproduced by this app.
+        // all. cc_load_policy=0 keeps captions off; since that alone can
+        // still be overridden by the viewer's own YouTube caption settings,
+        // the captions module is also unloaded whenever playback starts
+        // (see onStateChange).
         playerVars: {
           autoplay: 1,
           rel: 0,
@@ -427,11 +427,12 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
           modestbranding: 1,
           iv_load_policy: 3,
           fs: 0,
-          cc_load_policy: 1,
+          cc_load_policy: 0,
         },
         events: {
           onReady: () => setPlayerReady(true),
           onStateChange: (event) => {
+            if (event.data === YTApi.PlayerState.PLAYING) event.target.unloadModule("captions");
             if (event.data === YTApi.PlayerState.ENDED) {
               // stopVideo() on the video that just finished can deliver one
               // more ENDED after the next request has already been loaded;

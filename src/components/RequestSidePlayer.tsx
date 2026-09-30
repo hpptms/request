@@ -140,7 +140,7 @@ export function RequestSidePlayer({
       ytPlayerRef.current = new YTApi.Player(target, {
         width: "100%",
         height: "100%",
-        playerVars: { autoplay: 1, rel: 0, playsinline: 1, modestbranding: 1 },
+        playerVars: { autoplay: 1, rel: 0, playsinline: 1, modestbranding: 1, cc_load_policy: 0 },
         events: {
           onReady: () => {
             if (!cancelled) setYtReady(true);
