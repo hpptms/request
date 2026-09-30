@@ -14,7 +14,7 @@
     <title>動画リクエストキュー | みんなで一緒に動画を見るリクエストサイト</title>
 
     <!-- Sitewide defaults for crawlers and link previews. Each public page
-         (BoardPage/ReportPage/StatsPage) overwrites description/canonical/
+         (BoardPage/PlayPage/StatsPage/...) overwrites description/canonical/
          og:* for its own route once it mounts, via src/lib/useSeo.ts — this
          is a client-rendered SPA with no server-side rendering, so these
          tags are what's present before/without JS, and also what a page
@@ -33,7 +33,11 @@
     <meta name="twitter:title" content="動画リクエストキュー | みんなで一緒に動画を見るリクエストサイト" />
     <meta name="twitter:description" content="動画をリクエストして、みんなで一緒に動画を見よう。YouTube・ニコニコ動画・Vimeoに対応した視聴者参加型の動画リクエストサイト。" />
     <meta property="og:image" content="https://request.tokyo/apple-touch-icon.png" />
+    <meta property="og:image:width" content="180" />
+    <meta property="og:image:height" content="180" />
+    <meta property="og:image:alt" content="動画リクエストキューのロゴ" />
     <meta name="twitter:image" content="https://request.tokyo/apple-touch-icon.png" />
+    <meta name="twitter:site" content="@request_tokyo" />
 
     <!-- Structured data (a data block, not a script that runs, so the CSP's
          script-src doesn't affect it). -->
@@ -45,7 +49,19 @@
         "alternateName": ["動画リクエスト", "みんなで一緒に動画を見るリクエストサイト"],
         "url": "https://request.tokyo/",
         "inLanguage": "ja",
-        "description": "動画リクエストキューは、リクエスタ(リクエスター)がYouTube・ニコニコ動画・Vimeoの動画をリクエストして、みんなで一緒に動画を見られる視聴者参加型の動画リクエストサイトです。いいね・bad投票でリクエストの再生順が変わります。"
+        "description": "動画リクエストキューは、リクエスタ(リクエスター)がYouTube・ニコニコ動画・Vimeoの動画をリクエストして、みんなで一緒に動画を見られる視聴者参加型の動画リクエストサイトです。いいね・bad投票でリクエストの再生順が変わります。",
+        "publisher": { "@id": "https://request.tokyo/#organization" }
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "@id": "https://request.tokyo/#organization",
+        "name": "動画リクエストキュー",
+        "url": "https://request.tokyo/",
+        "logo": "https://request.tokyo/apple-touch-icon.png",
+        "sameAs": ["https://x.com/request_tokyo"]
       }
     </script>
 

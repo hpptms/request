@@ -4,8 +4,11 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { Link as RouterLink } from "react-router-dom";
 
-// Shared bottom-of-page links to the site's non-queue pages (プライバシー
-// ポリシー/サイトについて/お問い合わせ) — added to the pages a crawler or
+// Shared bottom-of-page links to the site's other public pages (再生/集計/
+// ヒートマップ/お知らせ, plus プライバシーポリシー/サイトについて/お問い合わせ)
+// — the first four are also in BoardPage's header, but not in every other
+// page's, so listing them here gives each public page a crawlable path to
+// all the others. Added to the pages a crawler or
 // reviewer is most likely to land on first (BoardPage, StatsPage) so these
 // pages are actually reachable by navigation, not just present at a URL.
 // Left off PlayPage/ViewerPage, which are optimized to show the video/queue
@@ -20,6 +23,21 @@ export function Footer() {
         divider={<Box sx={{ display: { xs: "none", sm: "block" }, borderLeft: 1, borderColor: "divider" }} />}
         sx={{ justifyContent: "center", alignItems: "center", flexWrap: "wrap", px: 2 }}
       >
+        <Link component={RouterLink} to="/" variant="body2" color="text.secondary" underline="hover">
+          リクエスト一覧
+        </Link>
+        <Link component={RouterLink} to="/play" variant="body2" color="text.secondary" underline="hover">
+          再生
+        </Link>
+        <Link component={RouterLink} to="/stats" variant="body2" color="text.secondary" underline="hover">
+          集計
+        </Link>
+        <Link component={RouterLink} to="/heatmap" variant="body2" color="text.secondary" underline="hover">
+          ヒートマップ
+        </Link>
+        <Link component={RouterLink} to="/notice" variant="body2" color="text.secondary" underline="hover">
+          お知らせ
+        </Link>
         <Link component={RouterLink} to="/about" variant="body2" color="text.secondary" underline="hover">
           サイトについて
         </Link>
