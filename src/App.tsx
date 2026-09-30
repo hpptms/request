@@ -24,6 +24,7 @@ const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 const ViewerPage = lazy(() => import("./pages/ViewerPage"));
 const NoticePage = lazy(() => import("./pages/NoticePage"));
+const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const AdminBansPage = lazy(() => import("./pages/AdminBansPage"));
 const AdminPlaylistPage = lazy(() => import("./pages/AdminPlaylistPage"));
@@ -126,6 +127,7 @@ function AppRoutes() {
             <Route path="live" element={<AdminNowLivePage />} />
             <Route path="themes" element={<AdminThemesPage />} />
           </Route>
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Box>
     </Suspense>
