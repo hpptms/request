@@ -17,10 +17,11 @@ import CasinoIcon from "@mui/icons-material/Casino";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EventIcon from "@mui/icons-material/Event";
 import TodayIcon from "@mui/icons-material/Today";
 import { api } from "../api";
 import { visibleInterval } from "../lib/visibleInterval";
-import type { Theme, TodayTheme } from "../types";
+import type { AdminThemes, Theme, TodayTheme } from "../types";
 
 // Mirrors backend theme.MaxTextRunes.
 const MAX_LENGTH = 40;
@@ -28,18 +29,21 @@ const MAX_LENGTH = 40;
 // テーマ管理画面 (/admin/themes): 今日のテーマの候補を追加し、ユーザーからの
 // 提案を承認/却下する。毎日(JST)、承認済みのテーマから選ばれた回数が
 // 最も少ないものの中でランダムに1つが選ばれる(backend/internal/theme)。
+// 翌日のテーマは1日前に予約として選ばれるので、ここで確認・差し替えできる。
 function AdminThemesPage() {
   const [themes, setThemes] = useState<Theme[]>([]);
   const [today, setToday] = useState<TodayTheme | null>(null);
+  const [next, setNext] = useState<TodayTheme | null>(null);
   const [text, setText] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const apply = ({ themes, today }: { themes: Theme[]; today: TodayTheme }) => {
+  const apply = ({ themes, today, next }: AdminThemes) => {
     setThemes(themes);
     setToday(today.text ? today : null);
+    setNext(next?.text ? next : null);
   };
 
-  const run = useCallback(async (action: () => Promise<{ themes: Theme[]; today: TodayTheme }>, failure: string) => {
+  const run = useCallback(async (action: () => Promise<AdminThemes>, failure: string) => {
     try {
       apply(await action());
       setErrorMessage(null);
@@ -94,6 +98,28 @@ function AdminThemesPage() {
           onClick={() => run(api.adminRedrawTheme, "引き直しに失敗しました")}
         >
           今日のテーマを引き直す
+        </Button>
+      </Paper>
+
+      <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
+        <Typography variant="h6" gutterBottom>
+          明日のテーマ{next && ` (${formatThemeDate(next.date)} 朝8時から)`}
+        </Typography>
+        <Typography variant="h5" sx={{ fontWeight: 700, mb: 1, wordBreak: "break-word" }}>
+          {next ? next.text : "承認済みのテーマがありません"}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          明日のテーマはあらかじめ選ばれていて、明日の朝8時にそのまま今日のテーマになります。差し替えたい場合は引き直すか、テーマ一覧の
+          <EventIcon fontSize="inherit" sx={{ verticalAlign: "middle", mx: 0.25 }} />
+          ボタンで指定してください。
+        </Typography>
+        <Button
+          variant="outlined"
+          startIcon={<CasinoIcon />}
+          disabled={approved.length === 0}
+          onClick={() => run(api.adminRedrawNextTheme, "引き直しに失敗しました")}
+        >
+          明日のテーマを引き直す
         </Button>
       </Paper>
 
@@ -177,6 +203,16 @@ function AdminThemesPage() {
                   divider={i < approved.length - 1}
                   secondaryAction={
                     <Stack direction="row">
+                      <Tooltip title="明日のテーマにする">
+                        <span>
+                          <IconButton
+                            disabled={next?.themeId === t.id}
+                            onClick={() => run(() => api.adminSetNextTheme(t.id), "設定に失敗しました")}
+                          >
+                            <EventIcon />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
                       <Tooltip title="今日のテーマにする">
                         <span>
                           <IconButton
@@ -196,11 +232,12 @@ function AdminThemesPage() {
                   }
                 >
                   <ListItemText
-                    sx={{ pr: 11, wordBreak: "break-word" }}
+                    sx={{ pr: 16, wordBreak: "break-word" }}
                     primary={
                       <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap" }} useFlexGap>
                         <span>{t.text}</span>
                         {today?.themeId === t.id && <Chip label="今日" color="primary" size="small" sx={{ height: 18, fontSize: "0.65rem" }} />}
+                        {next?.themeId === t.id && <Chip label="明日" color="secondary" size="small" sx={{ height: 18, fontSize: "0.65rem" }} />}
                         {t.source === "user" && <Chip label="ユーザー提案" size="small" sx={{ height: 18, fontSize: "0.65rem" }} />}
                       </Stack>
                     }
@@ -216,6 +253,13 @@ function AdminThemesPage() {
       </Box>
     </Stack>
   );
+}
+
+// "2026-10-01" -> "10/1(木)"
+function formatThemeDate(date: string): string {
+  const [y, m, d] = date.split("-").map(Number);
+  const weekday = "日月火水木金土"[new Date(y, m - 1, d).getDay()];
+  return `${m}/${d}(${weekday})`;
 }
 
 export default AdminThemesPage;
