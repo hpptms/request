@@ -451,6 +451,14 @@ export interface TodayTheme {
   text: string;
 }
 
+// The admin theme endpoints' response: next is the theme reserved for
+// tomorrow's theme day, which the admin can swap before it goes live.
+export interface AdminThemes {
+  themes: Theme[];
+  today: TodayTheme;
+  next: TodayTheme;
+}
+
 // backend/internal/safeip.Entry — an IP that keeps working (requests,
 // votes, ...) even while banned, and is never auto-banned.
 export interface SafeIP {

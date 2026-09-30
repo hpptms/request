@@ -23,11 +23,10 @@ import type {
   SearchResult,
   StatsSummary,
   SuspiciousFingerprint,
-  Theme,
+  AdminThemes,
   BanEvasion,
   SafeIP,
   TimeSlot,
-  TodayTheme,
   VideoRequest,
   VoteOnlyVoter,
   VoteQuota,
@@ -176,21 +175,20 @@ export const api = {
   // Visitor suggestion, shown to the admin for approval before it can be drawn.
   suggestTheme: (text: string) =>
     request<{ ok: boolean }>("/themes", { method: "POST", body: JSON.stringify({ text }) }),
-  // Every admin theme call answers with the updated list and today's pick.
-  adminListThemes: () => request<{ themes: Theme[]; today: TodayTheme }>("/admin/themes"),
+  // Every admin theme call answers with the updated list, today's pick and
+  // tomorrow's reservation.
+  adminListThemes: () => request<AdminThemes>("/admin/themes"),
   adminAddTheme: (text: string) =>
-    request<{ themes: Theme[]; today: TodayTheme }>("/admin/themes", {
+    request<AdminThemes>("/admin/themes", {
       method: "POST",
       body: JSON.stringify({ text }),
     }),
-  adminApproveTheme: (id: number) =>
-    request<{ themes: Theme[]; today: TodayTheme }>(`/admin/themes/${id}/approve`, { method: "POST" }),
-  adminDeleteTheme: (id: number) =>
-    request<{ themes: Theme[]; today: TodayTheme }>(`/admin/themes/${id}`, { method: "DELETE" }),
-  adminSetTodayTheme: (id: number) =>
-    request<{ themes: Theme[]; today: TodayTheme }>(`/admin/themes/${id}/today`, { method: "POST" }),
-  adminRedrawTheme: () =>
-    request<{ themes: Theme[]; today: TodayTheme }>("/admin/themes/redraw", { method: "POST" }),
+  adminApproveTheme: (id: number) => request<AdminThemes>(`/admin/themes/${id}/approve`, { method: "POST" }),
+  adminDeleteTheme: (id: number) => request<AdminThemes>(`/admin/themes/${id}`, { method: "DELETE" }),
+  adminSetTodayTheme: (id: number) => request<AdminThemes>(`/admin/themes/${id}/today`, { method: "POST" }),
+  adminRedrawTheme: () => request<AdminThemes>("/admin/themes/redraw", { method: "POST" }),
+  adminSetNextTheme: (id: number) => request<AdminThemes>(`/admin/themes/${id}/next`, { method: "POST" }),
+  adminRedrawNextTheme: () => request<AdminThemes>("/admin/themes/redraw-next", { method: "POST" }),
 
   // /play's throwaway chat (backend/internal/chat).
   getChat: (afterId: number) => request<{ messages: ChatMessage[] }>(`/chat?after=${afterId}`),
