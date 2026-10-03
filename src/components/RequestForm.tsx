@@ -135,14 +135,17 @@ export function RequestForm({ onSubmit, inline = false }: Props) {
   if (inline) {
     return (
       <Box component="form" onSubmit={handleSubmit}>
-        <Stack direction="row" spacing={1}>
-          <Box sx={{ flex: "0 1 140px", minWidth: 72 }}>{nameField}</Box>
-          <Box sx={{ flex: "1 1 auto", minWidth: 0 }}>{urlField}</Box>
+        {/* Below sm the name drops to its own second row (order + 100% basis) so the URL field keeps its width; sm+ stays one row. */}
+        <Box sx={{ display: "flex", flexWrap: { xs: "wrap", sm: "nowrap" }, gap: 1 }}>
+          <Box sx={{ order: { xs: 1, sm: 0 }, flex: { xs: "1 1 100%", sm: "0 1 140px" }, minWidth: { sm: 72 } }}>
+            {nameField}
+          </Box>
+          <Box sx={{ flex: "1 1 0", minWidth: 0 }}>{urlField}</Box>
           <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
             {requestButton}
             {twoMinuteButton}
           </Stack>
-        </Stack>
+        </Box>
         {errorAlert}
       </Box>
     );
