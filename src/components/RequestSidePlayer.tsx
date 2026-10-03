@@ -81,7 +81,7 @@ export function RequestSidePlayer({
   onSuberu,
 }: Props) {
   const [introVisible, setIntroVisible] = useState(false);
-  const [introContent, setIntroContent] = useState<{ title: string; channelTitle: string; videoId: string } | null>(null);
+  const [introContent, setIntroContent] = useState<{ title: string; channelTitle: string; videoId: string; requesterName?: string } | null>(null);
   const [durationBadgeVisible, setDurationBadgeVisible] = useState(false);
   const [durationBadgeSeconds, setDurationBadgeSeconds] = useState<number | null>(null);
   // newRequestNotice only ever updates when showing a new one (same
@@ -341,7 +341,12 @@ export function RequestSidePlayer({
     if (durationBadgeHideTimerRef.current !== null) window.clearTimeout(durationBadgeHideTimerRef.current);
     setDurationBadgeVisible(false);
 
-    setIntroContent({ title: nowPlaying.title, channelTitle: nowPlaying.channelTitle, videoId: nowPlaying.videoId });
+    setIntroContent({
+      title: nowPlaying.title,
+      channelTitle: nowPlaying.channelTitle,
+      videoId: nowPlaying.videoId,
+      requesterName: nowPlaying.requesterName,
+    });
     setIntroVisible(true);
     introHideTimerRef.current = window.setTimeout(() => {
       setIntroVisible(false);

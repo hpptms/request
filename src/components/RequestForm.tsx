@@ -9,8 +9,31 @@ import Typography from "@mui/material/Typography";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import TimerIcon from "@mui/icons-material/Timer";
 
+// Mirrors backend api.maxRequesterNameLen.
+const MAX_NAME_LENGTH = 30;
+// The name is remembered per browser so regulars don't retype it.
+const NAME_STORAGE_KEY = "requesterName";
+
+function loadSavedName(): string {
+  try {
+    return localStorage.getItem(NAME_STORAGE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function saveName(name: string) {
+  try {
+    if (name) localStorage.setItem(NAME_STORAGE_KEY, name);
+    else localStorage.removeItem(NAME_STORAGE_KEY);
+  } catch {
+    // Storage unavailable (private mode etc.) — just don't remember it.
+  }
+}
+
 interface Props {
-  onSubmit: (url: string, twoMinuteRequest: boolean) => Promise<void>;
+  // requesterName is optional ("" when left blank) and shown on the player.
+  onSubmit: (url: string, requesterName: string, twoMinuteRequest: boolean) => Promise<void>;
   // Compact single-row layout (URL, リクエスト, 2分でリクエスト side by side,
   // no card or title) for the /play screen's bottom bar. On phone widths the
   // button labels/icons shrink so it still fits one row.
@@ -29,6 +52,7 @@ const inlineButtonSx = {
 
 export function RequestForm({ onSubmit, inline = false }: Props) {
   const [url, setUrl] = useState("");
+  const [name, setName] = useState(loadSavedName);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,7 +62,9 @@ export function RequestForm({ onSubmit, inline = false }: Props) {
     setSubmitting(true);
     setError(null);
     try {
-      await onSubmit(url.trim(), twoMinuteRequest);
+      const trimmedName = name.trim();
+      saveName(trimmedName);
+      await onSubmit(url.trim(), trimmedName, twoMinuteRequest);
       setUrl("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "リクエストの追加に失敗しました");
@@ -61,6 +87,17 @@ export function RequestForm({ onSubmit, inline = false }: Props) {
       fullWidth
       required
       size="small"
+    />
+  );
+  const nameField = (
+    <TextField
+      label="名前"
+      placeholder="任意"
+      value={name}
+      onChange={(e) => setName(e.target.value)}
+      fullWidth
+      size="small"
+      slotProps={{ htmlInput: { maxLength: MAX_NAME_LENGTH } }}
     />
   );
   const requestButton = (
@@ -99,6 +136,7 @@ export function RequestForm({ onSubmit, inline = false }: Props) {
     return (
       <Box component="form" onSubmit={handleSubmit}>
         <Stack direction="row" spacing={1}>
+          <Box sx={{ flex: "0 1 140px", minWidth: 72 }}>{nameField}</Box>
           <Box sx={{ flex: "1 1 auto", minWidth: 0 }}>{urlField}</Box>
           <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
             {requestButton}
@@ -117,6 +155,7 @@ export function RequestForm({ onSubmit, inline = false }: Props) {
       </Typography>
       <Box component="form" onSubmit={handleSubmit}>
         <Stack spacing={2}>
+          {nameField}
           {urlField}
           <Stack direction="row" spacing={1}>
             {requestButton}
