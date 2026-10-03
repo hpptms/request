@@ -157,8 +157,8 @@ export function RequestForm({ onSubmit, inline = false }: Props) {
       </Typography>
       <Box component="form" onSubmit={handleSubmit}>
         <Stack spacing={2}>
-          {nameField}
           {urlField}
+          {nameField}
           <Stack direction="row" spacing={1}>
             {requestButton}
             {twoMinuteButton}
