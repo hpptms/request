@@ -182,7 +182,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // when showing a new one — introVisible drives the Zoom pop in/out so the
   // exit animation still has the right title to fade away with.
   const [introVisible, setIntroVisible] = useState(false);
-  const [introContent, setIntroContent] = useState<{ title: string; channelTitle: string; videoId: string } | null>(null);
+  const [introContent, setIntroContent] = useState<{ title: string; channelTitle: string; videoId: string; requesterName?: string } | null>(null);
   // Duration badge, shown DURATION_BADGE_VISIBLE_MS starting
   // DURATION_BADGE_DELAY_MS after a video starts (same lagging-content
   // pattern as the intro card above).
@@ -521,13 +521,19 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // the YouTube path can read playerRef.current.getDuration() at the
   // moment the badge is about to show — right after loadVideoById, the
   // player hasn't buffered enough to report it yet.
-  const startNowPlayingIntro = (title: string, channelTitle: string, videoId: string, getDurationSeconds: () => number | null) => {
+  const startNowPlayingIntro = (
+    title: string,
+    channelTitle: string,
+    videoId: string,
+    getDurationSeconds: () => number | null,
+    requesterName?: string,
+  ) => {
     if (introHideTimerRef.current !== null) window.clearTimeout(introHideTimerRef.current);
     if (durationBadgeShowTimerRef.current !== null) window.clearTimeout(durationBadgeShowTimerRef.current);
     if (durationBadgeHideTimerRef.current !== null) window.clearTimeout(durationBadgeHideTimerRef.current);
     setDurationBadgeVisible(false);
 
-    setIntroContent({ title, channelTitle, videoId });
+    setIntroContent({ title, channelTitle, videoId, requesterName });
     setIntroVisible(true);
     introHideTimerRef.current = window.setTimeout(() => {
       setIntroVisible(false);
@@ -975,7 +981,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
         nonYouTubeTimerRef.current = window.setTimeout(() => {
           advanceQueue(api.finishRequest);
         }, timerSeconds * 1000);
-        startNowPlayingIntro(target.title, target.channelTitle, target.videoId, () => playableSeconds || null);
+        startNowPlayingIntro(target.title, target.channelTitle, target.videoId, () => playableSeconds || null, target.requesterName);
         return;
       }
 
@@ -990,7 +996,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
         const duration = playerRef.current?.getDuration();
         if (typeof duration !== "number") return null;
         return (target.endSeconds ? Math.min(target.endSeconds, duration) : duration) - (target.startSeconds ?? 0);
-      });
+      }, target.requesterName);
       return;
     }
 

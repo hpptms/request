@@ -123,8 +123,8 @@ export function useRequestQueue(source: string) {
     return r ? { video_title: r.title, platform: r.platform } : {};
   };
 
-  const handleCreate = async (url: string, twoMinuteRequest: boolean) => {
-    const created = await api.createRequest(url, "", twoMinuteRequest);
+  const handleCreate = async (url: string, requesterName: string, twoMinuteRequest: boolean) => {
+    const created = await api.createRequest(url, requesterName, twoMinuteRequest);
     markMyRequest(created.id);
     trackEvent("video_request_submit", {
       request_id: created.id,
