@@ -91,8 +91,7 @@ export function RequestForm({ onSubmit, inline = false }: Props) {
   );
   const nameField = (
     <TextField
-      label="名前"
-      placeholder="任意"
+      label="名前（未入力の場合は表示されません）"
       value={name}
       onChange={(e) => setName(e.target.value)}
       fullWidth
