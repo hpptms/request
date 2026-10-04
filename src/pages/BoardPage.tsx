@@ -3,6 +3,7 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
+import Link from "@mui/material/Link";
 import Snackbar from "@mui/material/Snackbar";
 import Stack from "@mui/material/Stack";
 import { useTheme } from "@mui/material/styles";
@@ -182,7 +183,18 @@ function BoardPage() {
             みんなで一緒に動画を見る、動画リクエストサイト
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            動画リクエストキューは、リクエスタ(リクエスター)がYouTube・ニコニコ動画・Vimeoの動画URLを送るだけで、みんなで一緒に動画を見られる視聴者参加型のサービスです。リクエストされた動画は待機列に並び、いいねが集まると再生順が上がり、bad投票が集まると短く切り上げられます。配信やイベント、友達との動画鑑賞会などでご利用ください。
+            動画リクエストキューは、YouTube・ニコニコ動画・Vimeoの動画URLを送るだけで、みんなで一緒に動画を見られる視聴者参加型のサービスです。リクエストされた動画は待機列に並び、いいねが集まると再生順が上がり、bad投票が集まると短く切り上げられます。配信やイベント、友達との動画鑑賞会などでご利用ください。
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            初めての方は
+            <Link component={RouterLink} to="/guide">
+              使い方ガイド
+            </Link>
+            と
+            <Link component={RouterLink} to="/faq">
+              よくある質問
+            </Link>
+            をご覧ください。
           </Typography>
         </Box>
 

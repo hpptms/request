@@ -5,7 +5,8 @@ import Typography from "@mui/material/Typography";
 import { Link as RouterLink } from "react-router-dom";
 
 // Shared bottom-of-page links to the site's other public pages (再生/集計/
-// ヒートマップ/お知らせ, plus プライバシーポリシー/サイトについて/お問い合わせ)
+// ヒートマップ/お知らせ, plus 使い方ガイド/よくある質問/サイトについて/
+// プライバシーポリシー/利用規約/お問い合わせ)
 // — the first four are also in BoardPage's header, but not in every other
 // page's, so listing them here gives each public page a crawlable path to
 // all the others. Added to the pages a crawler or
@@ -38,18 +39,27 @@ export function Footer() {
         <Link component={RouterLink} to="/notice" variant="body2" color="text.secondary" underline="hover">
           お知らせ
         </Link>
+        <Link component={RouterLink} to="/guide" variant="body2" color="text.secondary" underline="hover">
+          使い方ガイド
+        </Link>
+        <Link component={RouterLink} to="/faq" variant="body2" color="text.secondary" underline="hover">
+          よくある質問
+        </Link>
         <Link component={RouterLink} to="/about" variant="body2" color="text.secondary" underline="hover">
           サイトについて
         </Link>
         <Link component={RouterLink} to="/privacy" variant="body2" color="text.secondary" underline="hover">
           プライバシーポリシー
         </Link>
+        <Link component={RouterLink} to="/terms" variant="body2" color="text.secondary" underline="hover">
+          利用規約
+        </Link>
         <Link component={RouterLink} to="/contact" variant="body2" color="text.secondary" underline="hover">
           お問い合わせ
         </Link>
       </Stack>
       <Typography variant="caption" color="text.secondary" align="center" sx={{ display: "block", mt: 1.5 }}>
-        動画リクエスト
+        © 2026 動画リクエストキュー
       </Typography>
     </Box>
   );

@@ -53,6 +53,51 @@ function AboutPage() {
 
           <Box>
             <Typography variant="h6" gutterBottom>
+              主な特徴
+            </Typography>
+            <Stack component="ul" spacing={0.75} sx={{ m: 0, pl: 3 }}>
+              {[
+                "登録不要。URLを貼るだけでリクエストでき、スマートフォンからも参加できます。",
+                "いいね・超いいね・bad・スベってるの4種類のリアクションで、参加者の反応がそのまま再生順・再生時間に反映されます。",
+                "毎朝切り替わる「今日のテーマ」が、何をリクエストするか考えるきっかけになります。",
+                "リクエストや投票の履歴を日別・週別・累計・時間帯別に集計し、人気の動画やアーティストをランキングで振り返れます。",
+                "いま参加している人の地域を地図で眺められるヒートマップを公開しています。",
+              ].map((item) => (
+                <Typography key={item} component="li" variant="body1">
+                  {item}
+                </Typography>
+              ))}
+            </Stack>
+          </Box>
+
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              開発のきっかけ
+            </Typography>
+            <Typography variant="body1">
+              配信中に視聴者から動画のリクエストを受け付けると、コメント欄にURLが流れて埋もれてしまったり、誰のリクエストを先に再生するかで迷ったりしがちです。そこで、リクエストを1つの待機列にまとめ、順番や再生時間を参加者自身の投票で決められるようにしたのが本サービスです。「選曲もみんなで楽しむ」ことを目指して、利用者の声をもとに機能を追加し続けています。これまでの変更内容は
+              <Button component={RouterLink} to="/notice" size="small" sx={{ mx: 0.5, verticalAlign: "baseline" }}>
+                お知らせ
+              </Button>
+              で公開しています。
+            </Typography>
+          </Box>
+
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              コンテンツと著作権について
+            </Typography>
+            <Typography variant="body1">
+              本サービスで再生される動画は、YouTube・ニコニコ動画・Vimeoの公式埋め込みプレイヤーを通じて表示しており、動画ファイルを本サービスが保存・再配信することはありません。不適切な動画は管理者が削除し、禁止ワードやBANの仕組みで荒らし行為を防いでいます。詳しくは
+              <Button component={RouterLink} to="/terms" size="small" sx={{ mx: 0.5, verticalAlign: "baseline" }}>
+                利用規約
+              </Button>
+              をご覧ください。
+            </Typography>
+          </Box>
+
+          <Box>
+            <Typography variant="h6" gutterBottom>
               運営者
             </Typography>
             <Typography variant="body1">
