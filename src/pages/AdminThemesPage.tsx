@@ -7,6 +7,8 @@ import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
@@ -26,21 +28,26 @@ import type { AdminThemes, Theme, TodayTheme } from "../types";
 // Mirrors backend theme.MaxTextRunes.
 const MAX_LENGTH = 40;
 
+// Circled slot numbers, as shown on the board's theme box.
+const SLOT_MARKS = "①②③④";
+
 // テーマ管理画面 (/admin/themes): 今日のテーマの候補を追加し、ユーザーからの
 // 提案を承認/却下する。毎日(JST)、承認済みのテーマから選ばれた回数が
-// 最も少ないものの中でランダムに1つが選ばれる(backend/internal/theme)。
+// 最も少ないものの中でランダムに2つ(別々のテーマ)が選ばれる(backend/internal/theme)。
 // 翌日のテーマは1日前に予約として選ばれるので、ここで確認・差し替えできる。
 function AdminThemesPage() {
   const [themes, setThemes] = useState<Theme[]>([]);
-  const [today, setToday] = useState<TodayTheme | null>(null);
-  const [next, setNext] = useState<TodayTheme | null>(null);
+  const [today, setToday] = useState<TodayTheme[]>([]);
+  const [next, setNext] = useState<TodayTheme[]>([]);
   const [text, setText] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // The theme-list button whose "which slot?" menu is open.
+  const [slotMenu, setSlotMenu] = useState<{ anchor: HTMLElement; theme: Theme; day: "today" | "next" } | null>(null);
 
   const apply = ({ themes, today, next }: AdminThemes) => {
     setThemes(themes);
-    setToday(today.text ? today : null);
-    setNext(next?.text ? next : null);
+    setToday(today ?? []);
+    setNext(next ?? []);
   };
 
   const run = useCallback(async (action: () => Promise<AdminThemes>, failure: string) => {
@@ -76,6 +83,19 @@ function AdminThemesPage() {
   // themes; those still at it are next in line.
   const minPicks = approved.length > 0 ? Math.min(...approved.map((t) => t.pickCount)) : 0;
   const remaining = approved.filter((t) => t.pickCount === minPicks).length;
+  const isToday = (id: number) => today.some((d) => d.text && d.themeId === id);
+  const isNext = (id: number) => next.some((d) => d.text && d.themeId === id);
+  const nextDate = next.find((d) => d.text)?.date;
+
+  const chooseSlot = (slot: number) => {
+    if (!slotMenu) return;
+    const { theme, day } = slotMenu;
+    setSlotMenu(null);
+    run(
+      () => (day === "today" ? api.adminSetTodayTheme(theme.id, slot) : api.adminSetNextTheme(theme.id, slot)),
+      "設定に失敗しました",
+    );
+  };
 
   return (
     <Stack spacing={3}>
@@ -85,42 +105,30 @@ function AdminThemesPage() {
         <Typography variant="h6" gutterBottom>
           今日のテーマ
         </Typography>
-        <Typography variant="h5" sx={{ fontWeight: 700, mb: 1, wordBreak: "break-word" }}>
-          {today ? today.text : "承認済みのテーマがありません"}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          毎日(日本時間の朝8時で切り替え)、承認済みのテーマからランダムに1つ選ばれ、再生画面の曲名の上に曲名と同じ時間だけ表示されます。まだ選ばれていないテーマが優先され、全て選ばれると{minPicks + 1}周目の抽選になります(この周の残り: {remaining}件)。
-        </Typography>
-        <Button
-          variant="outlined"
-          startIcon={<CasinoIcon />}
+        <ThemeSlots
+          days={today}
           disabled={approved.length === 0}
-          onClick={() => run(api.adminRedrawTheme, "引き直しに失敗しました")}
-        >
-          今日のテーマを引き直す
-        </Button>
+          onRedraw={(slot) => run(() => api.adminRedrawTheme(slot), "引き直しに失敗しました")}
+        />
+        <Typography variant="body2" color="text.secondary">
+          毎日(日本時間の朝8時で切り替え)、承認済みのテーマからランダムに2つ(別々のテーマ)選ばれ、掲示板と再生画面の曲名の上に並べて表示されます。まだ選ばれていないテーマが優先され、全て選ばれると{minPicks + 1}周目の抽選になります(この周の残り: {remaining}件)。
+        </Typography>
       </Paper>
 
       <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
         <Typography variant="h6" gutterBottom>
-          明日のテーマ{next && ` (${formatThemeDate(next.date)} 朝8時から)`}
+          明日のテーマ{nextDate && ` (${formatThemeDate(nextDate)} 朝8時から)`}
         </Typography>
-        <Typography variant="h5" sx={{ fontWeight: 700, mb: 1, wordBreak: "break-word" }}>
-          {next ? next.text : "承認済みのテーマがありません"}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        <ThemeSlots
+          days={next}
+          disabled={approved.length === 0}
+          onRedraw={(slot) => run(() => api.adminRedrawNextTheme(slot), "引き直しに失敗しました")}
+        />
+        <Typography variant="body2" color="text.secondary">
           明日のテーマはあらかじめ選ばれていて、明日の朝8時にそのまま今日のテーマになります。差し替えたい場合は引き直すか、テーマ一覧の
           <EventIcon fontSize="inherit" sx={{ verticalAlign: "middle", mx: 0.25 }} />
           ボタンで指定してください。
         </Typography>
-        <Button
-          variant="outlined"
-          startIcon={<CasinoIcon />}
-          disabled={approved.length === 0}
-          onClick={() => run(api.adminRedrawNextTheme, "引き直しに失敗しました")}
-        >
-          明日のテーマを引き直す
-        </Button>
       </Paper>
 
       <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
@@ -206,8 +214,8 @@ function AdminThemesPage() {
                       <Tooltip title="明日のテーマにする">
                         <span>
                           <IconButton
-                            disabled={next?.themeId === t.id}
-                            onClick={() => run(() => api.adminSetNextTheme(t.id), "設定に失敗しました")}
+                            disabled={isNext(t.id)}
+                            onClick={(e) => setSlotMenu({ anchor: e.currentTarget, theme: t, day: "next" })}
                           >
                             <EventIcon />
                           </IconButton>
@@ -216,8 +224,8 @@ function AdminThemesPage() {
                       <Tooltip title="今日のテーマにする">
                         <span>
                           <IconButton
-                            disabled={today?.themeId === t.id}
-                            onClick={() => run(() => api.adminSetTodayTheme(t.id), "設定に失敗しました")}
+                            disabled={isToday(t.id)}
+                            onClick={(e) => setSlotMenu({ anchor: e.currentTarget, theme: t, day: "today" })}
                           >
                             <TodayIcon />
                           </IconButton>
@@ -236,8 +244,8 @@ function AdminThemesPage() {
                     primary={
                       <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap" }} useFlexGap>
                         <span>{t.text}</span>
-                        {today?.themeId === t.id && <Chip label="今日" color="primary" size="small" sx={{ height: 18, fontSize: "0.65rem" }} />}
-                        {next?.themeId === t.id && <Chip label="明日" color="secondary" size="small" sx={{ height: 18, fontSize: "0.65rem" }} />}
+                        {isToday(t.id) && <Chip label="今日" color="primary" size="small" sx={{ height: 18, fontSize: "0.65rem" }} />}
+                        {isNext(t.id) && <Chip label="明日" color="secondary" size="small" sx={{ height: 18, fontSize: "0.65rem" }} />}
                         {t.source === "user" && <Chip label="ユーザー提案" size="small" sx={{ height: 18, fontSize: "0.65rem" }} />}
                       </Stack>
                     }
@@ -251,6 +259,42 @@ function AdminThemesPage() {
           </Paper>
         )}
       </Box>
+
+      <Menu anchorEl={slotMenu?.anchor} open={slotMenu !== null} onClose={() => setSlotMenu(null)}>
+        {(slotMenu?.day === "next" ? next : today).map((d, slot) => (
+          <MenuItem key={slot} onClick={() => chooseSlot(slot)}>
+            {SLOT_MARKS[slot]} {d.text ? `「${d.text}」と差し替え` : "に設定"}
+          </MenuItem>
+        ))}
+      </Menu>
+    </Stack>
+  );
+}
+
+// One day's themes, one row per slot, each with its own redraw button.
+function ThemeSlots({ days, disabled, onRedraw }: { days: TodayTheme[]; disabled: boolean; onRedraw: (slot: number) => void }) {
+  return (
+    <Stack spacing={1.5} sx={{ mb: 2 }}>
+      {days.map((d, slot) => (
+        <Stack key={slot} direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+          <Typography variant="h5" color="text.secondary" sx={{ flexShrink: 0 }}>
+            {SLOT_MARKS[slot]}
+          </Typography>
+          <Typography variant="h5" sx={{ fontWeight: 700, flexGrow: 1, minWidth: 0, wordBreak: "break-word" }}>
+            {d.text || "候補のテーマがありません"}
+          </Typography>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<CasinoIcon />}
+            disabled={disabled}
+            onClick={() => onRedraw(slot)}
+            sx={{ whiteSpace: "nowrap", flexShrink: 0 }}
+          >
+            引き直す
+          </Button>
+        </Stack>
+      ))}
     </Stack>
   );
 }

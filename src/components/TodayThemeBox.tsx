@@ -14,10 +14,10 @@ import { useTodayTheme } from "../lib/useTodayTheme";
 // Mirrors backend theme.MaxTextRunes.
 const MAX_LENGTH = 40;
 
-// 今日のテーマの表示と、テーマの提案フォーム。提案は管理者が承認すると
-// 抽選の対象になる(backend/internal/theme)。フォームは普段は畳んでおく。
+// 今日のテーマ(毎日2つ)の表示と、テーマの提案フォーム。提案は管理者が
+// 承認すると抽選の対象になる(backend/internal/theme)。フォームは普段は畳んでおく。
 export function TodayThemeBox() {
-  const todayTheme = useTodayTheme();
+  const todayThemes = useTodayTheme();
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
@@ -47,14 +47,28 @@ export function TodayThemeBox() {
       <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
         <LightbulbIcon sx={{ color: "#FF9A3C" }} />
         <Typography variant="subtitle2" sx={{ fontWeight: 800, flexGrow: 1, minWidth: 0, wordBreak: "break-word" }}>
-          今日のテーマ：{todayTheme ?? "準備中"}
+          今日のテーマ{todayThemes.length === 0 && "：準備中"}
         </Typography>
         <Button size="small" onClick={() => setOpen((v) => !v)} sx={{ whiteSpace: "nowrap", flexShrink: 0 }}>
           {open ? "閉じる" : "テーマを提案"}
         </Button>
       </Stack>
+      {todayThemes.length > 0 && (
+        <Stack spacing={0.5} sx={{ mt: 0.75 }}>
+          {todayThemes.map((theme, i) => (
+            <Stack key={i} direction="row" spacing={1} sx={{ alignItems: "baseline" }}>
+              <Typography variant="caption" sx={{ fontWeight: 800, color: "#FF9A3C", flexShrink: 0 }}>
+                {"①②③④"[i] ?? `${i + 1}.`}
+              </Typography>
+              <Typography variant="subtitle2" sx={{ fontWeight: 800, minWidth: 0, wordBreak: "break-word" }}>
+                {theme}
+              </Typography>
+            </Stack>
+          ))}
+        </Stack>
+      )}
       <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-        ※テーマは曲探しのお題なので、関係なくてもOK
+        ※{todayThemes.length > 1 && "どちらのテーマで選んでもOK。"}テーマは曲探しのお題なので、関係なくてもOK
       </Typography>
       <Collapse in={open} unmountOnExit>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5, mb: 1.5 }}>

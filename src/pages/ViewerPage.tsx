@@ -204,7 +204,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   const [voteStatusVisible, setVoteStatusVisible] = useState(false);
   const [voteStatusContent, setVoteStatusContent] = useState<VoteStatus | null>(null);
   const broadcastState = useBroadcastOverlay();
-  const todayTheme = useTodayTheme();
+  const todayThemes = useTodayTheme();
   const playingRequest = requests.find((r) => r.status === "playing") ?? null;
   const { scheduledVisible, scheduledSeconds, oneMinuteLeftVisible } = useFastForwardPacingPopups(
     playingRequest?.id ?? null,
@@ -1073,7 +1073,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
             <PlayerOverlays
               introVisible={introVisible}
               introContent={introContent}
-              todayTheme={todayTheme}
+              todayThemes={todayThemes}
               durationBadgeVisible={durationBadgeVisible}
               durationBadgeSeconds={durationBadgeSeconds}
               newRequestVisible={newRequestVisible}

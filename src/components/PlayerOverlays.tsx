@@ -21,8 +21,8 @@ interface Props {
   introVisible: boolean;
   introContent: { title: string; channelTitle: string; videoId: string; requesterName?: string } | null;
   // 今日のテーマ (see useTodayTheme): shown just above the title card, popping
-  // in and out together with it. Nothing extra is shown while null.
-  todayTheme: string | null;
+  // in and out together with it. Nothing extra is shown while empty.
+  todayThemes: string[];
   // Duration badge, shown a few seconds after the title card.
   durationBadgeVisible: boolean;
   durationBadgeSeconds: number | null;
@@ -56,7 +56,7 @@ interface Props {
 export function PlayerOverlays({
   introVisible,
   introContent,
-  todayTheme,
+  todayThemes,
   durationBadgeVisible,
   durationBadgeSeconds,
   newRequestVisible,
@@ -76,12 +76,12 @@ export function PlayerOverlays({
     <>
       {/* Music-program-style title card (with 今日のテーマ stacked above it): pops in when a video starts, pops out after NOW_PLAYING_INTRO_MS. Border color varies per video (requestAccentColor) instead of always the theme red. */}
       <Box sx={{ position: "absolute", left: 0, right: 0, bottom: { xs: 8, sm: 16, md: 24 }, display: "flex", flexDirection: "column", alignItems: "center", gap: { xs: 0.5, sm: 1, md: 1.5 }, px: { xs: 1.5, sm: 3 }, pointerEvents: "none" }}>
-        {/* 今日のテーマ + requester name, side by side: same introVisible as the title card below, so they show and hide together. The name badge only appears when the requester filled one in. */}
-        {(todayTheme || introContent?.requesterName) && (
+        {/* Requester name stacked above 今日のテーマ (side by side they didn't fit next to two themes): same introVisible as the title card below, so they show and hide together. The name badge only appears when the requester filled one in. */}
+        {(todayThemes.length > 0 || introContent?.requesterName) && (
           <Fade in={introVisible} timeout={{ enter: 200, exit: 250 }}>
-            <Box sx={{ maxWidth: "90%", display: "flex", alignItems: "stretch", gap: { xs: 1, sm: 1.5, md: 2.5 }, px: { xs: 1, md: 2 } }}>
-              {todayTheme && <TodayThemeBadge text={todayTheme} animate={introVisible} />}
+            <Box sx={{ maxWidth: "90%", display: "flex", flexDirection: "column", alignItems: "center", gap: { xs: 0.5, sm: 1, md: 1.5 }, px: { xs: 1, md: 2 }, "& > *": { maxWidth: "100%" } }}>
               {introContent?.requesterName && <RequesterBadge name={introContent.requesterName} animate={introVisible} />}
+              {todayThemes.length > 0 && <TodayThemeBadge texts={todayThemes} animate={introVisible} />}
             </Box>
           </Fade>
         )}
@@ -370,12 +370,13 @@ const BADGE_KEYFRAMES = {
   },
 } as const;
 
-// 今日のテーマ: a slanted, dark-glass plate with a neon edge. Its animations
+// 今日のテーマ: a slanted, dark-glass plate with a neon edge, listing each of
+// the day's themes on its own line. Its animations
 // only run while animate is true, so they restart every time the title card
 // comes back: the plate wipes open left-to-right, the label and text slide
 // in after it, then a light sweep glints across it and the neon edge
 // breathes for as long as it stays up.
-function TodayThemeBadge({ text, animate }: { text: string; animate: boolean }) {
+function TodayThemeBadge({ texts, animate }: { texts: string[]; animate: boolean }) {
   const run = (value: string) => (animate ? value : "none");
   return (
     <Box
@@ -442,22 +443,26 @@ function TodayThemeBadge({ text, animate }: { text: string; animate: boolean }) 
         >
           TODAY&apos;S THEME ／ 今日のテーマ
         </Box>
-        <Typography
-          component="span"
-          noWrap
-          sx={{
-            minWidth: 0,
-            color: "#FFFFFF",
-            fontWeight: 900,
-            lineHeight: 1.25,
-            letterSpacing: "0.04em",
-            fontSize: { xs: "0.9rem", sm: "1.3rem", md: "2.1rem" },
-            textShadow: "0 0 12px rgba(0, 229, 255, 0.55), 0 2px 4px rgba(0, 0, 0, 0.6)",
-            animation: run("todayThemeSlideIn 0.55s 0.35s cubic-bezier(0.22, 1, 0.36, 1) both"),
-          }}
-        >
-          {text}
-        </Typography>
+        {/* One line per theme, each sliding in a beat after the one above. */}
+        {texts.map((text, i) => (
+          <Typography
+            key={i}
+            component="span"
+            noWrap
+            sx={{
+              minWidth: 0,
+              color: "#FFFFFF",
+              fontWeight: 900,
+              lineHeight: 1.25,
+              letterSpacing: "0.04em",
+              fontSize: { xs: "0.9rem", sm: "1.3rem", md: "2.1rem" },
+              textShadow: "0 0 12px rgba(0, 229, 255, 0.55), 0 2px 4px rgba(0, 0, 0, 0.6)",
+              animation: run(`todayThemeSlideIn 0.55s ${0.35 + i * 0.12}s cubic-bezier(0.22, 1, 0.36, 1) both`),
+            }}
+          >
+            {text}
+          </Typography>
+        ))}
       </Box>
     </Box>
   );

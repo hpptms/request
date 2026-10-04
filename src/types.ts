@@ -443,20 +443,21 @@ export interface Theme {
   lastPickedAt?: string;
 }
 
-// backend/internal/theme.Today — the theme drawn for one JST date (empty
-// text/date when there's no approved theme to draw from).
+// backend/internal/theme.Today — one of the themes drawn for one JST date
+// (empty text/date when there's no approved theme to fill that slot).
 export interface TodayTheme {
   date: string;
   themeId: number;
   text: string;
 }
 
-// The admin theme endpoints' response: next is the theme reserved for
-// tomorrow's theme day, which the admin can swap before it goes live.
+// The admin theme endpoints' response: today holds one entry per slot
+// (backend theme.Slots), and next the themes reserved for tomorrow's theme
+// day, which the admin can swap before they go live.
 export interface AdminThemes {
   themes: Theme[];
-  today: TodayTheme;
-  next: TodayTheme;
+  today: TodayTheme[];
+  next: TodayTheme[];
 }
 
 // backend/internal/safeip.Entry — an IP that keeps working (requests,

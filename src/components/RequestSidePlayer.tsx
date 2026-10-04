@@ -94,7 +94,7 @@ export function RequestSidePlayer({
   const [voteStatusVisible, setVoteStatusVisible] = useState(false);
   const [voteStatusContent, setVoteStatusContent] = useState<VoteStatus | null>(null);
   const broadcastState = useBroadcastOverlay();
-  const todayTheme = useTodayTheme();
+  const todayThemes = useTodayTheme();
 
   // Which request's title/duration card has already been shown, so a poll
   // that just re-confirms the same one playing doesn't replay the intro.
@@ -447,7 +447,7 @@ export function RequestSidePlayer({
       <PlayerOverlays
         introVisible={introVisible}
         introContent={introContent}
-        todayTheme={todayTheme}
+        todayThemes={todayThemes}
         durationBadgeVisible={durationBadgeVisible}
         durationBadgeSeconds={durationBadgeSeconds}
         newRequestVisible={newRequestVisible}
