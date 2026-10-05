@@ -21,6 +21,7 @@ import { hasLiked, hasSuperLiked, markLiked, markSuperLiked } from "../lib/likeS
 import { hasSuberu, markSuberu } from "../lib/suberuStorage";
 import { useUnlimitedLikes } from "../lib/voteQuota";
 import { isMyRequest } from "../lib/myRequestStorage";
+import { listThumbnail } from "../lib/listThumbnail";
 import type { VideoRequest } from "../types";
 
 interface Props {
@@ -68,21 +69,21 @@ export function QueueList({
                 <CancelVoteIconButton request={r} onVoteCancel={onVoteCancel} />
                 {isMyRequest(r.id) && (
                   <Tooltip title="自分のリクエストをキャンセル">
-                    <IconButton edge="end" color="warning" onClick={() => onCancelMine(r.id)}>
+                    <IconButton edge="end" color="warning" onClick={() => onCancelMine(r.id)} aria-label="自分のリクエストをキャンセル">
                       <DeleteOutlineIcon />
                     </IconButton>
                   </Tooltip>
                 )}
                 {isAdmin && (
                   <Tooltip title="再生する">
-                    <IconButton edge="end" color="primary" onClick={() => onPlay(r.id)}>
+                    <IconButton edge="end" color="primary" onClick={() => onPlay(r.id)} aria-label="再生する">
                       <PlayArrowIcon />
                     </IconButton>
                   </Tooltip>
                 )}
                 {isAdmin && (
                   <Tooltip title="削除">
-                    <IconButton edge="end" onClick={() => onDelete(r.id)}>
+                    <IconButton edge="end" onClick={() => onDelete(r.id)} aria-label="削除">
                       <DeleteIcon />
                     </IconButton>
                   </Tooltip>
@@ -93,7 +94,8 @@ export function QueueList({
             <ListItemAvatar sx={{ minWidth: { xs: 56, sm: 72 } }}>
               <Avatar
                 variant="rounded"
-                src={r.thumbnailUrl}
+                src={listThumbnail(r.thumbnailUrl)}
+                alt=""
                 sx={{ width: { xs: 48, sm: 64 }, height: { xs: 36, sm: 48 }, mr: 1 }}
               />
             </ListItemAvatar>
@@ -149,10 +151,11 @@ export function LikeIconButton({ request, onLike }: LikeIconButtonProps) {
   };
 
   return (
-    <Tooltip title={own ? "自分のリクエストにはいいねできません" : liked ? "いいね済み" : "いいね"}>
+    <Tooltip describeChild title={own ? "自分のリクエストにはいいねできません" : liked ? "いいね済み" : "いいね"}>
       <span>
         <IconButton
           edge="end"
+          aria-label="いいね"
           color={liked ? "primary" : "default"}
           onClick={handleClick}
           disabled={liking || liked || own}
@@ -182,6 +185,7 @@ export function SuperLikeIconButton({ request, onLike }: LikeIconButtonProps) {
 
   return (
     <Tooltip
+      describeChild
       title={
         own ? "自分のリクエストにはいいねできません" : superLiked ? "超いいね済み" : "超いいね"
       }
@@ -217,7 +221,7 @@ export function SuberuIconButton({ request, onSuberu }: SuberuIconButtonProps) {
   };
 
   return (
-    <Tooltip title={pressed ? "スベってる済み" : "スベってる"}>
+    <Tooltip describeChild title={pressed ? "スベってる済み" : "スベってる"}>
       <span>
         <IconButton edge="end" onClick={handleClick} disabled={pressing || pressed} sx={{ fontSize: "1.1rem" }}>
           <span role="img" aria-label="スベってる">
@@ -248,9 +252,9 @@ export function CancelVoteIconButton({ request, onVoteCancel }: CancelVoteIconBu
   };
 
   return (
-    <Tooltip title={voted ? "投票済み" : "キャンセルに投票"}>
+    <Tooltip describeChild title={voted ? "投票済み" : "キャンセルに投票"}>
       <span>
-        <IconButton edge="end" color={voted ? "default" : "error"} onClick={handleClick} disabled={voting || voted}>
+        <IconButton edge="end" aria-label="キャンセルに投票" color={voted ? "default" : "error"} onClick={handleClick} disabled={voting || voted}>
           <ThumbDownAltIcon fontSize="small" />
         </IconButton>
       </span>

@@ -7,6 +7,8 @@ export function SiteLogo() {
     <Box
       component="img"
       src="/logo.svg"
+      width={160}
+      height={120}
       alt=""
       sx={{ height: { xs: 32, sm: 38 }, width: "auto", mr: 1.5, flexShrink: 0 }}
     />

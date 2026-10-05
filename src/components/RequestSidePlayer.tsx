@@ -490,7 +490,7 @@ export function RequestSidePlayer({
           spacing={{ xs: 1, sm: 1.5 }}
           sx={{ position: "absolute", right: { xs: 8, sm: 12 }, top: "50%", transform: "translateY(-50%)", zIndex: 1 }}
         >
-          <Tooltip title={liked ? "いいね済み" : `いいね (${nowPlaying.likes}/${likePriorityThreshold}で優先再生)`}>
+          <Tooltip describeChild title={liked ? "いいね済み" : `いいね (${nowPlaying.likes}/${likePriorityThreshold}で優先再生)`}>
             <span>
               {/* minHeight/minWidth keep this at (or above) the ~44px touch
                   target Apple/Google guidelines recommend, even though the
@@ -500,6 +500,7 @@ export function RequestSidePlayer({
                 variant="contained"
                 size="small"
                 startIcon={<ThumbUpAltIcon />}
+                aria-label={`いいね ${nowPlaying.likes}`}
                 onClick={handleLikeClick}
                 disabled={liking || liked}
                 sx={{
@@ -516,7 +517,7 @@ export function RequestSidePlayer({
               </Button>
             </span>
           </Tooltip>
-          <Tooltip title={superLiked ? "超いいね済み" : "超いいね"}>
+          <Tooltip describeChild title={superLiked ? "超いいね済み" : "超いいね"}>
             <span>
               <Button
                 variant="contained"
@@ -539,6 +540,7 @@ export function RequestSidePlayer({
             </span>
           </Tooltip>
           <Tooltip
+            describeChild
             title={
               voted
                 ? "投票済み"
@@ -552,6 +554,7 @@ export function RequestSidePlayer({
                 color="error"
                 onClick={handleVoteClick}
                 disabled={voting || voted}
+                aria-label="短縮に投票"
                 sx={{
                   minWidth: 44,
                   minHeight: 44,
@@ -565,7 +568,7 @@ export function RequestSidePlayer({
               </Button>
             </span>
           </Tooltip>
-          <Tooltip title={suberuPressed ? "スベってる済み" : "スベってる"}>
+          <Tooltip describeChild title={suberuPressed ? "スベってる済み" : "スベってる"}>
             <span>
               <Button
                 variant="contained"

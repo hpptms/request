@@ -13,6 +13,7 @@ import type { VideoRequest } from "../types";
 import { trackEvent } from "../lib/analytics";
 import { searchKeyword } from "../lib/affiliate";
 import { AffiliateNotice, StoreLinksInline } from "./MusicLinks";
+import { listThumbnail } from "../lib/listThumbnail";
 import { CancelVoteIconButton, LikeIconButton, SuberuIconButton, SuperLikeIconButton } from "./QueueList";
 
 interface Props {
@@ -58,7 +59,8 @@ export function RecentDoneList({ requests, onVoteCancel, onLike, onSuberu }: Pro
             <ListItemAvatar sx={{ minWidth: { xs: 56, sm: 72 } }}>
               <Avatar
                 variant="rounded"
-                src={r.thumbnailUrl}
+                src={listThumbnail(r.thumbnailUrl)}
+                alt=""
                 sx={{ width: { xs: 48, sm: 64 }, height: { xs: 36, sm: 48 }, mr: 1 }}
               />
             </ListItemAvatar>
