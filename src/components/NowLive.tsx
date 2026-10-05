@@ -39,8 +39,9 @@ const BRANDS: Record<NowLiveItem["key"], { bg: string; hover: string; fg: string
 
 // 配信中のプラットフォームへのリンク。管理画面で入力したURLの分だけ表示し、
 // 1つも無ければ何も出さない。
-export function NowLive() {
+export function NowLive({ onLoaded }: { onLoaded?: () => void } = {}) {
   const [items, setItems] = useState<NowLiveItem[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -52,6 +53,9 @@ export function NowLive() {
         })
         .catch(() => {
           // Purely a nicety — keep whatever was shown.
+        })
+        .finally(() => {
+          if (!cancelled) setLoaded(true);
         });
     load();
     const stop = visibleInterval(load, REFRESH_MS);
@@ -60,6 +64,10 @@ export function NowLive() {
       stop();
     };
   }, []);
+
+  useEffect(() => {
+    if (loaded) onLoaded?.();
+  }, [loaded, onLoaded]);
 
   if (items.length === 0) return null;
 

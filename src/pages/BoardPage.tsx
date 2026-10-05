@@ -16,6 +16,7 @@ import MapIcon from "@mui/icons-material/Map";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import ShieldIcon from "@mui/icons-material/Shield";
+import { useCallback, useEffect, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { Footer } from "../components/Footer";
 import { NowLive } from "../components/NowLive";
@@ -27,6 +28,10 @@ import { TodayThemeBox } from "../components/TodayThemeBox";
 import { useRequestQueue } from "../lib/useRequestQueue";
 import { useSeo } from "../lib/useSeo";
 import { SiteLogo } from "../components/SiteLogo";
+
+// Upper bound on how long the board waits for its first data before showing
+// anyway (see boardReady below), so a slow/failed API can't blank the page.
+const FIRST_LOAD_TIMEOUT_MS = 2500;
 
 function BoardPage() {
   const theme = useTheme();
@@ -42,6 +47,7 @@ function BoardPage() {
   );
 
   const {
+    requestsLoaded,
     cancelVoteTiers,
     fastForwardActive,
     fastForwardCancelVoteTiers,
@@ -61,6 +67,22 @@ function BoardPage() {
     handleLike,
     handleSuberu,
   } = useRequestQueue("board");
+
+  // NowLive, NowPlaying and TodayThemeBox each change height once their
+  // first fetch lands, which pushed the request form below them down after
+  // it was already on screen (CLS 0.27 in PageSpeed Insights). Keep the
+  // board invisible — with its space reserved by minHeight — until all
+  // three have loaded, then reveal it at its final layout in one go.
+  const [liveLoaded, setLiveLoaded] = useState(false);
+  const [themeLoaded, setThemeLoaded] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
+  const handleLiveLoaded = useCallback(() => setLiveLoaded(true), []);
+  const handleThemeLoaded = useCallback(() => setThemeLoaded(true), []);
+  useEffect(() => {
+    const id = window.setTimeout(() => setTimedOut(true), FIRST_LOAD_TIMEOUT_MS);
+    return () => window.clearTimeout(id);
+  }, []);
+  const boardReady = timedOut || (requestsLoaded && liveLoaded && themeLoaded);
 
   return (
     <Box sx={{ minHeight: "100%", bgcolor: "background.default" }}>
@@ -134,10 +156,10 @@ function BoardPage() {
       </AppBar>
 
       <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1.5, sm: 3 } }}>
-        <Stack spacing={3}>
+        <Stack spacing={3} sx={{ minHeight: "100vh", visibility: boardReady ? "visible" : "hidden" }}>
           {/* Live status first, so it is on screen as soon as the page opens;
               the rules and change log are folded into one box below it. */}
-          <NowLive />
+          <NowLive onLoaded={handleLiveLoaded} />
           <NowPlaying
             nowPlaying={nowPlaying}
             cancelVoteTiers={cancelVoteTiers}
@@ -151,11 +173,11 @@ function BoardPage() {
             onSuberu={handleSuberu}
             onCancelMine={handleCancelMine}
           />
-          <TodayThemeBox />
+          <TodayThemeBox onLoaded={handleThemeLoaded} />
           <RequestForm onSubmit={handleCreate} />
 
           <Box>
-            <Typography variant="h6" sx={{ mb: 1.5 }}>
+            <Typography variant="h6" component="h2" sx={{ mb: 1.5 }}>
               待機中のリクエスト {pending.length > 0 && `(${pending.length})`}
             </Typography>
             <QueueList
@@ -171,7 +193,7 @@ function BoardPage() {
           </Box>
 
           <Box>
-            <Typography variant="h6" sx={{ mb: 1.5 }}>
+            <Typography variant="h6" component="h2" sx={{ mb: 1.5 }}>
               再生が終わった動画
             </Typography>
             <RecentDoneList requests={recentDone} onVoteCancel={handleVoteCancel} onLike={handleLike} onSuberu={handleSuberu} />

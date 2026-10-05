@@ -15,6 +15,10 @@ import { Link as RouterLink } from "react-router-dom";
 // Left off PlayPage/ViewerPage, which are optimized to show the video/queue
 // as large as possible with no unrelated chrome, and off AdminPage (not
 // public — see robots.txt).
+// PageSpeed Insights' target-size audit: a bare body2 link is only ~20px
+// tall, under the 24px minimum, so pad each one vertically.
+const LINK_SX = { display: "inline-block", py: 0.5 } as const;
+
 export function Footer() {
   return (
     <Box component="footer" sx={{ borderTop: 1, borderColor: "divider", mt: 4, py: 3 }}>
@@ -24,37 +28,37 @@ export function Footer() {
         divider={<Box sx={{ display: { xs: "none", sm: "block" }, borderLeft: 1, borderColor: "divider" }} />}
         sx={{ justifyContent: "center", alignItems: "center", flexWrap: "wrap", px: 2 }}
       >
-        <Link component={RouterLink} to="/" variant="body2" color="text.secondary" underline="hover">
+        <Link component={RouterLink} to="/" variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
           リクエスト一覧
         </Link>
-        <Link component={RouterLink} to="/play" variant="body2" color="text.secondary" underline="hover">
+        <Link component={RouterLink} to="/play" variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
           再生
         </Link>
-        <Link component={RouterLink} to="/stats" variant="body2" color="text.secondary" underline="hover">
+        <Link component={RouterLink} to="/stats" variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
           集計
         </Link>
-        <Link component={RouterLink} to="/heatmap" variant="body2" color="text.secondary" underline="hover">
+        <Link component={RouterLink} to="/heatmap" variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
           ヒートマップ
         </Link>
-        <Link component={RouterLink} to="/notice" variant="body2" color="text.secondary" underline="hover">
+        <Link component={RouterLink} to="/notice" variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
           お知らせ
         </Link>
-        <Link component={RouterLink} to="/guide" variant="body2" color="text.secondary" underline="hover">
+        <Link component={RouterLink} to="/guide" variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
           使い方ガイド
         </Link>
-        <Link component={RouterLink} to="/faq" variant="body2" color="text.secondary" underline="hover">
+        <Link component={RouterLink} to="/faq" variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
           よくある質問
         </Link>
-        <Link component={RouterLink} to="/about" variant="body2" color="text.secondary" underline="hover">
+        <Link component={RouterLink} to="/about" variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
           サイトについて
         </Link>
-        <Link component={RouterLink} to="/privacy" variant="body2" color="text.secondary" underline="hover">
+        <Link component={RouterLink} to="/privacy" variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
           プライバシーポリシー
         </Link>
-        <Link component={RouterLink} to="/terms" variant="body2" color="text.secondary" underline="hover">
+        <Link component={RouterLink} to="/terms" variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
           利用規約
         </Link>
-        <Link component={RouterLink} to="/contact" variant="body2" color="text.secondary" underline="hover">
+        <Link component={RouterLink} to="/contact" variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
           お問い合わせ
         </Link>
       </Stack>

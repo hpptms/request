@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import Collapse from "@mui/material/Collapse";
@@ -9,15 +9,18 @@ import Typography from "@mui/material/Typography";
 import LightbulbIcon from "@mui/icons-material/Lightbulb";
 import SendIcon from "@mui/icons-material/Send";
 import { api } from "../api";
-import { useTodayTheme } from "../lib/useTodayTheme";
+import { useTodayThemeState } from "../lib/useTodayTheme";
 
 // Mirrors backend theme.MaxTextRunes.
 const MAX_LENGTH = 40;
 
 // 今日のテーマ(毎日2つ)の表示と、テーマの提案フォーム。提案は管理者が
 // 承認すると抽選の対象になる(backend/internal/theme)。フォームは普段は畳んでおく。
-export function TodayThemeBox() {
-  const todayThemes = useTodayTheme();
+export function TodayThemeBox({ onLoaded }: { onLoaded?: () => void } = {}) {
+  const { texts: todayThemes, loaded } = useTodayThemeState();
+  useEffect(() => {
+    if (loaded) onLoaded?.();
+  }, [loaded, onLoaded]);
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);

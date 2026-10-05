@@ -10,7 +10,15 @@ const POLL_INTERVAL_MS = 60000;
 // while there isn't one (none approved yet, or not loaded). Shared by both
 // players' overlays and the board's theme box.
 export function useTodayTheme(): string[] {
+  return useTodayThemeState().texts;
+}
+
+// Same as useTodayTheme, plus whether the first fetch has finished (either
+// way) — the board uses it to hold its layout until the theme box's final
+// height is known.
+export function useTodayThemeState(): { texts: string[]; loaded: boolean } {
   const [texts, setTexts] = useState<string[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -26,6 +34,9 @@ export function useTodayTheme(): string[] {
         })
         .catch(() => {
           // Keep the last known theme; the next poll retries.
+        })
+        .finally(() => {
+          if (!cancelled) setLoaded(true);
         });
     poll();
     const stop = visibleInterval(poll, POLL_INTERVAL_MS);
@@ -35,5 +46,5 @@ export function useTodayTheme(): string[] {
     };
   }, []);
 
-  return texts;
+  return { texts, loaded };
 }

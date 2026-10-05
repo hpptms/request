@@ -149,7 +149,7 @@ export function NowPlaying({
         <Stack direction="column" spacing={1.5}>
           <Box>
             <Chip label="NOW PLAYING" color="primary" size="small" sx={{ mb: 1 }} />
-            <Typography variant="h6" sx={{ lineHeight: 1.3 }}>
+            <Typography variant="h6" component="h2" sx={{ lineHeight: 1.3 }}>
               {nowPlaying.title}
               {nowPlaying.durationSeconds != null &&
                 `・ ${formatDuration(nowPlaying.durationSeconds)}`}

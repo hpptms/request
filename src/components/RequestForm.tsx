@@ -152,7 +152,7 @@ export function RequestForm({ onSubmit, inline = false }: Props) {
 
   return (
     <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="h6" component="h2" gutterBottom>
         動画をリクエストする
       </Typography>
       <Box component="form" onSubmit={handleSubmit}>
