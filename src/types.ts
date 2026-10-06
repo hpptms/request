@@ -347,7 +347,7 @@ export interface ChannelStat {
 export type StatsPeriod = "day" | "week" | "all";
 
 // backend/internal/analytics.TimeSlot — a broad part of the JST day
-// (morning 05-10, daytime 11-16, evening 17-21, midnight 22-04) a stats
+// (morning 08-13, daytime 14-19, evening 20-01, midnight 02-07) a stats
 // query can restrict itself to, on top of period/date. "" (omitted) means
 // every time of day, matching the pre-existing (unfiltered) behavior.
 export type TimeSlot = "" | "morning" | "daytime" | "evening" | "midnight";

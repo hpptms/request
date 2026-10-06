@@ -25,10 +25,10 @@ import { AffiliateNotice, StoreLinksInline } from "./MusicLinks";
 import type { ChannelStat, StatsPeriod, StatsSummary, TimeSlot, VideoStat } from "../types";
 
 const TIME_SLOT_LABELS: Record<Exclude<TimeSlot, "">, string> = {
-  morning: "朝",
-  daytime: "昼",
-  evening: "夜",
-  midnight: "深夜",
+  morning: "朝 8-14時",
+  daytime: "昼 14-20時",
+  evening: "夜 20-2時",
+  midnight: "深夜 2-8時",
 };
 
 // addDays/formatDateLabel treat a YYYY-MM-DD string as a plain calendar
