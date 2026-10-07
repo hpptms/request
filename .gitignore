@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local env (site IDs; production sets them in Cloudflare Pages)
+.env
