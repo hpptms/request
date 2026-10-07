@@ -15,6 +15,7 @@ const thresholdOptions = [
   { value: 5400, label: "1時間半以上を短縮" },
   { value: 3600, label: "1時間以上を短縮" },
   { value: 1800, label: "30分以上を短縮" },
+  { value: 900, label: "15分以上を短縮" },
   { value: 600, label: "10分以上を短縮" },
   { value: 0, label: "短縮しない" },
 ] as const;
