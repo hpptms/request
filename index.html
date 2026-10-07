@@ -60,7 +60,7 @@
         "name": "動画リクエストキュー",
         "url": "https://request.tokyo/",
         "logo": "https://request.tokyo/apple-touch-icon.png",
-        "sameAs": ["https://x.com/request_tokyo"]
+        "sameAs": ["https://x.com/%VITE_X_HANDLE%"]
       }
     </script>
 
@@ -70,13 +70,15 @@
          requests containing "gtag" in the path regardless of domain) because
          the CSP's script-src has no 'unsafe-inline'/nonce/hash, so an inline
          <script> here would be silently blocked by the browser and
-         gtag('config', ...) would never fire. -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8L7G9DTTF8"></script>
-    <script defer src="/boot.js"></script>
+         gtag('config', ...) would never fire. The measurement ID is passed
+         to it via data-ga-id, since files in public/ aren't processed by
+         Vite and so can't read VITE_GA_MEASUREMENT_ID themselves. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=%VITE_GA_MEASUREMENT_ID%"></script>
+    <script defer src="/boot.js" data-ga-id="%VITE_GA_MEASUREMENT_ID%"></script>
 
     <!-- Google AdSense. Its origins are allowed in the CSP (nginx.conf /
          public/_headers). -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5157294493857921"
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=%VITE_ADSENSE_CLIENT%"
          crossorigin="anonymous"></script>
   </head>
   <body>

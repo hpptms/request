@@ -1,8 +1,9 @@
 import Box from "@mui/material/Box";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useLocation } from "react-router-dom";
+import { ninjaAdSrc } from "../lib/ninjaAds";
 
-// admax banner ad, tag cd45827394e2a2c014eb20d9bfe1c51a — desktop only
+// admax banner ad (tag: VITE_ADMAX_TAG_PC_RAIL) — desktop only
 // (>=1024px; narrower viewports have no spare room beside the board's
 // content for a 160px-wide rail without overlapping it), fixed to the
 // right edge of the viewport. Skipped on /viewer, the admin-only OBS
@@ -22,12 +23,12 @@ import { useLocation } from "react-router-dom";
 // that origin (and allow-same-origin on the iframe) is needed for admax's
 // SDK to render anything at all, and why it's safe despite
 // allow-same-origin.
-const AD_SRC = "https://ads.request.tokyo/ad/banner?tag=cd45827394e2a2c014eb20d9bfe1c51a";
+const AD_SRC = ninjaAdSrc(import.meta.env.VITE_ADMAX_TAG_PC_RAIL);
 
 export function PcRailAd() {
   const isDesktop = useMediaQuery("(min-width:1024px)");
   const { pathname } = useLocation();
-  if (!isDesktop || pathname === "/viewer" || pathname === "/play") return null;
+  if (!AD_SRC || !isDesktop || pathname === "/viewer" || pathname === "/play") return null;
 
   return (
     <Box

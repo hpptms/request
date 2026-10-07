@@ -2,8 +2,9 @@ import Box from "@mui/material/Box";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useLocation } from "react-router-dom";
+import { ninjaAdSrc } from "../lib/ninjaAds";
 
-// admax banner ad, tag 23aa468c68dd9f337c4c77c42e885ffa (320x100, インライン
+// admax banner ad (tag: VITE_ADMAX_TAG_MOBILE_ANCHOR, 320x100, インライン
 // — not the SP overlay/fixed format, which like the old PC 固定表示/右サイド
 // tag would refuse to fire its ad request once the admax SDK detects it's
 // running inside an iframe). Mobile only (the desktop rail unit lives in
@@ -35,7 +36,7 @@ import { useLocation } from "react-router-dom";
 // on a same-origin URL (e.g. plain /ad/banner) — allow-scripts +
 // allow-same-origin together on same-origin content lets it reach
 // window.parent.document freely, defeating the sandbox entirely.
-const AD_SRC = "https://ads.request.tokyo/ad/banner?tag=23aa468c68dd9f337c4c77c42e885ffa";
+const AD_SRC = ninjaAdSrc(import.meta.env.VITE_ADMAX_TAG_MOBILE_ANCHOR);
 
 // Exported so App.tsx can reserve this much bottom padding on page content
 // — otherwise this fixed-position bar covers whatever was at the bottom of
@@ -56,7 +57,7 @@ export function useMobileAnchorAdVisible() {
 
 export function MobileAnchorAd() {
   const visible = useMobileAnchorAdVisible();
-  if (!visible) return null;
+  if (!visible || !AD_SRC) return null;
 
   return (
     <Box

@@ -18,12 +18,16 @@ gtag('js', new Date());
 // and also stops the event calls in src/ (they'd have no target anyway
 // without the config below). Subdomains like ads.request.tokyo share the
 // request.tokyo cookie domain, so they need no cross-domain setup.
+// The GA4 measurement ID comes from VITE_GA_MEASUREMENT_ID via this script
+// tag's data-ga-id (see index.html) — public/ isn't processed by Vite.
+var gaId = (document.currentScript && document.currentScript.dataset.gaId) || '';
+if (!/^G-[A-Z0-9]+$/.test(gaId)) gaId = '';
 var host = location.hostname;
 var isProdHost = host === 'request.tokyo' || host.endsWith('.request.tokyo');
-if (isProdHost) {
-  gtag('config', 'G-8L7G9DTTF8', { send_page_view: false });
+if (isProdHost && gaId) {
+  gtag('config', gaId, { send_page_view: false });
 } else {
-  window['ga-disable-G-8L7G9DTTF8'] = true;
+  if (gaId) window['ga-disable-' + gaId] = true;
   // Keep non-production copies (e.g. *.pages.dev) out of search results.
   // Cloudflare Pages' _headers can't match on hostname, so this can't be an
   // X-Robots-Tag header without a Pages Function on every request; Google

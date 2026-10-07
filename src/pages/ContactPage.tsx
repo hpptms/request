@@ -11,9 +11,9 @@ import { Footer } from "../components/Footer";
 import { useSeo } from "../lib/useSeo";
 import { SiteLogo } from "../components/SiteLogo";
 
-// お問い合わせ窓口。開設済みならここにX(旧Twitter)のURL/@ハンドルを入れる
-// — 未設定のうちは下のContactPageが「準備中」表示にフォールバックする。
-const X_HANDLE: string | null = "request_tokyo";
+// お問い合わせ窓口のX(旧Twitter)の@ハンドル(.envのVITE_X_HANDLE、@なし)
+// — 未設定なら下のContactPageが「準備中」表示にフォールバックする。
+const X_HANDLE: string | null = import.meta.env.VITE_X_HANDLE?.trim().replace(/^@/, "") || null;
 
 // お問い合わせページ (/contact)。フォームは持たず、連絡手段としてX(旧
 // Twitter)のアカウントを案内する。AdSense審査上は「連絡手段があること」

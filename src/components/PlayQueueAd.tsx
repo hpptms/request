@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import { ninjaAdSrc } from "../lib/ninjaAds";
 
-// admax 728x90 banner, tag 81a7e2cac2837657568af6a07ec1b354, above /play's
+// admax 728x90 banner (tag: VITE_ADMAX_TAG_PLAY_QUEUE), above /play's
 // waiting-queue column — desktop only. Loaded the same way as PcRailAd /
 // MobileAnchorAd (see MobileAnchorAd.tsx for why it goes through the
 // sandboxed ads.request.tokyo iframe). The column is narrower than 728px on
 // most desktop widths, and the creative mustn't be scaled or clipped, so it
 // only renders while the column actually has room for it.
-const AD_SRC = "https://ads.request.tokyo/ad/banner?tag=81a7e2cac2837657568af6a07ec1b354";
+const AD_SRC = ninjaAdSrc(import.meta.env.VITE_ADMAX_TAG_PLAY_QUEUE);
 const AD_WIDTH = 728;
 const AD_HEIGHT = 90;
 
@@ -25,7 +26,7 @@ export function PlayQueueAd() {
     return () => observer.disconnect();
   }, [isDesktop]);
 
-  if (!isDesktop) return null;
+  if (!isDesktop || !AD_SRC) return null;
 
   return (
     <Box ref={containerRef} sx={{ width: "100%", display: "flex", justifyContent: "center", mb: fits ? 2 : 0 }}>
