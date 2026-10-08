@@ -2,9 +2,9 @@
 // MobileAnchorAd and PlayQueueAd. Was turned off during the first AdSense
 // review (admax was serving adult creatives, which could get the
 // application rejected); turned back on after that review came back as
-// 有用性の低いコンテンツ. Consider setting this to false again before the
-// next AdSense re-review request.
-export const NINJA_ADS_ENABLED = true;
+// 有用性の低いコンテンツ. Turned off again (2026-10-08) at the user's
+// request.
+export const NINJA_ADS_ENABLED = false;
 
 // The admax ad units' iframe URL: /ad/banner (public/ad/banner.html) served
 // from the dedicated ads origin (see MobileAnchorAd.tsx for why it must be a
