@@ -16,7 +16,7 @@ gtag('js', new Date());
 // production property too, and GA4 flagged request-7xk.pages.dev as a
 // cross-domain measurement candidate. ga-disable-* is GA's official opt-out
 // and also stops the event calls in src/ (they'd have no target anyway
-// without the config below). Subdomains like ads.request.tokyo share the
+// without the config below). Subdomains of request.tokyo share the
 // request.tokyo cookie domain, so they need no cross-domain setup.
 // The GA4 measurement ID comes from VITE_GA_MEASUREMENT_ID via this script
 // tag's data-ga-id (see index.html) — public/ isn't processed by Vite.
@@ -35,8 +35,3 @@ if (isProdHost && gaId) {
   var robots = document.querySelector('meta[name="robots"]');
   if (robots) robots.setAttribute('content', 'noindex,nofollow');
 }
-
-// The admax (Shinobi Tools) PC-only rail ad used to be loaded here via
-// admax's own `sticky.right` JS action, running directly in this document.
-// It's now rendered by src/components/PcRailAd.tsx instead, inside a
-// sandboxed iframe pointed at /ad/banner.html — see that file for why.
