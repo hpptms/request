@@ -344,6 +344,14 @@ export interface ChannelStat {
   requestCount: number;
 }
 
+// One requester name's likes received over the same range
+// (backend/internal/analytics.RequesterStat). Only requests submitted with a
+// name are counted, grouped by exact name.
+export interface RequesterStat {
+  name: string;
+  totalLikes: number;
+}
+
 export type StatsPeriod = "day" | "week" | "all";
 
 // backend/internal/analytics.TimeSlot — a broad part of the JST day
@@ -378,6 +386,8 @@ export interface StatsSummary {
   topVideosByCancelVotes: VideoStat[];
   // Only videos with at least one スベってる; missing from an older backend.
   topVideosBySuberu?: VideoStat[];
+  // Only names with at least one like; missing from an older backend.
+  topRequestersByLikes?: RequesterStat[];
 }
 
 // backend/internal/analytics.IPLikeRank — a finished JST clock hour

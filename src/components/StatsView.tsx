@@ -22,7 +22,7 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import { api } from "../api";
 import { searchKeyword } from "../lib/affiliate";
 import { AffiliateNotice, StoreLinksInline } from "./MusicLinks";
-import type { ChannelStat, StatsPeriod, StatsSummary, TimeSlot, VideoStat } from "../types";
+import type { ChannelStat, RequesterStat, StatsPeriod, StatsSummary, TimeSlot, VideoStat } from "../types";
 
 const TIME_SLOT_LABELS: Record<Exclude<TimeSlot, "">, string> = {
   morning: "朝 8-14時",
@@ -192,6 +192,13 @@ export function StatsView() {
             <VideoTable rows={stats.topVideosByLikes} valueKey="totalLikes" valueLabel="いいね数" />
           </Section>
 
+          <Section title="いいねの多いリクエスト者">
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
+              名前を入れてリクエストした人のみ集計しています。同じ名前は同一人物として合算されます。
+            </Typography>
+            <RequesterTable rows={stats.topRequestersByLikes ?? []} />
+          </Section>
+
           <Section title="badの多い動画">
             <VideoTable rows={stats.topVideosByCancelVotes} valueKey="totalCancelVotes" valueLabel="bad数" />
           </Section>
@@ -300,6 +307,44 @@ function ChannelTable({
                   )}
                 </TableCell>
                 <TableCell align="right">{row.requestCount.toLocaleString("ja-JP")}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      {button}
+    </>
+  );
+}
+
+function RequesterTable({ rows }: { rows: RequesterStat[] }) {
+  const { limit, button } = useShowMore(rows.length);
+  if (rows.length === 0) {
+    return (
+      <Typography color="text.secondary" variant="body2">
+        まだデータがありません
+      </Typography>
+    );
+  }
+  return (
+    <>
+      <TableContainer sx={{ overflowX: "auto" }}>
+        <Table size="small" sx={tableSx}>
+          <TableHead>
+            <TableRow>
+              <TableCell>#</TableCell>
+              <TableCell>名前</TableCell>
+              <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+                いいね数
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {rows.slice(0, limit).map((row, i) => (
+              <TableRow key={row.name}>
+                <TableCell>{i + 1}</TableCell>
+                <TableCell sx={{ wordBreak: "break-word" }}>{row.name}</TableCell>
+                <TableCell align="right">{row.totalLikes.toLocaleString("ja-JP")}</TableCell>
               </TableRow>
             ))}
           </TableBody>
