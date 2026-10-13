@@ -419,8 +419,11 @@ export interface InquiryThread {
 }
 
 // backend/internal/chat.Message — ageMs is how long ago it was sent.
+// source is "site" for the /play form, or the live platform it was relayed
+// from.
 export interface ChatMessage {
   id: number;
+  source: "site" | NowLiveItem["key"];
   text: string;
   ageMs: number;
 }

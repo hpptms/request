@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { visibleInterval } from "./visibleInterval";
+import type { ChatMessage } from "../types";
 
 // How long each chat line stays on the /play screen.
 export const CHAT_DISPLAY_MS = 10000;
@@ -10,6 +11,7 @@ const MAX_VISIBLE = 5;
 
 export interface VisibleChat {
   id: number;
+  source: ChatMessage["source"];
   text: string;
   // Absolute (performance.now-based) time at which this line disappears.
   expiresAt: number;
@@ -31,7 +33,7 @@ export function usePlayChat() {
       lastId.current = Math.max(lastId.current, ...messages.map((m) => m.id));
       const fresh = messages
         .filter((m) => m.ageMs < CHAT_DISPLAY_MS)
-        .map((m) => ({ id: m.id, text: m.text, expiresAt: now + CHAT_DISPLAY_MS - m.ageMs }));
+        .map((m) => ({ id: m.id, source: m.source, text: m.text, expiresAt: now + CHAT_DISPLAY_MS - m.ageMs }));
       if (fresh.length > 0) setLines((prev) => [...prev, ...fresh].slice(-MAX_VISIBLE));
     } catch {
       // Purely a nicety — ignore failures.

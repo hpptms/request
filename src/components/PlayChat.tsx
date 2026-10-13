@@ -1,14 +1,31 @@
 import { useState } from "react";
+import type { ComponentType } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
+import type { SvgIconProps } from "@mui/material/SvgIcon";
 import SendIcon from "@mui/icons-material/Send";
+import YouTubeIcon from "@mui/icons-material/YouTube";
 import { api } from "../api";
 import type { VisibleChat } from "../lib/usePlayChat";
+import { Fc2Mark, NiconicoMark } from "./BrandIcons";
 
-// Chat lines laid over the bottom-left of the /play video area. Ignores
-// pointer events so it never blocks the like/bad buttons underneath.
+// Lines relayed from a live stream's chat get that platform's mark and
+// colour. ニコニコ's are deliberately the loudest — bigger, with a bright
+// frame — to draw comments onto the platform that has the fewest.
+const SOURCE_STYLES: Record<
+  Exclude<VisibleChat["source"], "site">,
+  { Icon: ComponentType<SvgIconProps>; iconBg: string; border: string; fontSize: string }
+> = {
+  youtube: { Icon: YouTubeIcon, iconBg: "#FF0000", border: "rgba(255, 0, 0, 0.8)", fontSize: "0.95rem" },
+  fc2: { Icon: Fc2Mark, iconBg: "#2F7BEA", border: "rgba(47, 123, 234, 0.8)", fontSize: "0.95rem" },
+  niconico: { Icon: NiconicoMark, iconBg: "#252525", border: "#FFD600", fontSize: "1.1rem" },
+};
+
+// Chat lines laid over the bottom-left of the /play video area — the /play
+// form's and the live streams' comments together. Ignores pointer events so
+// it never blocks the like/bad buttons underneath.
 export function PlayChatOverlay({ lines }: { lines: VisibleChat[] }) {
   if (lines.length === 0) return null;
   return (
@@ -25,22 +42,43 @@ export function PlayChatOverlay({ lines }: { lines: VisibleChat[] }) {
         alignItems: "flex-start",
       }}
     >
-      {lines.map((l) => (
-        <Box
-          key={l.id}
-          sx={{
-            px: 1.25,
-            py: 0.5,
-            borderRadius: 1,
-            bgcolor: "rgba(0, 0, 0, 0.7)",
-            color: "#fff",
-            fontSize: "0.95rem",
-            wordBreak: "break-word",
-          }}
-        >
-          {l.text}
-        </Box>
-      ))}
+      {lines.map((l) => {
+        const style = l.source === "site" ? undefined : SOURCE_STYLES[l.source];
+        return (
+          <Stack
+            key={l.id}
+            direction="row"
+            spacing={0.75}
+            sx={{
+              alignItems: "center",
+              px: 1.25,
+              py: 0.5,
+              borderRadius: 1,
+              bgcolor: "rgba(0, 0, 0, 0.7)",
+              color: "#fff",
+              fontSize: style?.fontSize ?? "0.95rem",
+              fontWeight: l.source === "niconico" ? 700 : undefined,
+              border: style ? `2px solid ${style.border}` : undefined,
+              wordBreak: "break-word",
+            }}
+          >
+            {style && (
+              <Box
+                sx={{
+                  display: "flex",
+                  flexShrink: 0,
+                  p: 0.25,
+                  borderRadius: 0.75,
+                  bgcolor: style.iconBg,
+                }}
+              >
+                <style.Icon sx={{ fontSize: "1.1em", color: "#fff" }} />
+              </Box>
+            )}
+            <span>{l.text}</span>
+          </Stack>
+        );
+      })}
     </Stack>
   );
 }
