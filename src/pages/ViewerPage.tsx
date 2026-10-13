@@ -33,7 +33,7 @@ import type { CancelVoteTier, FallbackTrack, PlaylistTrack, VideoRequest } from 
 const POLL_INTERVAL_MS = 3000;
 const PLAYER_ELEMENT_ID = "yt-viewer-player";
 // How long each comment (from /play or the live streams' chats) stays in
-// the bottom-left column.
+// the bottom-left column, shown only while the admin 機能 tab's switch is on.
 const VIEWER_COMMENT_MS = 15000;
 // YT.PlayerState.PLAYING; the enum is only available once the IFrame API has loaded.
 const PLAYER_STATE_PLAYING = 1;
@@ -209,7 +209,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   const [voteStatusVisible, setVoteStatusVisible] = useState(false);
   const [voteStatusContent, setVoteStatusContent] = useState<VoteStatus | null>(null);
   const broadcastState = useBroadcastOverlay();
-  const { lines: commentLines } = usePlayChat(VIEWER_COMMENT_MS);
+  const { lines: commentLines, viewerComments } = usePlayChat(VIEWER_COMMENT_MS);
   const todayThemes = useTodayTheme();
   const playingRequest = requests.find((r) => r.status === "playing") ?? null;
   const { scheduledVisible, scheduledSeconds, oneMinuteLeftVisible } = useFastForwardPacingPopups(
@@ -1091,7 +1091,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
               scheduledSeconds={scheduledSeconds}
               oneMinuteLeftVisible={oneMinuteLeftVisible}
             />
-            <ViewerCommentOverlay lines={commentLines} />
+            {viewerComments && <ViewerCommentOverlay lines={commentLines} />}
           </>
         </Box>
       </Box>

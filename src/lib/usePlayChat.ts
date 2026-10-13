@@ -23,11 +23,14 @@ export interface VisibleChat {
 // (used after sending, so the sender doesn't wait for the next tick).
 export function usePlayChat(displayMs = CHAT_DISPLAY_MS) {
   const [lines, setLines] = useState<VisibleChat[]>([]);
+  // The admin switch for /viewer's comment column, carried on each poll.
+  const [viewerComments, setViewerComments] = useState(false);
   const lastId = useRef(0);
 
   const poll = useCallback(async () => {
     try {
-      const { messages } = await api.getChat(lastId.current);
+      const { messages, viewerComments } = await api.getChat(lastId.current);
+      setViewerComments(viewerComments ?? false);
       if (messages.length === 0) return;
       const now = performance.now();
       lastId.current = Math.max(lastId.current, ...messages.map((m) => m.id));
@@ -56,5 +59,5 @@ export function usePlayChat(displayMs = CHAT_DISPLAY_MS) {
     return () => clearTimeout(timer);
   }, [lines]);
 
-  return { lines, poll };
+  return { lines, poll, viewerComments };
 }

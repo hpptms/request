@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Alert from "@mui/material/Alert";
+import Checkbox from "@mui/material/Checkbox";
 import FormControl from "@mui/material/FormControl";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Paper from "@mui/material/Paper";
@@ -24,7 +25,8 @@ const thresholdOptions = [
 
 // 機能タブ (/admin/features): 長い動画をリクエストされた際、一定の長さ以上
 // なら再生時間を一律capSeconds(backend/internal/durationlimit)まで短縮する
-// かどうかと、その閾値を設定する。
+// かどうかと、その閾値を設定する。あわせて/viewer左下のコメント表示の
+// オン/オフも切り替える。
 function AdminFeaturesPage() {
   const [thresholdSeconds, setThresholdSeconds] = useState(0);
   const [capSeconds, setCapSeconds] = useState(30);
@@ -32,6 +34,32 @@ function AdminFeaturesPage() {
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [savedMessage, setSavedMessage] = useState(false);
+  const [viewerComments, setViewerComments] = useState(false);
+  const [commentsLoading, setCommentsLoading] = useState(true);
+  const [commentsSaving, setCommentsSaving] = useState(false);
+
+  useEffect(() => {
+    api
+      .adminGetCommentOverlay()
+      .then(({ enabled }) => setViewerComments(enabled))
+      .catch((err) => setErrorMessage(err instanceof Error ? err.message : "取得に失敗しました"))
+      .finally(() => setCommentsLoading(false));
+  }, []);
+
+  const handleViewerCommentsChange = async (enabled: boolean) => {
+    setCommentsSaving(true);
+    setErrorMessage(null);
+    setSavedMessage(false);
+    try {
+      const res = await api.adminSetCommentOverlay(enabled);
+      setViewerComments(res.enabled);
+      setSavedMessage(true);
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "保存に失敗しました");
+    } finally {
+      setCommentsSaving(false);
+    }
+  };
 
   useEffect(() => {
     api
@@ -64,6 +92,26 @@ function AdminFeaturesPage() {
     <Stack spacing={3}>
       {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
       {savedMessage && !errorMessage && <Alert severity="success">保存しました</Alert>}
+
+      <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
+        <Typography variant="h6" gutterBottom>
+          配信画面のコメント表示
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          /viewer の左下に、YouTube・ニコニコ・FC2・サイト内チャットのコメントを15秒ずつ表示します。
+          配信サービス側でコメントが表示されない時に使ってください。
+        </Typography>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={viewerComments}
+              onChange={(e) => handleViewerCommentsChange(e.target.checked)}
+            />
+          }
+          label="コメントを表示する"
+          disabled={commentsLoading || commentsSaving}
+        />
+      </Paper>
 
       <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
         <Typography variant="h6" gutterBottom>

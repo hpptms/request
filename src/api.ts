@@ -193,7 +193,9 @@ export const api = {
   adminRedrawNextTheme: (slot: number) => request<AdminThemes>(`/admin/themes/redraw-next?slot=${slot}`, { method: "POST" }),
 
   // /play's throwaway chat (backend/internal/chat).
-  getChat: (afterId: number) => request<{ messages: ChatMessage[] }>(`/chat?after=${afterId}`),
+  // viewerComments: whether /viewer shows these (the admin 機能 tab switch).
+  getChat: (afterId: number) =>
+    request<{ messages: ChatMessage[]; viewerComments?: boolean }>(`/chat?after=${afterId}`),
   sendChat: (text: string) =>
     request<{ ok: boolean }>("/chat", { method: "POST", body: JSON.stringify({ text }) }),
 
@@ -327,6 +329,14 @@ export const api = {
     request<FastForwardWindow[]>("/admin/fastforward", {
       method: "PUT",
       body: JSON.stringify({ windows }),
+    }),
+
+  adminGetCommentOverlay: () => request<{ enabled: boolean }>("/admin/comment-overlay"),
+
+  adminSetCommentOverlay: (enabled: boolean) =>
+    request<{ enabled: boolean }>("/admin/comment-overlay", {
+      method: "PUT",
+      body: JSON.stringify({ enabled }),
     }),
 
   adminGetDurationLimit: () => request<DurationLimit>("/admin/durationlimit"),
