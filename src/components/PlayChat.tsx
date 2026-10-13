@@ -98,13 +98,13 @@ export function ViewerCommentOverlay({ lines }: { lines: VisibleChat[] }) {
   if (lines.length === 0) return null;
   return (
     <Stack
-      spacing={0.75}
+      spacing={1.5}
       sx={{
         position: "absolute",
         left: { xs: 8, sm: 16, md: 24 },
         // Above the bottom-center title card, like the /play overlay.
         bottom: { xs: 72, sm: 96, md: 120 },
-        maxWidth: { xs: "calc(100% - 16px)", md: "40%" },
+        maxWidth: { xs: "calc(100% - 16px)", md: "55%" },
         zIndex: 5,
         pointerEvents: "none",
         alignItems: "flex-start",
@@ -116,22 +116,22 @@ export function ViewerCommentOverlay({ lines }: { lines: VisibleChat[] }) {
           <Stack
             key={l.id}
             direction="row"
-            spacing={0.75}
+            spacing={1.5}
             sx={{
               alignItems: "center",
-              px: 1.25,
-              py: 0.5,
-              borderRadius: 1,
+              px: 2.5,
+              py: 1,
+              borderRadius: 2,
               bgcolor: VIEWER_BACKGROUNDS[l.source] ?? VIEWER_BACKGROUNDS.site,
               color: "#fff",
-              fontSize: { xs: "0.95rem", md: "1.15rem" },
+              fontSize: { xs: "1.9rem", md: "2.3rem" },
               fontWeight: l.source === "niconico" ? 700 : undefined,
-              border: l.source === "niconico" ? "2px solid rgba(255, 214, 0, 0.85)" : undefined,
-              textShadow: "0 1px 2px rgba(0, 0, 0, 0.6)",
+              border: l.source === "niconico" ? "4px solid rgba(255, 214, 0, 0.85)" : undefined,
+              textShadow: "0 2px 4px rgba(0, 0, 0, 0.6)",
               wordBreak: "break-word",
               animation: "viewerCommentIn 250ms ease-out",
               "@keyframes viewerCommentIn": {
-                from: { opacity: 0, transform: "translateY(8px)" },
+                from: { opacity: 0, transform: "translateY(16px)" },
                 to: { opacity: 1, transform: "none" },
               },
             }}
