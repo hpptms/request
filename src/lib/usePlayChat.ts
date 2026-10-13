@@ -17,11 +17,11 @@ export interface VisibleChat {
   expiresAt: number;
 }
 
-// Polls the chat and keeps only lines still inside their 10 seconds. Ages
+// Polls the chat and keeps only lines still inside their displayMs. Ages
 // come from the server (ageMs), so a line sent before this screen opened
 // only shows for whatever is left of its window. `poll` fetches right away
 // (used after sending, so the sender doesn't wait for the next tick).
-export function usePlayChat() {
+export function usePlayChat(displayMs = CHAT_DISPLAY_MS) {
   const [lines, setLines] = useState<VisibleChat[]>([]);
   const lastId = useRef(0);
 
@@ -32,13 +32,13 @@ export function usePlayChat() {
       const now = performance.now();
       lastId.current = Math.max(lastId.current, ...messages.map((m) => m.id));
       const fresh = messages
-        .filter((m) => m.ageMs < CHAT_DISPLAY_MS)
-        .map((m) => ({ id: m.id, source: m.source, text: m.text, expiresAt: now + CHAT_DISPLAY_MS - m.ageMs }));
+        .filter((m) => m.ageMs < displayMs)
+        .map((m) => ({ id: m.id, source: m.source, text: m.text, expiresAt: now + displayMs - m.ageMs }));
       if (fresh.length > 0) setLines((prev) => [...prev, ...fresh].slice(-MAX_VISIBLE));
     } catch {
       // Purely a nicety — ignore failures.
     }
-  }, []);
+  }, [displayMs]);
 
   useEffect(() => {
     poll();

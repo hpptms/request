@@ -11,11 +11,13 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import { api } from "../api";
 import { AdminLoginForm } from "../components/AdminLoginForm";
 import { PlayerOverlays } from "../components/PlayerOverlays";
+import { ViewerCommentOverlay } from "../components/PlayChat";
 import { hasVoteStatusIncrease, voteStatusOf, type VoteStatus } from "../lib/voteStatus";
 import { trackEvent } from "../lib/analytics";
 import { FALLBACK_VIDEO_IDS, pickRandomFallbackVideoId } from "../lib/fallbackPlaylist";
 import { loadYouTubeIframeApi } from "../lib/loadYouTubeIframeApi";
 import { useBroadcastOverlay } from "../lib/useBroadcastOverlay";
+import { usePlayChat } from "../lib/usePlayChat";
 import { useTodayTheme } from "../lib/useTodayTheme";
 import { useFastForwardPacingPopups } from "../lib/useFastForwardPacingPopups";
 import { getPlayableSeconds } from "../lib/playableSeconds";
@@ -30,6 +32,9 @@ import type { CancelVoteTier, FallbackTrack, PlaylistTrack, VideoRequest } from 
 
 const POLL_INTERVAL_MS = 3000;
 const PLAYER_ELEMENT_ID = "yt-viewer-player";
+// How long each comment (from /play or the live streams' chats) stays in
+// the bottom-left column.
+const VIEWER_COMMENT_MS = 15000;
 // YT.PlayerState.PLAYING; the enum is only available once the IFrame API has loaded.
 const PLAYER_STATE_PLAYING = 1;
 // Mirrors the backend's default store.CancelVoteTiers (internal/store/store.go)
@@ -204,6 +209,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   const [voteStatusVisible, setVoteStatusVisible] = useState(false);
   const [voteStatusContent, setVoteStatusContent] = useState<VoteStatus | null>(null);
   const broadcastState = useBroadcastOverlay();
+  const { lines: commentLines } = usePlayChat(VIEWER_COMMENT_MS);
   const todayThemes = useTodayTheme();
   const playingRequest = requests.find((r) => r.status === "playing") ?? null;
   const { scheduledVisible, scheduledSeconds, oneMinuteLeftVisible } = useFastForwardPacingPopups(
@@ -1085,6 +1091,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
               scheduledSeconds={scheduledSeconds}
               oneMinuteLeftVisible={oneMinuteLeftVisible}
             />
+            <ViewerCommentOverlay lines={commentLines} />
           </>
         </Box>
       </Box>

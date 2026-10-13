@@ -83,6 +83,68 @@ export function PlayChatOverlay({ lines }: { lines: VisibleChat[] }) {
   );
 }
 
+// The /viewer (stream output) screen's comment column: bottom-left, each
+// line on a translucent background tinted by where it came from. Lines are
+// oldest-first in a bottom-anchored column, so a new comment appears at the
+// bottom and pushes the ones still showing upward.
+const VIEWER_BACKGROUNDS: Record<VisibleChat["source"], string> = {
+  site: "rgba(0, 0, 0, 0.55)",
+  youtube: "rgba(150, 0, 0, 0.55)",
+  fc2: "rgba(20, 70, 170, 0.55)",
+  niconico: "rgba(60, 60, 60, 0.6)",
+};
+
+export function ViewerCommentOverlay({ lines }: { lines: VisibleChat[] }) {
+  if (lines.length === 0) return null;
+  return (
+    <Stack
+      spacing={0.75}
+      sx={{
+        position: "absolute",
+        left: { xs: 8, sm: 16, md: 24 },
+        // Above the bottom-center title card, like the /play overlay.
+        bottom: { xs: 72, sm: 96, md: 120 },
+        maxWidth: { xs: "calc(100% - 16px)", md: "40%" },
+        zIndex: 5,
+        pointerEvents: "none",
+        alignItems: "flex-start",
+      }}
+    >
+      {lines.map((l) => {
+        const style = l.source === "site" ? undefined : SOURCE_STYLES[l.source];
+        return (
+          <Stack
+            key={l.id}
+            direction="row"
+            spacing={0.75}
+            sx={{
+              alignItems: "center",
+              px: 1.25,
+              py: 0.5,
+              borderRadius: 1,
+              bgcolor: VIEWER_BACKGROUNDS[l.source] ?? VIEWER_BACKGROUNDS.site,
+              color: "#fff",
+              fontSize: { xs: "0.95rem", md: "1.15rem" },
+              fontWeight: l.source === "niconico" ? 700 : undefined,
+              border: l.source === "niconico" ? "2px solid rgba(255, 214, 0, 0.85)" : undefined,
+              textShadow: "0 1px 2px rgba(0, 0, 0, 0.6)",
+              wordBreak: "break-word",
+              animation: "viewerCommentIn 250ms ease-out",
+              "@keyframes viewerCommentIn": {
+                from: { opacity: 0, transform: "translateY(8px)" },
+                to: { opacity: 1, transform: "none" },
+              },
+            }}
+          >
+            {style && <style.Icon sx={{ fontSize: "1.2em", color: "#fff", flexShrink: 0 }} />}
+            <span>{l.text}</span>
+          </Stack>
+        );
+      })}
+    </Stack>
+  );
+}
+
 // One-row message box: メッセージ + 送信.
 export function PlayChatForm({ onSent }: { onSent: () => void }) {
   const [text, setText] = useState("");
