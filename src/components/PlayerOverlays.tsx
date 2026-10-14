@@ -147,9 +147,9 @@ export function PlayerOverlays({
         </Grow>
       </Box>
 
-      {/* Periodic status (/viewer only): remaining time + queued count, in the duration badge's spot and styled to match it. */}
+      {/* Periodic status (/viewer only): remaining time + queued count, in the duration badge's spot and styled to match it. Appears and disappears instantly, with no transition. */}
       <Box sx={{ position: "absolute", top: { xs: 8, sm: 16 }, right: { xs: 8, sm: 16 }, pointerEvents: "none" }}>
-        <Grow in={periodicStatusVisible} timeout={250}>
+        {periodicStatusVisible && (
           <Stack spacing={{ xs: 0.5, sm: 1 }} sx={{ alignItems: "flex-end" }}>
             {periodicStatus?.remainingSeconds != null && (
               <Chip
@@ -164,7 +164,7 @@ export function PlayerOverlays({
               sx={BADGE_CHIP_SX}
             />
           </Stack>
-        </Grow>
+        )}
       </Box>
 
       {/* New-request toast: fires once per request as it's added to the
