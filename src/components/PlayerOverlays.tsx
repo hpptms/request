@@ -147,9 +147,9 @@ export function PlayerOverlays({
         </Grow>
       </Box>
 
-      {/* Periodic status (/viewer only): remaining time + queued count, in the duration badge's spot and styled to match it. Appears and disappears instantly, with no transition. */}
+      {/* Periodic status (/viewer only): remaining time + queued count, in the duration badge's spot and styled to match it. Slides in from / back out to the right edge, same motion as the 早送りタイム「残り1分!」 pop-out. */}
       <Box sx={{ position: "absolute", top: { xs: 8, sm: 16 }, right: { xs: 8, sm: 16 }, pointerEvents: "none" }}>
-        {periodicStatusVisible && (
+        <Slide in={periodicStatusVisible} direction="left" timeout={{ enter: 300, exit: 250 }}>
           <Stack spacing={{ xs: 0.5, sm: 1 }} sx={{ alignItems: "flex-end" }}>
             {periodicStatus?.remainingSeconds != null && (
               <Chip
@@ -164,7 +164,7 @@ export function PlayerOverlays({
               sx={BADGE_CHIP_SX}
             />
           </Stack>
-        )}
+        </Slide>
       </Box>
 
       {/* New-request toast: fires once per request as it's added to the
