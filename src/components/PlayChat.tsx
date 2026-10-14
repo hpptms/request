@@ -2,11 +2,14 @@ import { useState } from "react";
 import type { ComponentType } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Collapse from "@mui/material/Collapse";
+import type { CollapseProps } from "@mui/material/Collapse";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import SendIcon from "@mui/icons-material/Send";
 import YouTubeIcon from "@mui/icons-material/YouTube";
+import { TransitionGroup } from "react-transition-group";
 import { api } from "../api";
 import type { VisibleChat } from "../lib/usePlayChat";
 import { Fc2Mark, NiconicoMark } from "./BrandIcons";
@@ -87,6 +90,13 @@ export function PlayChatOverlay({ lines }: { lines: VisibleChat[] }) {
 // line on a translucent background tinted by where it came from. Lines are
 // oldest-first in a bottom-anchored column, so a new comment appears at the
 // bottom and pushes the ones still showing upward.
+//
+// Motion only on the way in and out — a line is perfectly still while it's
+// up, so it never gets in the way of reading. In: the row opens (smoothly
+// pushing the others up), the card slides in from the left with a slight
+// overshoot, its platform-coloured edge bar draws in and one light glint
+// sweeps across. Out: the card slides back left and fades, then its row
+// closes.
 const VIEWER_BACKGROUNDS: Record<VisibleChat["source"], string> = {
   site: "rgba(0, 0, 0, 0.55)",
   youtube: "rgba(150, 0, 0, 0.55)",
@@ -94,11 +104,21 @@ const VIEWER_BACKGROUNDS: Record<VisibleChat["source"], string> = {
   niconico: "rgba(60, 60, 60, 0.6)",
 };
 
+const VIEWER_ACCENTS: Record<VisibleChat["source"], string> = {
+  site: "rgba(255, 255, 255, 0.85)",
+  youtube: "#FF3B3B",
+  fc2: "#4C8DFF",
+  niconico: "#FFD600",
+};
+
+const ROW_OPEN_MS = 300;
+const CARD_EXIT_MS = 350;
+const ROW_CLOSE_MS = 250;
+
 export function ViewerCommentOverlay({ lines }: { lines: VisibleChat[] }) {
-  if (lines.length === 0) return null;
+  // Always mounted (even when empty) so the last line can animate out.
   return (
-    <Stack
-      spacing={1.5}
+    <Box
       sx={{
         position: "absolute",
         left: { xs: 8, sm: 16, md: 24 },
@@ -107,41 +127,104 @@ export function ViewerCommentOverlay({ lines }: { lines: VisibleChat[] }) {
         maxWidth: { xs: "calc(100% - 16px)", md: "55%" },
         zIndex: 5,
         pointerEvents: "none",
+        display: "flex",
+        flexDirection: "column",
         alignItems: "flex-start",
       }}
     >
-      {lines.map((l) => {
-        const style = l.source === "site" ? undefined : SOURCE_STYLES[l.source];
-        return (
-          <Stack
-            key={l.id}
-            direction="row"
-            spacing={1.5}
-            sx={{
-              alignItems: "center",
-              px: 2.5,
-              py: 1,
-              borderRadius: 2,
-              bgcolor: VIEWER_BACKGROUNDS[l.source] ?? VIEWER_BACKGROUNDS.site,
-              color: "#fff",
-              fontSize: { xs: "1.9rem", md: "2.3rem" },
-              fontWeight: l.source === "niconico" ? 700 : undefined,
-              border: l.source === "niconico" ? "4px solid rgba(255, 214, 0, 0.85)" : undefined,
-              textShadow: "0 2px 4px rgba(0, 0, 0, 0.6)",
-              wordBreak: "break-word",
-              animation: "viewerCommentIn 250ms ease-out",
-              "@keyframes viewerCommentIn": {
-                from: { opacity: 0, transform: "translateY(16px)" },
-                to: { opacity: 1, transform: "none" },
-              },
-            }}
-          >
-            {style && <style.Icon sx={{ fontSize: "1.2em", color: "#fff", flexShrink: 0 }} />}
-            <span>{l.text}</span>
-          </Stack>
-        );
-      })}
-    </Stack>
+      <TransitionGroup component={null}>
+        {lines.map((l) => (
+          <ViewerCommentRow key={l.id} line={l} />
+        ))}
+      </TransitionGroup>
+    </Box>
+  );
+}
+
+// TransitionGroup clones this with in/onExited etc., handed on to Collapse.
+function ViewerCommentRow({ line, in: inProp, ...transition }: { line: VisibleChat } & Partial<CollapseProps>) {
+  const leaving = inProp === false;
+  const style = line.source === "site" ? undefined : SOURCE_STYLES[line.source];
+  const accent = VIEWER_ACCENTS[line.source] ?? VIEWER_ACCENTS.site;
+  return (
+    <Collapse
+      {...transition}
+      in={inProp}
+      timeout={{ enter: ROW_OPEN_MS, exit: CARD_EXIT_MS + ROW_CLOSE_MS }}
+      // On the way out, hold the row open until the card has slid away.
+      style={{ transitionDelay: leaving ? `${CARD_EXIT_MS}ms` : "0ms", transitionDuration: leaving ? `${ROW_CLOSE_MS}ms` : undefined }}
+    >
+      <Box sx={{ pt: 1.5 }}>
+        <Stack
+          direction="row"
+          spacing={1.5}
+          sx={{
+            position: "relative",
+            overflow: "hidden",
+            alignItems: "center",
+            pl: 3.5,
+            pr: 2.5,
+            py: 1,
+            borderRadius: 2,
+            bgcolor: VIEWER_BACKGROUNDS[line.source] ?? VIEWER_BACKGROUNDS.site,
+            color: "#fff",
+            fontSize: { xs: "1.9rem", md: "2.3rem" },
+            fontWeight: line.source === "niconico" ? 700 : undefined,
+            border: line.source === "niconico" ? "4px solid rgba(255, 214, 0, 0.85)" : undefined,
+            textShadow: "0 2px 4px rgba(0, 0, 0, 0.6)",
+            wordBreak: "break-word",
+            animation: leaving
+              ? `viewerCommentOut ${CARD_EXIT_MS}ms ease-in forwards`
+              : "viewerCommentIn 650ms cubic-bezier(0.2, 0.9, 0.3, 1.15) both",
+            // Edge bar in the platform's colour, drawn top to bottom on entry.
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: 8,
+              bgcolor: accent,
+              transformOrigin: "top",
+              animation: "viewerCommentBar 400ms ease-out 100ms both",
+            },
+            // A single glint across the card, then gone.
+            "&::after": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              bottom: 0,
+              left: 0,
+              width: "40%",
+              background: "linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent)",
+              transform: "translateX(-120%)",
+              animation: "viewerCommentGlint 800ms ease-in-out 250ms both",
+            },
+            "@keyframes viewerCommentIn": {
+              "0%": { opacity: 0, transform: "translateX(-60px) skewX(-8deg)", filter: "blur(4px)" },
+              "60%": { opacity: 1, transform: "translateX(8px) skewX(0deg)", filter: "blur(0)" },
+              "100%": { opacity: 1, transform: "none", filter: "none" },
+            },
+            "@keyframes viewerCommentOut": {
+              from: { opacity: 1, transform: "none", filter: "none" },
+              to: { opacity: 0, transform: "translateX(-50px)", filter: "blur(3px)" },
+            },
+            "@keyframes viewerCommentBar": {
+              from: { transform: "scaleY(0)" },
+              to: { transform: "scaleY(1)" },
+            },
+            "@keyframes viewerCommentGlint": {
+              "0%": { transform: "translateX(-120%)", opacity: 1 },
+              "99%": { transform: "translateX(320%)", opacity: 1 },
+              "100%": { transform: "translateX(320%)", opacity: 0 },
+            },
+          }}
+        >
+          {style && <style.Icon sx={{ fontSize: "1.2em", color: "#fff", flexShrink: 0, position: "relative" }} />}
+          <span style={{ position: "relative" }}>{line.text}</span>
+        </Stack>
+      </Box>
+    </Collapse>
   );
 }
 
