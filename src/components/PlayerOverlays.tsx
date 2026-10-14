@@ -9,6 +9,7 @@ import Typography from "@mui/material/Typography";
 import Zoom from "@mui/material/Zoom";
 import { useTheme } from "@mui/material/styles";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
+import QueueMusicIcon from "@mui/icons-material/QueueMusic";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import { broadcastImageUrl } from "../api";
 import { formatDuration } from "../lib/formatDuration";
@@ -26,6 +27,12 @@ interface Props {
   // Duration badge, shown a few seconds after the title card.
   durationBadgeVisible: boolean;
   durationBadgeSeconds: number | null;
+  // /viewer only: the playing video's remaining time (null when unknown)
+  // and the queued-request count, shown periodically in the duration
+  // badge's spot. Content only updates while shown (same lagging-content
+  // pattern as introContent below).
+  periodicStatusVisible?: boolean;
+  periodicStatus?: { remainingSeconds: number | null; queueCount: number } | null;
   // New-request toast: fires once per request as it's added to the queue.
   // newRequestNotice only ever updates when showing a new one (see
   // introContent above) — newRequestVisible alone drives the Slide in/out,
@@ -59,6 +66,8 @@ export function PlayerOverlays({
   todayThemes,
   durationBadgeVisible,
   durationBadgeSeconds,
+  periodicStatusVisible = false,
+  periodicStatus = null,
   newRequestVisible,
   newRequestNotice,
   voteStatusVisible,
@@ -135,6 +144,26 @@ export function PlayerOverlays({
               "& .MuiChip-label": { fontSize: { xs: "0.8rem", sm: "1.3rem", md: "2.4rem" }, px: { xs: 0.75, sm: 1.5, md: 2 } },
             }}
           />
+        </Grow>
+      </Box>
+
+      {/* Periodic status (/viewer only): remaining time + queued count, in the duration badge's spot and styled to match it. */}
+      <Box sx={{ position: "absolute", top: { xs: 8, sm: 16 }, right: { xs: 8, sm: 16 }, pointerEvents: "none" }}>
+        <Grow in={periodicStatusVisible} timeout={250}>
+          <Stack spacing={{ xs: 0.5, sm: 1 }} sx={{ alignItems: "flex-end" }}>
+            {periodicStatus?.remainingSeconds != null && (
+              <Chip
+                icon={<ScheduleIcon sx={PERIODIC_ICON_SX} />}
+                label={`残り ${formatDuration(Math.ceil(periodicStatus.remainingSeconds))}`}
+                sx={BADGE_CHIP_SX}
+              />
+            )}
+            <Chip
+              icon={<QueueMusicIcon sx={PERIODIC_ICON_SX} />}
+              label={`キュー ${periodicStatus?.queueCount ?? 0}件`}
+              sx={BADGE_CHIP_SX}
+            />
+          </Stack>
         </Grow>
       </Box>
 
@@ -341,6 +370,17 @@ export function PlayerOverlays({
     </>
   );
 }
+
+// Shared by the periodic status chips, matching the duration badge's size.
+const PERIODIC_ICON_SX = { color: "white !important", fontSize: { xs: "1.1rem !important", sm: "1.6rem !important", md: "2.4rem !important" } };
+const BADGE_CHIP_SX = {
+  bgcolor: "rgba(0,0,0,0.7)",
+  color: "white",
+  fontWeight: 600,
+  height: { xs: 28, sm: 44, md: 72 },
+  borderRadius: { xs: 2, sm: 3, md: 4 },
+  "& .MuiChip-label": { fontSize: { xs: "0.8rem", sm: "1.3rem", md: "2.4rem" }, px: { xs: 0.75, sm: 1.5, md: 2 } },
+};
 
 // Neon accent shared by the badge's edge bar, glow and label.
 const THEME_NEON = "linear-gradient(180deg, #00E5FF, #B14DFF)";

@@ -11,3 +11,8 @@ export const DURATION_BADGE_DELAY_MS = 5000;
 export const DURATION_BADGE_VISIBLE_MS = NOW_PLAYING_INTRO_MS;
 export const NEW_REQUEST_NOTICE_MS = 4000;
 export const VOTE_STATUS_VISIBLE_MS = 4000;
+// /viewer only: every PERIODIC_STATUS_INTERVAL_MS, the remaining time of the
+// playing video and the number of queued requests show for
+// PERIODIC_STATUS_VISIBLE_MS in the duration badge's spot.
+export const PERIODIC_STATUS_INTERVAL_MS = 60000;
+export const PERIODIC_STATUS_VISIBLE_MS = 10000;

@@ -26,6 +26,8 @@ import {
   DURATION_BADGE_VISIBLE_MS,
   NEW_REQUEST_NOTICE_MS,
   NOW_PLAYING_INTRO_MS,
+  PERIODIC_STATUS_INTERVAL_MS,
+  PERIODIC_STATUS_VISIBLE_MS,
   VOTE_STATUS_VISIBLE_MS,
 } from "../lib/playerOverlayTiming";
 import type { CancelVoteTier, FallbackTrack, PlaylistTrack, VideoRequest } from "../types";
@@ -193,6 +195,12 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // pattern as the intro card above).
   const [durationBadgeVisible, setDurationBadgeVisible] = useState(false);
   const [durationBadgeSeconds, setDurationBadgeSeconds] = useState<number | null>(null);
+  // Every PERIODIC_STATUS_INTERVAL_MS, the playing video's remaining time and
+  // the queued-request count show for PERIODIC_STATUS_VISIBLE_MS in the
+  // duration badge's spot (skipped while that badge is up) — see the
+  // effects next to readPeriodicStatusRef.
+  const [periodicStatusVisible, setPeriodicStatusVisible] = useState(false);
+  const [periodicStatus, setPeriodicStatus] = useState<{ remainingSeconds: number | null; queueCount: number } | null>(null);
   // New-request toast (feature: notify every time someone adds a request).
   // One at a time, oldest first — see enqueueNewRequestNotice.
   // newRequestNotice only ever updates when showing a new one (same
@@ -266,6 +274,9 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // (niconico/vimeo's plain iframe has no real one). Null whenever
   // nonYouTubeEmbedUrl is null.
   const nonYouTubeStartRef = useRef<number | null>(null);
+  // How long the current non-YouTube video's one-shot timer was set for,
+  // so the periodic status can show its remaining time.
+  const nonYouTubeTimerSecondsRef = useRef<number | null>(null);
   // Which platform the current non-YouTube iframe is showing (set
   // alongside nonYouTubeEmbedUrl) and a handle to the iframe element
   // itself, so sendNiconicoPlayCommand knows when/where to postMessage.
@@ -276,6 +287,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   const introHideTimerRef = useRef<number | null>(null);
   const durationBadgeShowTimerRef = useRef<number | null>(null);
   const durationBadgeHideTimerRef = useRef<number | null>(null);
+  const periodicStatusHideTimerRef = useRef<number | null>(null);
   // New-request notice queue + whether one is currently being shown (see
   // enqueueNewRequestNotice). null after the very first poll seeds it, so
   // the existing backlog on page load doesn't fire a notice per request.
@@ -538,6 +550,11 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     if (durationBadgeShowTimerRef.current !== null) window.clearTimeout(durationBadgeShowTimerRef.current);
     if (durationBadgeHideTimerRef.current !== null) window.clearTimeout(durationBadgeHideTimerRef.current);
     setDurationBadgeVisible(false);
+    if (periodicStatusHideTimerRef.current !== null) {
+      window.clearTimeout(periodicStatusHideTimerRef.current);
+      periodicStatusHideTimerRef.current = null;
+    }
+    setPeriodicStatusVisible(false);
 
     setIntroContent({ title, channelTitle, videoId, requesterName });
     setIntroVisible(true);
@@ -716,6 +733,42 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   const nextPending = pendingList[0] ?? null;
   const target = playing ?? nextPending;
 
+  // The playback cap (in seconds from startSeconds) currently in force for
+  // a real request, or null if it isn't capped — see the cap-checking
+  // effect below for the rules.
+  const capSecondsFor = (current: VideoRequest): number | null => {
+    const caps: number[] = [];
+    const joinedMidPlay = fastForwardActive && !!current.fastForwardCutoffSeconds;
+    if (joinedMidPlay) {
+      caps.push(current.fastForwardCutoffSeconds!);
+      for (const tier of cancelVoteTiers) {
+        if (current.cancelVotes >= tier.votes) caps.push(tier.capSeconds);
+      }
+      if (current.twoMinuteRequest) {
+        caps.push(twoMinuteRequestCapSeconds);
+      }
+    } else if (fastForwardActive) {
+      caps.push(fastForwardCapSeconds);
+      for (const tier of fastForwardCancelVoteTiers) {
+        if (current.cancelVotes >= tier.votes) caps.push(tier.capSeconds);
+      }
+    } else {
+      for (const tier of cancelVoteTiers) {
+        if (current.cancelVotes >= tier.votes) caps.push(tier.capSeconds);
+      }
+      if (current.twoMinuteRequest) {
+        caps.push(twoMinuteRequestCapSeconds);
+      }
+    }
+    if (durationLimitThresholdSeconds > 0 && getPlayableSeconds(current) >= durationLimitThresholdSeconds) {
+      caps.push(durationLimitCapSeconds);
+    }
+    if (caps.length === 0) return null;
+    // Likes extend whichever cap won (see store.playbackFloorLocked), so a
+    // bad-voted or overlong request still gets its likes' extra time.
+    return Math.min(...caps) + (fastForwardActive && !joinedMidPlay ? fastForwardPerLikeSeconds * current.likes : 0);
+  };
+
   // If the request that's currently loaded disappears from the queue (e.g.
   // deleted by the admin), stop it immediately instead of waiting for it to
   // play out, so the claim effect can advance.
@@ -800,37 +853,8 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     const current = requests.find((r) => r.id === requestId);
     if (!current) return;
 
-    const caps: number[] = [];
-    const joinedMidPlay = fastForwardActive && !!current.fastForwardCutoffSeconds;
-    if (joinedMidPlay) {
-      caps.push(current.fastForwardCutoffSeconds!);
-      for (const tier of cancelVoteTiers) {
-        if (current.cancelVotes >= tier.votes) caps.push(tier.capSeconds);
-      }
-      if (current.twoMinuteRequest) {
-        caps.push(twoMinuteRequestCapSeconds);
-      }
-    } else if (fastForwardActive) {
-      caps.push(fastForwardCapSeconds);
-      for (const tier of fastForwardCancelVoteTiers) {
-        if (current.cancelVotes >= tier.votes) caps.push(tier.capSeconds);
-      }
-    } else {
-      for (const tier of cancelVoteTiers) {
-        if (current.cancelVotes >= tier.votes) caps.push(tier.capSeconds);
-      }
-      if (current.twoMinuteRequest) {
-        caps.push(twoMinuteRequestCapSeconds);
-      }
-    }
-    if (durationLimitThresholdSeconds > 0 && getPlayableSeconds(current) >= durationLimitThresholdSeconds) {
-      caps.push(durationLimitCapSeconds);
-    }
-    if (caps.length === 0) return;
-    // Likes extend whichever cap won (see store.playbackFloorLocked), so a
-    // bad-voted or overlong request still gets its likes' extra time.
-    const capSeconds =
-      Math.min(...caps) + (fastForwardActive && !joinedMidPlay ? fastForwardPerLikeSeconds * current.likes : 0);
+    const capSeconds = capSecondsFor(current);
+    if (capSeconds === null) return;
 
     const elapsed = nonYouTubeEmbedUrl
       ? nonYouTubeStartRef.current !== null
@@ -874,6 +898,57 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     nonYouTubeEmbedUrl,
     refresh,
   ]);
+
+  // Remaining seconds of whatever's playing, counting any cap from
+  // capSecondsFor; null when it can't be told yet (e.g. still buffering).
+  const computeRemainingSeconds = (): number | null => {
+    const requestId = currentRequestIdRef.current;
+    const current = requestId ? (requests.find((r) => r.id === requestId) ?? null) : null;
+    const cap = current ? capSecondsFor(current) : null;
+    if (nonYouTubeEmbedUrl) {
+      if (nonYouTubeStartRef.current === null || nonYouTubeTimerSecondsRef.current === null) return null;
+      const total = cap !== null ? Math.min(cap, nonYouTubeTimerSecondsRef.current) : nonYouTubeTimerSecondsRef.current;
+      return Math.max(0, total - (Date.now() - nonYouTubeStartRef.current) / 1000);
+    }
+    const player = playerRef.current;
+    if (!player) return null;
+    const now = player.getCurrentTime();
+    const duration = player.getDuration();
+    if (typeof now !== "number" || !Number.isFinite(now) || typeof duration !== "number" || !(duration > 0)) return null;
+    let end = current?.endSeconds ? Math.min(current.endSeconds, duration) : duration;
+    if (current && cap !== null) end = Math.min(end, (current.startSeconds ?? 0) + cap);
+    return Math.max(0, end - now);
+  };
+
+  // Re-assigned every render so the interval effects below always read the
+  // latest requests/caps without re-arming themselves.
+  const readPeriodicStatusRef = useRef(() => ({ remainingSeconds: null as number | null, queueCount: 0 }));
+  readPeriodicStatusRef.current = () => ({ remainingSeconds: computeRemainingSeconds(), queueCount: pendingList.length });
+
+  // Every PERIODIC_STATUS_INTERVAL_MS, show the periodic status for
+  // PERIODIC_STATUS_VISIBLE_MS — skipped while the duration badge (same
+  // spot) is up or about to be.
+  useEffect(() => {
+    if (!started || !playerReady) return;
+    const interval = window.setInterval(() => {
+      if (durationBadgeShowTimerRef.current !== null || durationBadgeHideTimerRef.current !== null) return;
+      if (periodicStatusHideTimerRef.current !== null) window.clearTimeout(periodicStatusHideTimerRef.current);
+      setPeriodicStatus(readPeriodicStatusRef.current());
+      setPeriodicStatusVisible(true);
+      periodicStatusHideTimerRef.current = window.setTimeout(() => {
+        setPeriodicStatusVisible(false);
+        periodicStatusHideTimerRef.current = null;
+      }, PERIODIC_STATUS_VISIBLE_MS);
+    }, PERIODIC_STATUS_INTERVAL_MS);
+    return () => window.clearInterval(interval);
+  }, [started, playerReady]);
+
+  // Count the remaining time down live while the periodic status is shown.
+  useEffect(() => {
+    if (!periodicStatusVisible) return;
+    const interval = window.setInterval(() => setPeriodicStatus(readPeriodicStatusRef.current()), 1000);
+    return () => window.clearInterval(interval);
+  }, [periodicStatusVisible]);
 
   // Actively reverts any jump away from the expected playback position —
   // whether from the (visually hidden, but still reachable via keyboard
@@ -984,6 +1059,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
                 Math.max(playableSeconds || NON_YOUTUBE_DEFAULT_DURATION_SECONDS, SHORTENED_PLAYBACK_SECONDS),
                 NON_YOUTUBE_MAX_DURATION_SECONDS,
               );
+        nonYouTubeTimerSecondsRef.current = timerSeconds;
         nonYouTubeTimerRef.current = window.setTimeout(() => {
           advanceQueue(api.finishRequest);
         }, timerSeconds * 1000);
@@ -1082,6 +1158,8 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
               todayThemes={todayThemes}
               durationBadgeVisible={durationBadgeVisible}
               durationBadgeSeconds={durationBadgeSeconds}
+              periodicStatusVisible={periodicStatusVisible}
+              periodicStatus={periodicStatus}
               newRequestVisible={newRequestVisible}
               newRequestNotice={newRequestNotice}
               voteStatusVisible={voteStatusVisible}
