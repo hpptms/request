@@ -14,5 +14,5 @@ export const VOTE_STATUS_VISIBLE_MS = 4000;
 // /viewer only: every PERIODIC_STATUS_INTERVAL_MS, the remaining time of the
 // playing video and the number of queued requests show for
 // PERIODIC_STATUS_VISIBLE_MS in the duration badge's spot.
-export const PERIODIC_STATUS_INTERVAL_MS = 60000;
+export const PERIODIC_STATUS_INTERVAL_MS = 90000;
 export const PERIODIC_STATUS_VISIBLE_MS = 10000;
