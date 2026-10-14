@@ -154,7 +154,7 @@ export function PlayerOverlays({
             {periodicStatus?.remainingSeconds != null && (
               <Chip
                 icon={<ScheduleIcon sx={PERIODIC_ICON_SX} />}
-                label={`残り ${formatDuration(Math.ceil(periodicStatus.remainingSeconds))}`}
+                label={formatDuration(Math.ceil(periodicStatus.remainingSeconds))}
                 sx={BADGE_CHIP_SX}
               />
             )}
