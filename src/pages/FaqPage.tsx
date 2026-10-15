@@ -6,7 +6,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { ContentPageLayout } from "../components/ContentPageLayout";
-import { useSeo } from "../lib/useSeo";
+import { usePageSeo } from "../lib/useSeo";
 
 const FAQ_SCRIPT_ID = "seo-faq";
 
@@ -100,11 +100,7 @@ const FAQ_GROUPS: { heading: string; items: Faq[] }[] = [
 
 // よくある質問 (/faq)。FAQPage構造化データも併せて出力する。
 function FaqPage() {
-  useSeo(
-    "よくある質問 | 動画リクエストキュー",
-    "動画リクエストキューのよくある質問。登録の要否、対応している動画サイト、リクエストの取り消し方、いいね・超いいね・bad・スベってるの違い、投票の上限などにお答えします。",
-    "/faq",
-  );
+  usePageSeo("/faq");
 
   useEffect(() => {
     const el = document.createElement("script");

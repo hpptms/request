@@ -14,16 +14,12 @@ import { AdminMessageForm } from "../components/AdminMessageForm";
 import { Footer } from "../components/Footer";
 import { SiteLogo } from "../components/SiteLogo";
 import { NOTICE_SECTIONS, RECENT_CHANGES } from "../lib/notices";
-import { useSeo } from "../lib/useSeo";
+import { usePageSeo } from "../lib/useSeo";
 
 // お知らせページ (/notice): トップページに置いていた注意書き・直近の変更・
 // 管理者へのメッセージ欄をここにまとめている(トップは配信中/再生中を優先)。
 function NoticePage() {
-  useSeo(
-    "お知らせ | 動画リクエストキュー",
-    "動画リクエストキューのお知らせ・ルール・直近の変更点と、管理者へのメッセージ送信ページです。",
-    "/notice",
-  );
+  usePageSeo("/notice");
 
   return (
     <Box sx={{ minHeight: "100%", bgcolor: "background.default" }}>

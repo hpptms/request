@@ -7,7 +7,7 @@ import Typography from "@mui/material/Typography";
 import { ActiveUsersMap } from "../components/ActiveUsersMap";
 import { Footer } from "../components/Footer";
 import { useActiveUsersHeatmap } from "../lib/useActiveUsersHeatmap";
-import { useSeo } from "../lib/useSeo";
+import { usePageSeo } from "../lib/useSeo";
 import { PublicNavButtons } from "../components/PublicNavButtons";
 import { SiteLogo } from "../components/SiteLogo";
 
@@ -15,11 +15,7 @@ import { SiteLogo } from "../components/SiteLogo";
 // 認証不要で誰でも見られる形で表示する。
 function HeatmapPage() {
   const { points, prefectures, countries, isMock } = useActiveUsersHeatmap();
-  useSeo(
-    "アクティブユーザーヒートマップ | 動画リクエストキュー",
-    "動画リクエストキューを今見ている人を都市別のバブルマップで表示します。",
-    "/heatmap",
-  );
+  usePageSeo("/heatmap");
 
   return (
     <Box sx={{ minHeight: "100%", bgcolor: "background.default" }}>

@@ -8,18 +8,14 @@ import Typography from "@mui/material/Typography";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Link as RouterLink } from "react-router-dom";
 import { Footer } from "../components/Footer";
-import { useSeo } from "../lib/useSeo";
+import { usePageSeo } from "../lib/useSeo";
 import { SiteLogo } from "../components/SiteLogo";
 
 // サイトについて/運営者情報ページ (/about)。誰が何の目的で運営しているかを
 // 示す、AdSense審査で求められる「運営者情報」ページ。実名・住所までは載せず、
 // プロフィール的な内容にとどめる。
 function AboutPage() {
-  useSeo(
-    "サイトについて | 動画リクエストキュー",
-    "動画リクエストキューは、リクエスタがリクエストした動画をみんなで一緒に見られる動画リクエストサイトです。運営者情報・サービスの目的についてのページです。",
-    "/about",
-  );
+  usePageSeo("/about");
 
   return (
     <Box sx={{ minHeight: "100%", bgcolor: "background.default" }}>

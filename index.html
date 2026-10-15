@@ -18,7 +18,10 @@
          og:* for its own route once it mounts, via src/lib/useSeo.ts — this
          is a client-rendered SPA with no server-side rendering, so these
          tags are what's present before/without JS, and also what a page
-         without its own useSeo call (ViewerPage, AdminPage) keeps. -->
+         without its own useSeo call (ViewerPage, AdminPage) keeps. The
+         public routes also get their own prerendered copy of this file
+         (dist/guide.html etc.) with these tags swapped at build time — see
+         prerenderSeo in vite.config.ts. -->
     <meta name="description" content="動画リクエストキューは、リクエスタ(リクエスター)がYouTube・ニコニコ動画・Vimeoの動画をリクエストして、みんなで一緒に動画を見られる視聴者参加型の動画リクエストサイトです。いいね・bad投票でリクエストの再生順が変わります。" />
         <meta name="robots" content="index,follow" />
     <link rel="canonical" href="https://request.tokyo/" />

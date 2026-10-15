@@ -9,7 +9,7 @@ import Typography from "@mui/material/Typography";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Link as RouterLink } from "react-router-dom";
 import { Footer } from "../components/Footer";
-import { useSeo } from "../lib/useSeo";
+import { usePageSeo } from "../lib/useSeo";
 import { SiteLogo } from "../components/SiteLogo";
 
 // プライバシーポリシー (/privacy)。Google公式ヘルプが必須としている3点
@@ -18,11 +18,7 @@ import { SiteLogo } from "../components/SiteLogo";
 // サイトが行っているGoogle Analyticsでのアクセス解析、荒らし対策目的の
 // IPアドレス利用についても合わせて記載する。
 function PrivacyPolicyPage() {
-  useSeo(
-    "プライバシーポリシー | 動画リクエストキュー",
-    "動画リクエストキューにおける個人情報の取り扱い、Cookie・アクセス解析・広告配信についてのプライバシーポリシーです。",
-    "/privacy",
-  );
+  usePageSeo("/privacy");
 
   return (
     <Box sx={{ minHeight: "100%", bgcolor: "background.default" }}>

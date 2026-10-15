@@ -26,7 +26,7 @@ import { RecentDoneList } from "../components/RecentDoneList";
 import { RequestForm } from "../components/RequestForm";
 import { TodayThemeBox } from "../components/TodayThemeBox";
 import { useRequestQueue } from "../lib/useRequestQueue";
-import { useSeo } from "../lib/useSeo";
+import { usePageSeo } from "../lib/useSeo";
 import { SiteLogo } from "../components/SiteLogo";
 
 // Upper bound on how long the board waits for its first data before showing
@@ -40,11 +40,7 @@ function BoardPage() {
   // Toolbar and were overflowing it horizontally.
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  useSeo(
-    "動画リクエストキュー | みんなで一緒に動画を見るリクエストサイト",
-    "動画リクエストキューは、リクエスタ(リクエスター)がYouTube・ニコニコ動画・Vimeoの動画をリクエストして、みんなで一緒に動画を見られる視聴者参加型の動画リクエストサイトです。いいね・bad投票でリクエストの再生順が変わります。",
-    "/",
-  );
+  usePageSeo("/");
 
   const {
     requestsLoaded,

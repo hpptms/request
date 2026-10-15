@@ -1,13 +1,9 @@
 import { ContentList, ContentPageLayout, ContentSection } from "../components/ContentPageLayout";
-import { useSeo } from "../lib/useSeo";
+import { usePageSeo } from "../lib/useSeo";
 
 // 利用規約 (/terms)。
 function TermsPage() {
-  useSeo(
-    "利用規約 | 動画リクエストキュー",
-    "動画リクエストキューの利用規約です。禁止事項、投稿されたリクエストの取り扱い、免責事項などを定めています。",
-    "/terms",
-  );
+  usePageSeo("/terms");
 
   return (
     <ContentPageLayout

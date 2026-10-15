@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { PAGE_SEO, type PagePath } from "./pageSeo";
 
 const SITE_ORIGIN = "https://request.tokyo";
 const SITE_NAME = "動画リクエストキュー";
@@ -82,4 +83,11 @@ export function useSeo(title: string, description: string, path: string, options
       setBreadcrumb(null, url);
     };
   }, [title, description, path, noindex]);
+}
+
+// useSeo for one of the public pages listed in PAGE_SEO — the same title/
+// description vite.config.ts bakes into that route's prerendered HTML.
+export function usePageSeo(path: PagePath) {
+  const { title, description } = PAGE_SEO[path];
+  useSeo(title, description, path);
 }

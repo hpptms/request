@@ -2,17 +2,13 @@ import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import { Link as RouterLink } from "react-router-dom";
 import { ContentList, ContentPageLayout, ContentSection } from "../components/ContentPageLayout";
-import { useSeo } from "../lib/useSeo";
+import { usePageSeo } from "../lib/useSeo";
 
 // 使い方ガイド (/guide)。初めて来た人向けに、リクエストから投票・集計まで
 // の流れを文章で説明する。数値ルール(上限・時間帯)は変わりうるので、
 // 正確な値は /notice(src/lib/notices.ts)を参照させる。
 function GuidePage() {
-  useSeo(
-    "使い方ガイド | 動画リクエストキュー",
-    "動画リクエストキューの使い方ガイド。動画のリクエスト方法、いいね・bad・超いいね・スベってるの違い、早送りタイム、今日のテーマ、集計ランキングやヒートマップの見方を初めての方向けに解説します。",
-    "/guide",
-  );
+  usePageSeo("/guide");
 
   return (
     <ContentPageLayout

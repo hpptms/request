@@ -21,7 +21,7 @@ import { TodayThemeBox } from "../components/TodayThemeBox";
 import { LANDSCAPE_PHONE } from "../lib/layout";
 import { usePlayChat } from "../lib/usePlayChat";
 import { useRequestQueue } from "../lib/useRequestQueue";
-import { useSeo } from "../lib/useSeo";
+import { usePageSeo } from "../lib/useSeo";
 import { SiteLogo } from "../components/SiteLogo";
 
 // 公開の再生画面 (/play): キュー制御(シークガード・投票による短縮・終了時の
@@ -31,11 +31,7 @@ import { SiteLogo } from "../components/SiteLogo";
 // 直接重ねたボタンから行う。中身のデータ・操作はBoardPage(/)と同じ
 // useRequestQueue を共有している。
 function PlayPage() {
-  useSeo(
-    "みんなで一緒に動画を見る 再生画面 | 動画リクエストキュー",
-    "リクエストされた動画をみんなで一緒に見られる再生画面です。現在再生中の動画をその場で見ながら、いいね・bad投票や動画リクエストができます。",
-    "/play",
-  );
+  usePageSeo("/play");
 
   const {
     requests,

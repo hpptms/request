@@ -5,7 +5,7 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import { Footer } from "../components/Footer";
 import { StatsView } from "../components/StatsView";
-import { useSeo } from "../lib/useSeo";
+import { usePageSeo } from "../lib/useSeo";
 import { PublicNavButtons } from "../components/PublicNavButtons";
 import { SiteLogo } from "../components/SiteLogo";
 
@@ -13,11 +13,7 @@ import { SiteLogo } from "../components/SiteLogo";
 // ランキング(GET /api/stats、認証不要)を誰でも見られる形で表示する。
 // 中身は StatsView。
 function StatsPage() {
-  useSeo(
-    "集計 | 動画リクエストキュー",
-    "動画リクエストキューで、リクエスタから動画リクエストの多いアーティスト・動画、いいね・bad(キャンセル投票)の多い動画を日別・週別・累計で集計したランキングです。",
-    "/stats",
-  );
+  usePageSeo("/stats");
 
   return (
     <Box sx={{ minHeight: "100%", bgcolor: "background.default" }}>

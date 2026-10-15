@@ -8,7 +8,7 @@ import Typography from "@mui/material/Typography";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Link as RouterLink } from "react-router-dom";
 import { Footer } from "../components/Footer";
-import { useSeo } from "../lib/useSeo";
+import { usePageSeo } from "../lib/useSeo";
 import { SiteLogo } from "../components/SiteLogo";
 
 // お問い合わせ窓口のX(旧Twitter)の@ハンドル(.envのVITE_X_HANDLE、@なし)
@@ -19,11 +19,7 @@ const X_HANDLE: string | null = import.meta.env.VITE_X_HANDLE?.trim().replace(/^
 // Twitter)のアカウントを案内する。AdSense審査上は「連絡手段があること」
 // が重要で、フォームである必要はない。
 function ContactPage() {
-  useSeo(
-    "お問い合わせ | 動画リクエストキュー",
-    "動画リクエストキューへのご意見・不具合報告等のお問い合わせ方法についてのページです。",
-    "/contact",
-  );
+  usePageSeo("/contact");
 
   return (
     <Box sx={{ minHeight: "100%", bgcolor: "background.default" }}>
