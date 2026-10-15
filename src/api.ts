@@ -218,6 +218,14 @@ export const api = {
       body: JSON.stringify({ urls }),
     }),
 
+  // Called by the viewer screen when a playlist track plays to the end;
+  // removes it from the playlist and returns what's left.
+  adminPlaylistPlayed: (index: number, videoId: string) =>
+    request<PlaylistTrack[]>("/admin/playlist/played", {
+      method: "POST",
+      body: JSON.stringify({ index, videoId }),
+    }),
+
   // Expands a YouTube playlist URL into its member videos' watch URLs.
   // Doesn't save anything by itself — the caller appends the result into
   // the playlist textarea for review, then saves via adminSetPlaylist.

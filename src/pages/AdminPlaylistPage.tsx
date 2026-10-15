@@ -164,7 +164,7 @@ function AdminPlaylistPage() {
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           リクエストが無いときに順番に再生される動画です。1行に1つ、動画ページのYouTube URL（例:
-          youtube.com/watch?v=…、youtu.be/…）を貼り付けて保存してください。検索結果ページのURL（youtube.com/results?search_query=…）は解決できません。リクエストが入ると中断され、無くなると続きから再開されます。
+          youtube.com/watch?v=…、youtu.be/…）を貼り付けて保存してください。検索結果ページのURL（youtube.com/results?search_query=…）は解決できません。リクエストが入ると中断され、無くなると続きから再開されます。最後まで再生された動画はプレイリストから自動で削除されます（スキップした場合は残ります）。
         </Typography>
         {errorMessage && (
           <Alert severity="error" sx={{ mb: 2 }}>
