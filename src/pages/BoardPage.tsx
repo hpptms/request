@@ -21,7 +21,6 @@ import { Link as RouterLink } from "react-router-dom";
 import { Footer } from "../components/Footer";
 import { NowLive } from "../components/NowLive";
 import { NowPlaying } from "../components/NowPlaying";
-import { PlayCta } from "../components/PlayCta";
 import { QueueList } from "../components/QueueList";
 import { RecentDoneList } from "../components/RecentDoneList";
 import { RequestForm } from "../components/RequestForm";
@@ -157,7 +156,6 @@ function BoardPage() {
           {/* Live status first, so it is on screen as soon as the page opens;
               the rules and change log are folded into one box below it. */}
           <NowLive onLoaded={handleLiveLoaded} />
-          <PlayCta />
           <NowPlaying
             nowPlaying={nowPlaying}
             cancelVoteTiers={cancelVoteTiers}

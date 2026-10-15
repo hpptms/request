@@ -6,10 +6,13 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import Typography from "@mui/material/Typography";
+import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import YouTubeIcon from "@mui/icons-material/YouTube";
+import { Link as RouterLink } from "react-router-dom";
 import { api } from "../api";
 import { visibleInterval } from "../lib/visibleInterval";
 import { Fc2Mark, NiconicoMark } from "./BrandIcons";
+import { PlayCta } from "./PlayCta";
 import type { NowLiveItem } from "../types";
 
 const REFRESH_MS = 60000;
@@ -38,7 +41,8 @@ const BRANDS: Record<NowLiveItem["key"], { bg: string; hover: string; fg: string
 };
 
 // 配信中のプラットフォームへのリンク。管理画面で入力したURLの分だけ表示し、
-// 1つも無ければ何も出さない。
+// 同じ列の最後にサイト内の再生画面(/play)への「みんなで同時視聴する」も
+// 並べる。配信が1つも無いときは、その誘導ボタンだけを単独で出す。
 export function NowLive({ onLoaded }: { onLoaded?: () => void } = {}) {
   const [items, setItems] = useState<NowLiveItem[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -69,7 +73,18 @@ export function NowLive({ onLoaded }: { onLoaded?: () => void } = {}) {
     if (loaded) onLoaded?.();
   }, [loaded, onLoaded]);
 
-  if (items.length === 0) return null;
+  if (items.length === 0) return loaded ? <PlayCta /> : null;
+
+  const tileSx = {
+    textTransform: "none",
+    fontWeight: 800,
+    fontSize: "1rem",
+    minHeight: 48,
+    px: 2.5,
+    borderRadius: 2,
+    boxShadow: "none",
+    "&:hover": { boxShadow: "none" },
+  } as const;
 
   return (
     <Paper variant="outlined" sx={{ px: 2, py: 1.5 }}>
@@ -105,13 +120,7 @@ export function NowLive({ onLoaded }: { onLoaded?: () => void } = {}) {
                 variant="contained"
                 startIcon={<brand.Icon sx={{ fontSize: 28 }} />}
                 sx={{
-                  textTransform: "none",
-                  fontWeight: 800,
-                  fontSize: "1rem",
-                  minHeight: 48,
-                  px: 2.5,
-                  borderRadius: 2,
-                  boxShadow: "none",
+                  ...tileSx,
                   background: brand.bg,
                   color: brand.fg,
                   "&:hover": { background: brand.hover, boxShadow: "none" },
@@ -121,6 +130,15 @@ export function NowLive({ onLoaded }: { onLoaded?: () => void } = {}) {
               </Button>
             );
           })}
+          <Button
+            component={RouterLink}
+            to="/play"
+            variant="contained"
+            startIcon={<PlayCircleIcon sx={{ fontSize: 28 }} />}
+            sx={tileSx}
+          >
+            みんなで同時視聴する
+          </Button>
         </Stack>
       </Stack>
     </Paper>
