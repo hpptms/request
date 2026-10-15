@@ -3,6 +3,7 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
+import Link from "@mui/material/Link";
 import Snackbar from "@mui/material/Snackbar";
 import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
@@ -75,7 +76,7 @@ function PlayPage() {
           <Toolbar sx={{ px: { xs: 2, sm: 3 }, gap: 1 }}>
             <SiteLogo />
             <Typography variant="h6" component="h1" noWrap sx={{ flexGrow: 1, minWidth: 0 }}>
-              再生
+              同時視聴
             </Typography>
             <Stack direction="row" spacing={0.5}>
               <Button
@@ -226,8 +227,22 @@ function PlayPage() {
           description instead of leaving this page's only text content as
           nav labels and dynamically-loaded queue titles. */}
       <Container maxWidth="sm" sx={{ py: { xs: 3, sm: 4 }, px: { xs: 2, sm: 3 } }}>
-        <Typography variant="body2" color="text.secondary">
-          今まさに再生中の動画をその場で見ながら、いいね・bad投票で再生順に反映したり、新しい動画をリクエストできます。待機中のリクエストもここから確認・投票できます。
+        <Typography variant="subtitle1" component="h2" gutterBottom sx={{ fontWeight: 700 }}>
+          YouTube・ニコニコ動画をみんなで同時視聴
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.9 }}>
+          この画面を開いている全員が、いま再生中の同じ動画を同時視聴しています。登録やルーム作成は不要で、開くだけで知らない人と一緒に動画を楽しめます。見たい動画のURL(YouTube・ニコニコ動画・Vimeo)を下の欄から送るとリクエストの待機列に並び、いいねが集まると再生順が上がり、bad投票が集まると短く切り上げられます。FC2ライブ・ニコ生でも同時視聴配信を行っています。
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          初めての方は
+          <Link component={RouterLink} to="/guide">
+            使い方ガイド
+          </Link>
+          と
+          <Link component={RouterLink} to="/faq">
+            よくある質問
+          </Link>
+          をご覧ください。
         </Typography>
       </Container>
     </>

@@ -21,6 +21,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { Footer } from "../components/Footer";
 import { NowLive } from "../components/NowLive";
 import { NowPlaying } from "../components/NowPlaying";
+import { PlayCta } from "../components/PlayCta";
 import { QueueList } from "../components/QueueList";
 import { RecentDoneList } from "../components/RecentDoneList";
 import { RequestForm } from "../components/RequestForm";
@@ -156,6 +157,7 @@ function BoardPage() {
           {/* Live status first, so it is on screen as soon as the page opens;
               the rules and change log are folded into one box below it. */}
           <NowLive onLoaded={handleLiveLoaded} />
+          <PlayCta />
           <NowPlaying
             nowPlaying={nowPlaying}
             cancelVoteTiers={cancelVoteTiers}
@@ -198,10 +200,14 @@ function BoardPage() {
 
         <Box component="section" sx={{ mt: 4 }}>
           <Typography variant="h6" component="h2" gutterBottom>
-            みんなで一緒に動画を見る、動画リクエストサイト
+            みんなで動画を同時視聴する、動画リクエストサイト
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            動画リクエストキューは、YouTube・ニコニコ動画・Vimeoの動画URLを送るだけで、みんなで一緒に動画を見られる視聴者参加型のサービスです。リクエストされた動画は待機列に並び、いいねが集まると再生順が上がり、bad投票が集まると短く切り上げられます。配信やイベント、友達との動画鑑賞会などでご利用ください。
+            動画リクエストキューは、YouTube・ニコニコ動画・Vimeoの動画URLを送るだけで、知らない人とみんなで動画を同時視聴できる視聴者参加型のサービスです。登録は不要で、
+            <Link component={RouterLink} to="/play">
+              再生画面
+            </Link>
+            を開けばすぐに参加できます。リクエストされた動画は待機列に並び、いいねが集まると再生順が上がり、bad投票が集まると短く切り上げられます。配信やイベント、友達との動画鑑賞会などでご利用ください。
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
             初めての方は

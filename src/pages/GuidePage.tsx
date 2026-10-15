@@ -2,6 +2,7 @@ import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import { Link as RouterLink } from "react-router-dom";
 import { ContentList, ContentPageLayout, ContentSection } from "../components/ContentPageLayout";
+import { PlayCta } from "../components/PlayCta";
 import { usePageSeo } from "../lib/useSeo";
 
 // 使い方ガイド (/guide)。初めて来た人向けに、リクエストから投票・集計まで
@@ -133,6 +134,8 @@ function GuidePage() {
           をご覧ください。
         </Typography>
       </ContentSection>
+
+      <PlayCta caption="使い方が分かったら、さっそく再生画面でみんなと同時視聴してみましょう。" />
     </ContentPageLayout>
   );
 }

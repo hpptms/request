@@ -6,6 +6,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { ContentPageLayout } from "../components/ContentPageLayout";
+import { PlayCta } from "../components/PlayCta";
 import { usePageSeo } from "../lib/useSeo";
 
 const FAQ_SCRIPT_ID = "seo-faq";
@@ -150,6 +151,7 @@ function FaqPage() {
           ))}
         </Box>
       ))}
+      <PlayCta />
     </ContentPageLayout>
   );
 }
