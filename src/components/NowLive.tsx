@@ -75,19 +75,28 @@ export function NowLive({ onLoaded }: { onLoaded?: () => void } = {}) {
 
   if (items.length === 0) return loaded ? <PlayCta /> : null;
 
+  // All tiles (live platforms + 同時視聴) stay on one row: tighter padding/
+  // font/icon than a normal large button, shrinking further on phones, and
+  // allowed to shrink rather than wrap if the row is still too tight.
   const tileSx = {
+    flex: "0 1 auto",
+    minWidth: 0,
+    whiteSpace: "nowrap",
+    overflow: "hidden",
     textTransform: "none",
     fontWeight: 800,
-    fontSize: "1rem",
-    minHeight: 48,
-    px: 2.5,
+    fontSize: { xs: "0.75rem", sm: "0.95rem" },
+    minHeight: { xs: 42, sm: 46 },
+    px: { xs: 0.75, sm: 1.75 },
     borderRadius: 2,
     boxShadow: "none",
+    "& .MuiButton-startIcon": { ml: 0, mr: { xs: 0.4, sm: 0.75 } },
     "&:hover": { boxShadow: "none" },
   } as const;
+  const iconSx = { fontSize: { xs: 18, sm: 24 } } as const;
 
   return (
-    <Paper variant="outlined" sx={{ px: 2, py: 1.5 }}>
+    <Paper variant="outlined" sx={{ px: { xs: 1.5, sm: 2 }, py: 1.5 }}>
       <Stack spacing={1.25}>
         <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
           <Box
@@ -107,7 +116,7 @@ export function NowLive({ onLoaded }: { onLoaded?: () => void } = {}) {
             配信中
           </Typography>
         </Stack>
-        <Stack useFlexGap direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
+        <Stack useFlexGap direction="row" spacing={{ xs: 0.5, sm: 1 }} sx={{ flexWrap: "nowrap" }}>
           {items.map((it) => {
             const brand = BRANDS[it.key];
             return (
@@ -118,7 +127,7 @@ export function NowLive({ onLoaded }: { onLoaded?: () => void } = {}) {
                 target="_blank"
                 rel="noopener noreferrer"
                 variant="contained"
-                startIcon={<brand.Icon sx={{ fontSize: 28 }} />}
+                startIcon={<brand.Icon sx={iconSx} />}
                 sx={{
                   ...tileSx,
                   background: brand.bg,
@@ -134,10 +143,13 @@ export function NowLive({ onLoaded }: { onLoaded?: () => void } = {}) {
             component={RouterLink}
             to="/play"
             variant="contained"
-            startIcon={<PlayCircleIcon sx={{ fontSize: 28 }} />}
+            startIcon={<PlayCircleIcon sx={iconSx} />}
             sx={tileSx}
           >
-            みんなで同時視聴する
+            <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+              みんなで
+            </Box>
+            同時視聴する
           </Button>
         </Stack>
       </Stack>
