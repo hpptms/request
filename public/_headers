@@ -19,7 +19,15 @@
 # reason as connect-src above — the 意思表示 broadcast image is served
 # from GET /api/broadcast/image, and without this the <img> tag showing it
 # is silently blocked the same way gtag's hits were.
+#
+# Strict-Transport-Security pins the site to HTTPS (no includeSubDomains, so
+# it can't break some other subdomain still on plain HTTP). Permissions-
+# Policy turns off device APIs the site never uses, so a compromised script
+# or ad can't ask for them; autoplay/fullscreen/encrypted-media are left
+# alone because the embedded players need them.
 /*
+  Strict-Transport-Security: max-age=31536000
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), usb=(), serial=(), hid=(), bluetooth=(), payment=()
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
