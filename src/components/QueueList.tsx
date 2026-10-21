@@ -240,7 +240,8 @@ interface CancelVoteIconButtonProps {
 
 export function CancelVoteIconButton({ request, onVoteCancel }: CancelVoteIconButtonProps) {
   const [voting, setVoting] = useState(false);
-  const voted = hasVoted(request.id);
+  const unlimited = useUnlimitedLikes();
+  const voted = !unlimited && hasVoted(request.id);
 
   const handleClick = async () => {
     setVoting(true);

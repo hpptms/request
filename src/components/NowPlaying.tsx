@@ -83,7 +83,7 @@ export function NowPlaying({
     );
   }
 
-  const voted = hasVoted(nowPlaying.id);
+  const voted = !unlimitedLikes && hasVoted(nowPlaying.id);
   const suberuPressed = hasSuberu(nowPlaying.id);
   const liked = !unlimitedLikes && hasLiked(nowPlaying.id);
   const superLiked = !unlimitedLikes && hasSuperLiked(nowPlaying.id);

@@ -23,8 +23,9 @@ export function useVoteQuota(): VoteQuota | null {
   );
 }
 
-// True for an admin IP, whose likes the server counts on every press with
-// no quota — so the like buttons never grey out as "already liked".
+// True for an admin IP, whose likes and bad votes the server counts on
+// every press with no quota — so those buttons never grey out as "already
+// voted".
 export function useUnlimitedLikes(): boolean {
   return useVoteQuota()?.unlimitedLikes === true;
 }

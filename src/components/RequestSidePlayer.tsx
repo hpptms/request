@@ -236,7 +236,7 @@ export function RequestSidePlayer({
   const unlimitedLikes = useUnlimitedLikes();
   const liked = !unlimitedLikes && nowPlaying !== null && hasLiked(nowPlaying.id);
   const superLiked = !unlimitedLikes && nowPlaying !== null && hasSuperLiked(nowPlaying.id);
-  const voted = nowPlaying !== null && hasVoted(nowPlaying.id);
+  const voted = !unlimitedLikes && nowPlaying !== null && hasVoted(nowPlaying.id);
   const [suberuPressing, setSuberuPressing] = useState(false);
   const suberuPressed = nowPlaying !== null && hasSuberu(nowPlaying.id);
   const activeTiers = fastForwardActive ? fastForwardCancelVoteTiers : cancelVoteTiers;
