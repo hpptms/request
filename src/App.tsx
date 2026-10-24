@@ -24,6 +24,7 @@ const NoticePage = lazy(() => import("./pages/NoticePage"));
 const GuidePage = lazy(() => import("./pages/GuidePage"));
 const FaqPage = lazy(() => import("./pages/FaqPage"));
 const TermsPage = lazy(() => import("./pages/TermsPage"));
+const CopyrightPage = lazy(() => import("./pages/CopyrightPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const AdminBansPage = lazy(() => import("./pages/AdminBansPage"));
@@ -102,6 +103,7 @@ function AppRoutes() {
         <Route path="/guide" element={<GuidePage />} />
         <Route path="/faq" element={<FaqPage />} />
         <Route path="/terms" element={<TermsPage />} />
+        <Route path="/copyright" element={<CopyrightPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route path="/contact" element={<ContactPage />} />

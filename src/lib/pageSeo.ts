@@ -15,6 +15,7 @@ export type PagePath =
   | "/guide"
   | "/faq"
   | "/terms"
+  | "/copyright"
   | "/about"
   | "/privacy"
   | "/contact";
@@ -56,6 +57,11 @@ export const PAGE_SEO: Record<PagePath, { title: string; description: string }> 
   "/terms": {
     title: "利用規約 | 動画リクエストキュー",
     description: "動画リクエストキューの利用規約です。禁止事項、投稿されたリクエストの取り扱い、免責事項などを定めています。",
+  },
+  "/copyright": {
+    title: "著作権ガイドライン | 動画リクエストキュー",
+    description:
+      "動画リクエストキューの著作権ガイドラインです。公式埋め込みプレイヤーによる動画の再生方法、禁止しているリクエスト、著作権者・投稿者の方からの再生停止のご依頼方法を説明しています。",
   },
   "/about": {
     title: "サイトについて | 動画リクエストキュー",
