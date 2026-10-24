@@ -418,6 +418,37 @@ export interface InquiryThread {
   lastAt: string;
 }
 
+// backend/internal/copyrightclaim.Submission — what the 著作権に関する
+// お問い合わせ form sends.
+export interface CopyrightClaimSubmission {
+  videoUrls: string[];
+  claimant: "owner" | "agent";
+  name: string;
+  organization: string;
+  rightsHolder: string;
+  basis: string;
+  proofUrl: string;
+  email: string;
+  phone: string;
+  stopSite: boolean;
+  stopStream: boolean;
+  details: string;
+  agreed: boolean;
+}
+
+export type CopyrightClaimStatus = "new" | "in_progress" | "done" | "rejected";
+
+// backend/internal/copyrightclaim.Claim — a stored submission plus the
+// admin's handling of it.
+export interface CopyrightClaim extends CopyrightClaimSubmission {
+  id: number;
+  ip: string;
+  createdAt: string;
+  status: CopyrightClaimStatus;
+  adminNote: string;
+  updatedAt: string;
+}
+
 // backend/internal/chat.Message — ageMs is how long ago it was sent.
 // source is "site" for the /play form, or the live platform it was relayed
 // from.

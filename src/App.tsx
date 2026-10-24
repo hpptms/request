@@ -25,6 +25,8 @@ const GuidePage = lazy(() => import("./pages/GuidePage"));
 const FaqPage = lazy(() => import("./pages/FaqPage"));
 const TermsPage = lazy(() => import("./pages/TermsPage"));
 const CopyrightPage = lazy(() => import("./pages/CopyrightPage"));
+const CopyrightClaimPage = lazy(() => import("./pages/CopyrightClaimPage"));
+const AdminCopyrightClaimsPage = lazy(() => import("./pages/AdminCopyrightClaimsPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const AdminBansPage = lazy(() => import("./pages/AdminBansPage"));
@@ -104,6 +106,7 @@ function AppRoutes() {
         <Route path="/faq" element={<FaqPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/copyright" element={<CopyrightPage />} />
+        <Route path="/copyright-request" element={<CopyrightClaimPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route path="/contact" element={<ContactPage />} />
@@ -123,6 +126,7 @@ function AppRoutes() {
           <Route path="messages" element={<AdminMessagesPage />} />
           <Route path="live" element={<AdminNowLivePage />} />
           <Route path="themes" element={<AdminThemesPage />} />
+          <Route path="copyright" element={<AdminCopyrightClaimsPage />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

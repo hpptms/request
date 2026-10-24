@@ -62,6 +62,18 @@ function ContactPage() {
             )}
           </Box>
 
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              著作権に関するお問い合わせ
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 1.5 }}>
+              著作権者・投稿者の方で、動画の再生停止をご希望の場合は、専用のフォームからご連絡ください。
+            </Typography>
+            <Button component={RouterLink} to="/copyright-request" variant="outlined">
+              著作権に関するお問い合わせフォーム
+            </Button>
+          </Box>
+
           <Typography variant="body2" color="text.secondary">
             内容によってはご返信までお時間をいただく場合や、返信できない場合がございます。あらかじめご了承ください。
           </Typography>

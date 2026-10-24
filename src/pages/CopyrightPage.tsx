@@ -47,10 +47,10 @@ function CopyrightPage() {
       <ContentSection heading="4. 著作権者・投稿者の皆様へ">
         <Typography variant="body1" sx={{ lineHeight: 1.9 }}>
           ご自身が権利を持つ動画について、当サイトでの再生や、運営者が行う配信での使用を望まれない場合は、
-          <Link component={RouterLink} to="/contact">
-            お問い合わせ
+          <Link component={RouterLink} to="/copyright-request">
+            著作権に関するお問い合わせフォーム
           </Link>
-          に記載の窓口から以下をお知らせください。内容を確認のうえ、速やかに再生・使用を停止いたします。
+          から以下をお知らせください。内容を確認のうえ、速やかに再生・使用を停止いたします。
         </Typography>
         <ContentList
           items={[

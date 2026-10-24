@@ -10,6 +10,9 @@ import type {
   HeatmapReport,
   ChatMessage,
   InquiryMessage,
+  CopyrightClaim,
+  CopyrightClaimStatus,
+  CopyrightClaimSubmission,
   InquiryThread,
   KeywordLimit,
   LikeRank,
@@ -209,6 +212,18 @@ export const api = {
     }),
   adminDeleteInquiry: (ip: string) =>
     request<void>(`/admin/inquiries/${encodeURIComponent(ip)}`, { method: "DELETE" }),
+
+  // Copyright holders' takedown requests (backend/internal/copyrightclaim).
+  submitCopyrightClaim: (claim: CopyrightClaimSubmission) =>
+    request<{ ok: boolean }>("/copyright-claims", { method: "POST", body: JSON.stringify(claim) }),
+  adminListCopyrightClaims: () =>
+    request<{ claims: CopyrightClaim[]; newCount: number }>("/admin/copyright-claims"),
+  adminUpdateCopyrightClaim: (id: number, status: CopyrightClaimStatus, adminNote: string) =>
+    request<CopyrightClaim>(`/admin/copyright-claims/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ status, adminNote }),
+    }),
+  adminDeleteCopyrightClaim: (id: number) => request<void>(`/admin/copyright-claims/${id}`, { method: "DELETE" }),
 
   getHeatmap: () => request<HeatmapReport>("/heatmap"),
 

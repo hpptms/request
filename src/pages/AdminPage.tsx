@@ -12,6 +12,7 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import CampaignIcon from "@mui/icons-material/Campaign";
+import CopyrightIcon from "@mui/icons-material/Copyright";
 import FastForwardIcon from "@mui/icons-material/FastForward";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import LightbulbIcon from "@mui/icons-material/Lightbulb";
@@ -91,6 +92,7 @@ const adminTabs = [
   { value: "messages", path: "/admin/messages", label: "メッセージ", icon: <MailIcon fontSize="small" /> },
   { value: "live", path: "/admin/live", label: "NOW LIVE", icon: <LiveTvIcon fontSize="small" /> },
   { value: "themes", path: "/admin/themes", label: "テーマ", icon: <LightbulbIcon fontSize="small" /> },
+  { value: "copyright", path: "/admin/copyright", label: "著作権", icon: <CopyrightIcon fontSize="small" /> },
 ] as const;
 
 // Shared header for every authenticated /admin/* screen: title, logout, and
@@ -145,8 +147,35 @@ function AdminLayout({ onLoggedOut }: { onLoggedOut: () => void }) {
     };
   }, [location.pathname]);
 
+  // Copyright holders' requests not yet started on (see
+  // AdminCopyrightClaimsPage) — the ones that most need noticing.
+  const [newCopyrightClaims, setNewCopyrightClaims] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    const poll = () =>
+      api
+        .adminListCopyrightClaims()
+        .then(({ newCount }) => {
+          if (!cancelled) setNewCopyrightClaims(newCount);
+        })
+        .catch(() => {});
+    poll();
+    const stop = visibleInterval(poll, 30000);
+    return () => {
+      cancelled = true;
+      stop();
+    };
+  }, [location.pathname]);
+
   const tabLabel = (value: string, label: string) => {
-    const count = value === "messages" ? unreadMessages : value === "themes" ? pendingThemes : 0;
+    const count =
+      value === "messages"
+        ? unreadMessages
+        : value === "themes"
+          ? pendingThemes
+          : value === "copyright"
+            ? newCopyrightClaims
+            : 0;
     return count > 0 ? `${label} (${count})` : label;
   };
 

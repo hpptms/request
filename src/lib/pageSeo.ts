@@ -16,6 +16,7 @@ export type PagePath =
   | "/faq"
   | "/terms"
   | "/copyright"
+  | "/copyright-request"
   | "/about"
   | "/privacy"
   | "/contact";
@@ -62,6 +63,11 @@ export const PAGE_SEO: Record<PagePath, { title: string; description: string }> 
     title: "著作権ガイドライン | 動画リクエストキュー",
     description:
       "動画リクエストキューの著作権ガイドラインです。公式埋め込みプレイヤーによる動画の再生方法、禁止しているリクエスト、著作権者・投稿者の方からの再生停止のご依頼方法を説明しています。",
+  },
+  "/copyright-request": {
+    title: "著作権に関するお問い合わせ | 動画リクエストキュー",
+    description:
+      "著作権者・投稿者の方が、動画リクエストキューでの動画の再生停止をご依頼いただくためのお問い合わせフォームです。",
   },
   "/about": {
     title: "サイトについて | 動画リクエストキュー",
