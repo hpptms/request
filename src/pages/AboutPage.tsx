@@ -88,6 +88,10 @@ function AboutPage() {
               <Button component={RouterLink} to="/terms" size="small" sx={{ mx: 0.5, verticalAlign: "baseline" }}>
                 利用規約
               </Button>
+              と
+              <Button component={RouterLink} to="/copyright" size="small" sx={{ mx: 0.5, verticalAlign: "baseline" }}>
+                著作権ガイドライン
+              </Button>
               をご覧ください。
             </Typography>
           </Box>

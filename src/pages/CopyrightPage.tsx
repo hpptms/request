@@ -10,7 +10,10 @@ function CopyrightPage() {
   usePageSeo("/copyright");
 
   return (
-    <ContentPageLayout title="著作権ガイドライン">
+    <ContentPageLayout
+      title="著作権ガイドライン"
+      lead="動画リクエストキューでYouTube・ニコニコ動画・Vimeoの動画をみんなで同時視聴するにあたり、動画の著作権の取り扱いと、著作権者・投稿者の皆様からの再生停止のご依頼方法を定めています。"
+    >
       <ContentSection
         heading="1. 基本方針"
         paragraphs={[

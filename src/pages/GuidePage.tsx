@@ -127,6 +127,10 @@ function GuidePage() {
           <Link component={RouterLink} to="/terms">
             利用規約
           </Link>
+          、動画の著作権の取り扱いは
+          <Link component={RouterLink} to="/copyright">
+            著作権ガイドライン
+          </Link>
           、よくある疑問は
           <Link component={RouterLink} to="/faq">
             よくある質問
