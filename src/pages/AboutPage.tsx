@@ -84,7 +84,7 @@ function AboutPage() {
               コンテンツと著作権について
             </Typography>
             <Typography variant="body1">
-              本サービスで再生される動画は、YouTube・ニコニコ動画・Vimeoの公式埋め込みプレイヤーを通じて表示しており、動画ファイルを本サービスが保存・再配信することはありません。不適切な動画は管理者が削除し、禁止ワードやBANの仕組みで荒らし行為を防いでいます。詳しくは
+              本サービスで再生される動画は、YouTube・ニコニコ動画・Vimeoの公式埋め込みプレイヤーを通じて表示しており、動画ファイルを本サービスが保存することはありません。不適切な動画は管理者が削除し、禁止ワードやBANの仕組みで荒らし行為を防いでいます。詳しくは
               <Button component={RouterLink} to="/terms" size="small" sx={{ mx: 0.5, verticalAlign: "baseline" }}>
                 利用規約
               </Button>
