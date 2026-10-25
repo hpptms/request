@@ -1,7 +1,6 @@
 import { useState } from "react";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
@@ -26,7 +25,6 @@ import type { VideoRequest } from "../types";
 
 interface Props {
   requests: VideoRequest[];
-  likePriorityThreshold: number;
   isAdmin: boolean;
   onPlay: (id: string) => void;
   onDelete: (id: string) => void;
@@ -37,7 +35,6 @@ interface Props {
 
 export function QueueList({
   requests,
-  likePriorityThreshold,
   isAdmin,
   onPlay,
   onDelete,
@@ -103,14 +100,6 @@ export function QueueList({
               sx={{ pr: { xs: 10, sm: 13 } }}
               primary={
                 <Stack direction="row" spacing={0.75} sx={{ alignItems: "center", minWidth: 0 }}>
-                  {isAdmin && r.likes >= likePriorityThreshold && (
-                    <Chip
-                      label="優先"
-                      size="small"
-                      color="primary"
-                      sx={{ height: 18, fontSize: "0.65rem", flexShrink: 0, "& .MuiChip-label": { px: 0.75 } }}
-                    />
-                  )}
                   <Typography component="span" noWrap>
                     {r.title}
                   </Typography>

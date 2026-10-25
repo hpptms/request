@@ -177,7 +177,6 @@ function PlayPage() {
             </Typography>
             <QueueList
               requests={pending}
-              likePriorityThreshold={likePriorityThreshold}
               isAdmin={isAdmin}
               onPlay={handlePlay}
               onDelete={handleDelete}
