@@ -12,7 +12,7 @@ import { api } from "../api";
 import { AdminLoginForm } from "../components/AdminLoginForm";
 import { PlayerOverlays } from "../components/PlayerOverlays";
 import { ViewerCommentOverlay } from "../components/PlayChat";
-import { hasVoteStatusIncrease, voteStatusOf, type VoteStatus } from "../lib/voteStatus";
+import { hasVoteStatusIncrease, increasedVoteStatus, voteStatusOf, type VoteStatus } from "../lib/voteStatus";
 import { trackEvent } from "../lib/analytics";
 import { FALLBACK_VIDEO_IDS, pickRandomFallbackVideoId } from "../lib/fallbackPlaylist";
 import { loadYouTubeIframeApi } from "../lib/loadYouTubeIframeApi";
@@ -846,7 +846,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     }
     if (hasVoteStatusIncrease(last, status)) {
       lastShownVoteCountsRef.current = { id: requestId, ...status };
-      showVoteStatus(status);
+      showVoteStatus(increasedVoteStatus(last, status));
     }
   }, [requests]);
 

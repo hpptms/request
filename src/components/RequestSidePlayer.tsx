@@ -8,7 +8,7 @@ import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import { PlayerOverlays } from "./PlayerOverlays";
-import { hasVoteStatusIncrease, voteStatusOf, type VoteStatus } from "../lib/voteStatus";
+import { hasVoteStatusIncrease, increasedVoteStatus, voteStatusOf, type VoteStatus } from "../lib/voteStatus";
 import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
 import { formatDuration } from "../lib/formatDuration";
 import { loadYouTubeIframeApi } from "../lib/loadYouTubeIframeApi";
@@ -382,7 +382,7 @@ export function RequestSidePlayer({
     }
     if (hasVoteStatusIncrease(last, status)) {
       lastShownVoteCountsRef.current = { id: nowPlaying.id, ...status };
-      showVoteStatus(status);
+      showVoteStatus(increasedVoteStatus(last, status));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nowPlaying]);
