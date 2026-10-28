@@ -4,11 +4,11 @@ import Typography from "@mui/material/Typography";
 import Link from "@mui/material/Link";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import type { ComponentType } from "react";
-import { AmazonMark, AppleMusicMark, RakutenMark, SpotifyMark } from "./BrandIcons";
-import { hasAffiliateLinks, hasAmazonAffiliate, musicLinks, storeLinks, type MusicLink } from "../lib/affiliate";
+import { AppleMusicMark, RakutenMark, SpotifyMark } from "./BrandIcons";
+import { hasAffiliateLinks, musicLinks, storeLinks, type MusicLink } from "../lib/affiliate";
 import { trackEvent } from "../lib/analytics";
 
-// Fired when a viewer clicks one of the Amazon/楽天/Apple Music/Spotify
+// Fired when a viewer clicks one of the 楽天/Apple Music/Spotify
 // buttons, so GA can show which store and which song/artist keyword it was
 // searched for (source distinguishes the two call sites below).
 function trackMusicLinkClick(l: MusicLink, keyword: string, source: string) {
@@ -17,23 +17,21 @@ function trackMusicLinkClick(l: MusicLink, keyword: string, source: string) {
 
 // Each store's brand colours and mark, so a button reads as that service.
 const BRANDS: Record<string, { bg: string; hover: string; fg: string; Icon: ComponentType<SvgIconProps> }> = {
-  amazon: { bg: "#FF9900", hover: "#E68A00", fg: "#111111", Icon: AmazonMark },
   rakuten: { bg: "#BF0000", hover: "#A00000", fg: "#FFFFFF", Icon: RakutenMark },
   apple: { bg: "linear-gradient(135deg, #FA233B, #FB5C74)", hover: "linear-gradient(135deg, #E01F35, #EA4F68)", fg: "#FFFFFF", Icon: AppleMusicMark },
   spotify: { bg: "#1DB954", hover: "#1ED760", fg: "#000000", Icon: SpotifyMark },
 };
 
-// 「この曲を探す」リンク。Amazon・楽天は広告(アフィリエイトリンク)で、
-// 景品表示法の広告表示と、Amazonアソシエイトの規約上の表記を付ける。
+// 「この曲を探す」リンク。楽天は広告(アフィリエイトリンク)なので、
+// 景品表示法の広告表示を付ける。
 export function MusicLinks({ title }: { title: string }) {
   const links = musicLinks(title);
   if (links.length === 0) return null;
   const hasAffiliate = links.some((l) => l.affiliate);
-  const hasAmazon = links.some((l) => l.key === "amazon" && l.affiliate);
   return (
     <div>
       <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
-        この曲を探す{hasAffiliate && "(Amazon・楽天のリンクは広告です)"}
+        この曲を探す{hasAffiliate && "(楽天のリンクは広告です)"}
       </Typography>
       <Stack useFlexGap direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
         {links.map((l) => {
@@ -66,11 +64,6 @@ export function MusicLinks({ title }: { title: string }) {
           );
         })}
       </Stack>
-      {hasAmazon && (
-        <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-          Amazonアソシエイトとして、適格販売により収入を得ています。
-        </Typography>
-      )}
     </div>
   );
 }
@@ -80,7 +73,7 @@ export function MusicLinks({ title }: { title: string }) {
 // AffiliateNotice, not per row.
 export function StoreLinksInline({ keyword, withStreaming = false }: { keyword: string; withStreaming?: boolean }) {
   // withStreaming adds the plain Apple Music / Spotify searches after the
-  // two store links.
+  // store link.
   const links = withStreaming ? musicLinks(keyword) : storeLinks(keyword);
   if (links.length === 0) return null;
   return (
@@ -123,7 +116,7 @@ export function AffiliateNotice() {
   if (!hasAffiliateLinks) return null;
   return (
     <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-      各行の「Amazon」「楽天」のリンクは広告です。{hasAmazonAffiliate && "Amazonアソシエイトとして、適格販売により収入を得ています。"}
+      各行の「楽天」のリンクは広告です。
     </Typography>
   );
 }

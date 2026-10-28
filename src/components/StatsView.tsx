@@ -270,7 +270,7 @@ function ChannelTable({
 }: {
   rows: ChannelStat[];
   label?: string;
-  // Add Amazon/楽天 search links under each name (used for artists).
+  // Add 楽天 search links under each name (used for artists).
   storeLinks?: boolean;
 }) {
   const { limit, button } = useShowMore(rows.length);

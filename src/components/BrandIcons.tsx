@@ -6,18 +6,6 @@ import MusicNoteIcon from "@mui/icons-material/MusicNote";
 // Simple marks (not the official logos) that make each store's button
 // recognisable at a glance next to its brand colour.
 
-export function AmazonMark(props: SvgIconProps) {
-  return (
-    <SvgIcon viewBox="0 0 24 24" {...props}>
-      <text x="12" y="14" textAnchor="middle" fontSize="15" fontWeight="700" fontFamily="Arial, sans-serif" fill="currentColor">
-        a
-      </text>
-      <path d="M4 17c5 3 11 3 16 0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M17.5 14.5l3 2-3.2 1.6z" fill="currentColor" />
-    </SvgIcon>
-  );
-}
-
 export function RakutenMark(props: SvgIconProps) {
   return (
     <SvgIcon viewBox="0 0 24 24" {...props}>

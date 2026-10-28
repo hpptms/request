@@ -1,10 +1,7 @@
 // Affiliate / search links for the song currently playing. The IDs come from
-// the VITE_AMAZON_TAG / VITE_RAKUTEN_AFFILIATE_ID env vars (.env.production);
-// they are public by nature (they appear in every generated link). With an ID
-// unset, that store's link is a plain search link and isn't marked as an ad.
-// Amazon requires the site the links appear on (request.tokyo) to be
-// registered in the Associates account's site list.
-const AMAZON_TAG = import.meta.env.VITE_AMAZON_TAG?.trim();
+// the VITE_RAKUTEN_AFFILIATE_ID env var (.env.production); it is public by
+// nature (it appears in every generated link). With the ID unset, the store
+// link is a plain search link and isn't marked as an ad.
 const RAKUTEN_AFFILIATE_ID = import.meta.env.VITE_RAKUTEN_AFFILIATE_ID?.trim();
 
 // A video title as a search keyword: bracketed tags (【MV】, (Official Video),
@@ -24,12 +21,10 @@ export interface MusicLink {
   affiliate: boolean;
 }
 
-// True when at least one store link earns a commission (ad disclosure is
-// needed), and when specifically the Amazon one does (its required wording).
-export const hasAffiliateLinks = Boolean(AMAZON_TAG || RAKUTEN_AFFILIATE_ID);
-export const hasAmazonAffiliate = Boolean(AMAZON_TAG);
+// True when the store link earns a commission (ad disclosure is needed).
+export const hasAffiliateLinks = Boolean(RAKUTEN_AFFILIATE_ID);
 
-// The two store links (Amazon, Rakuten) for a free-text keyword (an artist
+// The store link (Rakuten) for a free-text keyword (an artist
 // name, or an already-cleaned title).
 export function storeLinks(keyword: string): MusicLink[] {
   const kw = keyword.trim();
@@ -38,12 +33,6 @@ export function storeLinks(keyword: string): MusicLink[] {
   const rakutenTarget = encodeURIComponent(`https://search.rakuten.co.jp/search/mall/${q}/`);
   const rakutenPlain = `https://search.rakuten.co.jp/search/mall/${q}/`;
   return [
-    {
-      key: "amazon",
-      label: "Amazon",
-      href: `https://www.amazon.co.jp/s?k=${q}&i=popular${AMAZON_TAG ? `&tag=${encodeURIComponent(AMAZON_TAG)}` : ""}`,
-      affiliate: Boolean(AMAZON_TAG),
-    },
     {
       key: "rakuten",
       label: "楽天",
