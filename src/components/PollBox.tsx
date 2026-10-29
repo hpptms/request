@@ -7,9 +7,9 @@ import { Link as RouterLink } from "react-router-dom";
 import { usePolls } from "../lib/usePolls";
 import { PollCard } from "./PollCard";
 
-// The board's アンケート box: every open poll, answerable in place, with a
-// link to /polls for the closed ones' results. Renders nothing while no
-// poll is open.
+// The board's アンケート box: every open poll, folded down to its question
+// until clicked and then answerable in place, with a link to /polls for
+// the closed ones' results. Renders nothing while no poll is open.
 export function PollBox({ onLoaded }: { onLoaded?: () => void } = {}) {
   const { polls, loaded, answer } = usePolls();
   useEffect(() => {
@@ -30,7 +30,7 @@ export function PollBox({ onLoaded }: { onLoaded?: () => void } = {}) {
         </Button>
       </Stack>
       {open.map((p) => (
-        <PollCard key={p.id} poll={p} onAnswer={(choices) => answer(p.id, choices)} />
+        <PollCard key={p.id} poll={p} collapsible onAnswer={(choices) => answer(p.id, choices)} />
       ))}
     </Stack>
   );
