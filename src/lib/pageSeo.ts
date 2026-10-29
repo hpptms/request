@@ -15,6 +15,7 @@ export type PagePath =
   | "/guide"
   | "/faq"
   | "/themes"
+  | "/polls"
   | "/terms"
   | "/copyright"
   | "/copyright-request"
@@ -60,6 +61,10 @@ export const PAGE_SEO: Record<PagePath, { title: string; description: string }> 
     title: "テーマ投票 | 動画リクエストキュー",
     description:
       "動画リクエストキューの「今日のテーマ」を投票で決めるページです。まだ採用されていないテーマから明日のテーマに投票でき、過去に採用されたテーマの履歴も確認できます。",
+  },
+  "/polls": {
+    title: "アンケート | 動画リクエストキュー",
+    description: "動画リクエストキューの運営についてのアンケートです。受付中のアンケートへの回答と、過去のアンケート結果を確認できます。",
   },
   "/terms": {
     title: "利用規約 | 動画リクエストキュー",

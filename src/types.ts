@@ -542,6 +542,21 @@ export interface AdminThemes {
   ballot: ThemeBallot;
 }
 
+// backend/internal/poll.View — a poll (アンケート) with its totals: votes
+// per option, how many visitors answered, and the caller's own answer
+// (option indexes, empty if none). multiple polls take several options.
+export interface Poll {
+  id: number;
+  question: string;
+  options: string[];
+  multiple: boolean;
+  closed: boolean;
+  createdAt: string;
+  votes: number[];
+  voters: number;
+  myChoices: number[];
+}
+
 // backend/internal/safeip.Entry — an IP that keeps working (requests,
 // votes, ...) even while banned, and is never auto-banned.
 export interface SafeIP {

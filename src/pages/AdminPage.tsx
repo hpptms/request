@@ -21,6 +21,7 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import LiveTvIcon from "@mui/icons-material/LiveTv";
 import MailIcon from "@mui/icons-material/Mail";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
+import PollIcon from "@mui/icons-material/Poll";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import PlaylistPlayIcon from "@mui/icons-material/PlaylistPlay";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -92,6 +93,7 @@ const adminTabs = [
   { value: "messages", path: "/admin/messages", label: "メッセージ", icon: <MailIcon fontSize="small" /> },
   { value: "live", path: "/admin/live", label: "NOW LIVE", icon: <LiveTvIcon fontSize="small" /> },
   { value: "themes", path: "/admin/themes", label: "テーマ", icon: <LightbulbIcon fontSize="small" /> },
+  { value: "polls", path: "/admin/polls", label: "アンケート", icon: <PollIcon fontSize="small" /> },
   { value: "copyright", path: "/admin/copyright", label: "著作権", icon: <CopyrightIcon fontSize="small" /> },
 ] as const;
 

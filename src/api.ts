@@ -28,6 +28,7 @@ import type {
   SuspiciousFingerprint,
   AdminThemes,
   PastTheme,
+  Poll,
   ThemeBallot,
   BanEvasion,
   SafeIP,
@@ -180,6 +181,17 @@ export const api = {
   // Visitor suggestion, shown to the admin for approval before it can be drawn.
   suggestTheme: (text: string) =>
     request<{ ok: boolean }>("/themes", { method: "POST", body: JSON.stringify({ text }) }),
+  // アンケート (backend/internal/poll): open polls first. answerPoll with no
+  // choices withdraws the caller's answer; both answer with the full list.
+  getPolls: () => request<{ polls: Poll[] }>("/polls"),
+  answerPoll: (id: number, choices: number[]) =>
+    request<{ polls: Poll[] }>(`/polls/${id}/answer`, { method: "POST", body: JSON.stringify({ choices }) }),
+  adminListPolls: () => request<{ polls: Poll[] }>("/admin/polls"),
+  adminCreatePoll: (question: string, options: string[], multiple: boolean) =>
+    request<{ polls: Poll[] }>("/admin/polls", { method: "POST", body: JSON.stringify({ question, options, multiple }) }),
+  adminClosePoll: (id: number) => request<{ polls: Poll[] }>(`/admin/polls/${id}/close`, { method: "POST" }),
+  adminReopenPoll: (id: number) => request<{ polls: Poll[] }>(`/admin/polls/${id}/reopen`, { method: "POST" }),
+  adminDeletePoll: (id: number) => request<{ polls: Poll[] }>(`/admin/polls/${id}`, { method: "DELETE" }),
   // The vote on a coming day's themes; themeId 0 withdraws the caller's vote.
   getThemeBallot: () => request<ThemeBallot>("/theme/vote"),
   voteTheme: (themeId: number) =>

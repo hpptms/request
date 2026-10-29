@@ -25,6 +25,7 @@ import { QueueList } from "../components/QueueList";
 import { RecentDoneList } from "../components/RecentDoneList";
 import { RequestForm } from "../components/RequestForm";
 import { TodayThemeBox } from "../components/TodayThemeBox";
+import { PollBox } from "../components/PollBox";
 import { useRequestQueue } from "../lib/useRequestQueue";
 import { usePageSeo } from "../lib/useSeo";
 import { SiteLogo } from "../components/SiteLogo";
@@ -64,21 +65,23 @@ function BoardPage() {
     handleSuberu,
   } = useRequestQueue("board");
 
-  // NowLive, NowPlaying and TodayThemeBox each change height once their
-  // first fetch lands, which pushed the request form below them down after
-  // it was already on screen (CLS 0.27 in PageSpeed Insights). Keep the
-  // board invisible — with its space reserved by minHeight — until all
-  // three have loaded, then reveal it at its final layout in one go.
+  // NowLive, NowPlaying, TodayThemeBox and PollBox each change height once
+  // their first fetch lands, which pushed the request form below them down
+  // after it was already on screen (CLS 0.27 in PageSpeed Insights). Keep
+  // the board invisible — with its space reserved by minHeight — until all
+  // of them have loaded, then reveal it at its final layout in one go.
   const [liveLoaded, setLiveLoaded] = useState(false);
   const [themeLoaded, setThemeLoaded] = useState(false);
+  const [pollLoaded, setPollLoaded] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
   const handleLiveLoaded = useCallback(() => setLiveLoaded(true), []);
   const handleThemeLoaded = useCallback(() => setThemeLoaded(true), []);
+  const handlePollLoaded = useCallback(() => setPollLoaded(true), []);
   useEffect(() => {
     const id = window.setTimeout(() => setTimedOut(true), FIRST_LOAD_TIMEOUT_MS);
     return () => window.clearTimeout(id);
   }, []);
-  const boardReady = timedOut || (requestsLoaded && liveLoaded && themeLoaded);
+  const boardReady = timedOut || (requestsLoaded && liveLoaded && themeLoaded && pollLoaded);
 
   return (
     <Box sx={{ minHeight: "100%", bgcolor: "background.default" }}>
@@ -170,6 +173,7 @@ function BoardPage() {
             onCancelMine={handleCancelMine}
           />
           <TodayThemeBox onLoaded={handleThemeLoaded} />
+          <PollBox onLoaded={handlePollLoaded} />
           <RequestForm onSubmit={handleCreate} />
 
           <Box>

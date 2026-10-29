@@ -24,6 +24,7 @@ const NoticePage = lazy(() => import("./pages/NoticePage"));
 const GuidePage = lazy(() => import("./pages/GuidePage"));
 const FaqPage = lazy(() => import("./pages/FaqPage"));
 const ThemesPage = lazy(() => import("./pages/ThemesPage"));
+const PollsPage = lazy(() => import("./pages/PollsPage"));
 const TermsPage = lazy(() => import("./pages/TermsPage"));
 const CopyrightPage = lazy(() => import("./pages/CopyrightPage"));
 const CopyrightClaimPage = lazy(() => import("./pages/CopyrightClaimPage"));
@@ -41,6 +42,7 @@ const AdminInterruptPage = lazy(() => import("./pages/AdminInterruptPage"));
 const AdminMessagesPage = lazy(() => import("./pages/AdminMessagesPage"));
 const AdminNowLivePage = lazy(() => import("./pages/AdminNowLivePage"));
 const AdminThemesPage = lazy(() => import("./pages/AdminThemesPage"));
+const AdminPollsPage = lazy(() => import("./pages/AdminPollsPage"));
 
 // /admin has its own login-gated pages (an admin needs to reach them to
 // manage bans in the first place), and /viewer is the OBS capture output —
@@ -106,6 +108,7 @@ function AppRoutes() {
         <Route path="/guide" element={<GuidePage />} />
         <Route path="/faq" element={<FaqPage />} />
         <Route path="/themes" element={<ThemesPage />} />
+        <Route path="/polls" element={<PollsPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/copyright" element={<CopyrightPage />} />
         <Route path="/copyright-request" element={<CopyrightClaimPage />} />
@@ -128,6 +131,7 @@ function AppRoutes() {
           <Route path="messages" element={<AdminMessagesPage />} />
           <Route path="live" element={<AdminNowLivePage />} />
           <Route path="themes" element={<AdminThemesPage />} />
+          <Route path="polls" element={<AdminPollsPage />} />
           <Route path="copyright" element={<AdminCopyrightClaimsPage />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />
