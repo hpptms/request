@@ -12,6 +12,7 @@ import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import RadioButtonCheckedIcon from "@mui/icons-material/RadioButtonChecked";
 import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
+import { formatJst } from "../lib/jstDateTime";
 import type { Poll } from "../types";
 
 // One アンケート: the question, then each option as a tappable row with its
@@ -37,6 +38,7 @@ export function PollCard({
   const [error, setError] = useState<string | null>(null);
   const canAnswer = onAnswer !== undefined && !poll.closed;
   const total = poll.votes.reduce((sum, v) => sum + v, 0);
+  const deadline = poll.deadline ? ` ・ 締切 ${formatJst(poll.deadline)}` : "";
 
   const toggle = async (i: number) => {
     if (!onAnswer) return;
@@ -101,8 +103,7 @@ export function PollCard({
       </Stack>
       {collapsible && !open && (
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
-          {poll.voters}人が回答 ・ タップして
-          {canAnswer ? "回答する" : "結果を見る"}
+          {poll.voters}人が回答{deadline} ・ タップして{canAnswer ? "回答する" : "結果を見る"}
         </Typography>
       )}
       <Collapse in={open}>
@@ -178,7 +179,7 @@ export function PollCard({
           })}
         </Stack>
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.75 }}>
-          {poll.voters}人が回答
+          {poll.voters}人が回答{deadline}
           {canAnswer && (poll.multiple ? " ・ 複数選択できます(タップで選択/解除)" : " ・ タップで回答、もう一度タップで取り消し")}
         </Typography>
         {error && (

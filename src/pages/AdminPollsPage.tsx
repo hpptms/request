@@ -17,6 +17,7 @@ import LockIcon from "@mui/icons-material/Lock";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import { api } from "../api";
 import { PollCard } from "../components/PollCard";
+import { fromJstInput, nextSundayEndJst, toJstInput } from "../lib/jstDateTime";
 import { visibleInterval } from "../lib/visibleInterval";
 import type { Poll } from "../types";
 
@@ -27,11 +28,14 @@ const MAX_OPTIONS = 10;
 
 // アンケート管理画面 (/admin/polls): アンケートを作成し、結果を見ながら
 // 締切/再開/削除する(backend/internal/poll)。受付中のものは掲示板に表示される。
+// 締切日時は日本時間で入力し、初期値は次の日曜23:59。
 function AdminPollsPage() {
   const [polls, setPolls] = useState<Poll[]>([]);
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState(["", ""]);
   const [multiple, setMultiple] = useState(false);
+  // datetime-local value in JST; empty for no deadline.
+  const [deadline, setDeadline] = useState(() => toJstInput(nextSundayEndJst()));
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const run = useCallback(async (action: () => Promise<{ polls: Poll[] }>, failure: string) => {
@@ -58,10 +62,12 @@ function AdminPollsPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     const filled = options.map((o) => o.trim()).filter(Boolean);
-    if (await run(() => api.adminCreatePoll(question.trim(), filled, multiple), "作成に失敗しました")) {
+    const until = deadline ? fromJstInput(deadline) : undefined;
+    if (await run(() => api.adminCreatePoll(question.trim(), filled, multiple, until), "作成に失敗しました")) {
       setQuestion("");
       setOptions(["", ""]);
       setMultiple(false);
+      setDeadline(toJstInput(nextSundayEndJst()));
     }
   };
 
@@ -117,12 +123,16 @@ function AdminPollsPage() {
                 control={<Checkbox checked={multiple} onChange={(e) => setMultiple(e.target.checked)} />}
                 label="複数選択可"
               />
+              <TextField
+                label="締切(日本時間・空欄で無期限)"
+                type="datetime-local"
+                value={deadline}
+                onChange={(e) => setDeadline(e.target.value)}
+                size="small"
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
               <Box sx={{ flexGrow: 1 }} />
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={!question.trim() || options.filter((o) => o.trim()).length < 2}
-              >
+              <Button type="submit" variant="contained" disabled={!question.trim() || options.filter((o) => o.trim()).length < 2}>
                 作成(すぐに公開)
               </Button>
             </Stack>
@@ -145,10 +155,21 @@ function AdminPollsPage() {
                 key={p.id}
                 poll={p}
                 header={
-                  <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end", mb: 0.5 }}>
+                  <Stack
+                    direction="row"
+                    spacing={0.5}
+                    useFlexGap
+                    sx={{ justifyContent: "flex-end", alignItems: "center", flexWrap: "wrap", mb: 1 }}
+                  >
                     <Typography variant="caption" color="text.secondary" sx={{ flexGrow: 1, alignSelf: "center" }}>
                       {new Date(p.createdAt).toLocaleString("ja-JP")} 作成{p.multiple && " ・ 複数選択可"}
                     </Typography>
+                    <DeadlineEditor
+                      deadline={p.deadline}
+                      onSave={(value) =>
+                        run(() => api.adminSetPollDeadline(p.id, value ? fromJstInput(value) : null), "締切の変更に失敗しました")
+                      }
+                    />
                     {p.closed ? (
                       <Tooltip title="再開">
                         <IconButton size="small" onClick={() => run(() => api.adminReopenPoll(p.id), "再開に失敗しました")}>
@@ -181,6 +202,31 @@ function AdminPollsPage() {
           </Stack>
         )}
       </Box>
+    </Stack>
+  );
+}
+
+// A poll's deadline as an editable JST datetime-local field, saved with
+// its button once changed (cleared for no deadline).
+function DeadlineEditor({ deadline, onSave }: { deadline?: string; onSave: (value: string) => void }) {
+  const saved = deadline ? toJstInput(deadline) : "";
+  const [value, setValue] = useState(saved);
+  useEffect(() => setValue(saved), [saved]);
+  return (
+    <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
+      <TextField
+        label="締切"
+        type="datetime-local"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        size="small"
+        slotProps={{ inputLabel: { shrink: true }, htmlInput: { style: { fontSize: "0.8rem" } } }}
+      />
+      {value !== saved && (
+        <Button size="small" variant="contained" onClick={() => onSave(value)}>
+          保存
+        </Button>
+      )}
     </Stack>
   );
 }

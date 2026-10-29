@@ -545,12 +545,14 @@ export interface AdminThemes {
 // backend/internal/poll.View — a poll (アンケート) with its totals: votes
 // per option, how many visitors answered, and the caller's own answer
 // (option indexes, empty if none). multiple polls take several options.
+// closed is also true once the deadline (absent for none) has passed.
 export interface Poll {
   id: number;
   question: string;
   options: string[];
   multiple: boolean;
   closed: boolean;
+  deadline?: string;
   createdAt: string;
   votes: number[];
   voters: number;

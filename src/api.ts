@@ -187,8 +187,11 @@ export const api = {
   answerPoll: (id: number, choices: number[]) =>
     request<{ polls: Poll[] }>(`/polls/${id}/answer`, { method: "POST", body: JSON.stringify({ choices }) }),
   adminListPolls: () => request<{ polls: Poll[] }>("/admin/polls"),
-  adminCreatePoll: (question: string, options: string[], multiple: boolean) =>
-    request<{ polls: Poll[] }>("/admin/polls", { method: "POST", body: JSON.stringify({ question, options, multiple }) }),
+  // deadline is an ISO instant, or omitted / null for a poll that never closes.
+  adminCreatePoll: (question: string, options: string[], multiple: boolean, deadline?: string) =>
+    request<{ polls: Poll[] }>("/admin/polls", { method: "POST", body: JSON.stringify({ question, options, multiple, deadline }) }),
+  adminSetPollDeadline: (id: number, deadline: string | null) =>
+    request<{ polls: Poll[] }>(`/admin/polls/${id}/deadline`, { method: "POST", body: JSON.stringify({ deadline }) }),
   adminClosePoll: (id: number) => request<{ polls: Poll[] }>(`/admin/polls/${id}/close`, { method: "POST" }),
   adminReopenPoll: (id: number) => request<{ polls: Poll[] }>(`/admin/polls/${id}/reopen`, { method: "POST" }),
   adminDeletePoll: (id: number) => request<{ polls: Poll[] }>(`/admin/polls/${id}`, { method: "DELETE" }),
