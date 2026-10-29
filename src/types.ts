@@ -495,13 +495,51 @@ export interface TodayTheme {
   text: string;
 }
 
+// backend/internal/theme.Option — a theme visitors can vote for.
+export interface ThemeOption {
+  id: number;
+  text: string;
+  votes: number;
+  pickCount: number;
+}
+
+// backend/internal/theme.Ballot — the vote on a coming theme day's themes
+// (date), closing at closesAt (5:00 JST that morning). open is how many of
+// its slots the vote decides (the rest the admin pinned); myVote is the
+// caller's theme ID, 0 if it hasn't voted.
+export interface ThemeBallot {
+  date: string;
+  closesAt: string;
+  open: number;
+  options: ThemeOption[];
+  myVote: number;
+  // Tomorrow's themes once its vote has closed (the vote is on the day
+  // after by then).
+  tomorrow?: string[];
+}
+
+// backend/internal/theme.Past — a theme that went live; votes is how many
+// votes won it its slot (0 when drawn or set by the admin).
+export interface PastTheme {
+  date: string;
+  slot: number;
+  themeId: number;
+  text: string;
+  votes: number;
+}
+
 // The admin theme endpoints' response: today holds one entry per slot
 // (backend theme.Slots), and next the themes reserved for tomorrow's theme
-// day, which the admin can swap before they go live.
+// day, which the admin can swap before they go live. nextPinned marks the
+// ones the admin chose (they win over the vote), nextVotes how many votes
+// won a slot (0 if drawn).
 export interface AdminThemes {
   themes: Theme[];
   today: TodayTheme[];
   next: TodayTheme[];
+  nextPinned: boolean[];
+  nextVotes: number[];
+  ballot: ThemeBallot;
 }
 
 // backend/internal/safeip.Entry — an IP that keeps working (requests,

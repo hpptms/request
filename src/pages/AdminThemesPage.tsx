@@ -23,7 +23,7 @@ import EventIcon from "@mui/icons-material/Event";
 import TodayIcon from "@mui/icons-material/Today";
 import { api } from "../api";
 import { visibleInterval } from "../lib/visibleInterval";
-import type { AdminThemes, Theme, TodayTheme } from "../types";
+import type { AdminThemes, Theme, ThemeBallot, TodayTheme } from "../types";
 
 // Mirrors backend theme.MaxTextRunes.
 const MAX_LENGTH = 40;
@@ -33,21 +33,28 @@ const SLOT_MARKS = "①②③④";
 
 // テーマ管理画面 (/admin/themes): 今日のテーマの候補を追加し、ユーザーからの
 // 提案を承認/却下する。毎日(JST)、承認済みのテーマから選ばれた回数が
-// 最も少ないものの中でランダムに2つ(別々のテーマ)が選ばれる(backend/internal/theme)。
-// 翌日のテーマは1日前に予約として選ばれるので、ここで確認・差し替えできる。
+// 最も少ないものの中から、ユーザーの投票で2つ(別々のテーマ)が選ばれる
+// (backend/internal/theme)。投票は朝5時に締め切られ、票の入らなかった枠は
+// 前日に抽選しておいた予約がそのまま使われる。管理者が指定した枠は投票より優先。
 function AdminThemesPage() {
   const [themes, setThemes] = useState<Theme[]>([]);
   const [today, setToday] = useState<TodayTheme[]>([]);
   const [next, setNext] = useState<TodayTheme[]>([]);
+  const [nextPinned, setNextPinned] = useState<boolean[]>([]);
+  const [nextVotes, setNextVotes] = useState<number[]>([]);
+  const [ballot, setBallot] = useState<ThemeBallot | null>(null);
   const [text, setText] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   // The theme-list button whose "which slot?" menu is open.
   const [slotMenu, setSlotMenu] = useState<{ anchor: HTMLElement; theme: Theme; day: "today" | "next" } | null>(null);
 
-  const apply = ({ themes, today, next }: AdminThemes) => {
+  const apply = ({ themes, today, next, nextPinned, nextVotes, ballot }: AdminThemes) => {
     setThemes(themes);
     setToday(today ?? []);
     setNext(next ?? []);
+    setNextPinned(nextPinned ?? []);
+    setNextVotes(nextVotes ?? []);
+    setBallot(ballot ?? null);
   };
 
   const run = useCallback(async (action: () => Promise<AdminThemes>, failure: string) => {
@@ -86,6 +93,16 @@ function AdminThemesPage() {
   const isToday = (id: number) => today.some((d) => d.text && d.themeId === id);
   const isNext = (id: number) => next.some((d) => d.text && d.themeId === id);
   const nextDate = next.find((d) => d.text)?.date;
+  // Once tomorrow's vote has closed (5:00), the open vote is on the day after.
+  const nextSettled = ballot !== null && nextDate !== undefined && ballot.date !== nextDate;
+  const nextStatus = (slot: number) =>
+    nextPinned[slot]
+      ? "管理者指定"
+      : nextVotes[slot] > 0
+        ? `投票で決定(${nextVotes[slot]}票)`
+        : nextSettled
+          ? "抽選"
+          : "投票待ち(票がなければこのテーマ)";
 
   const chooseSlot = (slot: number) => {
     if (!slotMenu) return;
@@ -122,14 +139,36 @@ function AdminThemesPage() {
         <ThemeSlots
           days={next}
           disabled={approved.length === 0}
+          status={nextStatus}
           onRedraw={(slot) => run(() => api.adminRedrawNextTheme(slot), "引き直しに失敗しました")}
+          onUnpin={nextSettled ? undefined : (slot) => run(() => api.adminUnpinNextTheme(slot), "変更に失敗しました")}
         />
         <Typography variant="body2" color="text.secondary">
-          明日のテーマはあらかじめ選ばれていて、明日の朝8時にそのまま今日のテーマになります。差し替えたい場合は引き直すか、テーマ一覧の
+          明日のテーマはユーザーの投票(朝5時締切)で決まり、朝8時に今日のテーマになります。票が入らなかった枠には表示中のテーマ(抽選)が使われます。テーマ一覧の
           <EventIcon fontSize="inherit" sx={{ verticalAlign: "middle", mx: 0.25 }} />
-          ボタンで指定してください。
+          ボタンで指定した枠は投票より優先されます(「投票に戻す」で解除)。
         </Typography>
       </Paper>
+
+      {ballot && (
+        <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
+          <Typography variant="h6" gutterBottom>
+            投票状況 ({formatThemeDate(ballot.date)}のテーマ・上位{ballot.open}つを採用)
+          </Typography>
+          {ballot.open === 0 || ballot.options.length === 0 ? (
+            <Typography color="text.secondary">{ballot.open === 0 ? "全ての枠が管理者指定です" : "候補のテーマがありません"}</Typography>
+          ) : (
+            <Stack spacing={0.5}>
+              {ballot.options.map((o) => (
+                <Stack key={o.id} direction="row" spacing={1}>
+                  <Typography sx={{ flexGrow: 1, minWidth: 0, wordBreak: "break-word" }}>{o.text}</Typography>
+                  <Typography sx={{ fontWeight: 700, flexShrink: 0 }}>{o.votes}票</Typography>
+                </Stack>
+              ))}
+            </Stack>
+          )}
+        </Paper>
+      )}
 
       <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
         <Typography variant="h6" gutterBottom>
@@ -271,8 +310,21 @@ function AdminThemesPage() {
   );
 }
 
-// One day's themes, one row per slot, each with its own redraw button.
-function ThemeSlots({ days, disabled, onRedraw }: { days: TodayTheme[]; disabled: boolean; onRedraw: (slot: number) => void }) {
+// One day's themes, one row per slot, each with its own redraw button (and,
+// for tomorrow's, how the slot is decided and a way to unpin it).
+function ThemeSlots({
+  days,
+  disabled,
+  status,
+  onRedraw,
+  onUnpin,
+}: {
+  days: TodayTheme[];
+  disabled: boolean;
+  status?: (slot: number) => string;
+  onRedraw: (slot: number) => void;
+  onUnpin?: (slot: number) => void;
+}) {
   return (
     <Stack spacing={1.5} sx={{ mb: 2 }}>
       {days.map((d, slot) => (
@@ -280,9 +332,21 @@ function ThemeSlots({ days, disabled, onRedraw }: { days: TodayTheme[]; disabled
           <Typography variant="h5" color="text.secondary" sx={{ flexShrink: 0 }}>
             {SLOT_MARKS[slot]}
           </Typography>
-          <Typography variant="h5" sx={{ fontWeight: 700, flexGrow: 1, minWidth: 0, wordBreak: "break-word" }}>
-            {d.text || "候補のテーマがありません"}
-          </Typography>
+          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+            <Typography variant="h5" sx={{ fontWeight: 700, wordBreak: "break-word" }}>
+              {d.text || "候補のテーマがありません"}
+            </Typography>
+            {status && (
+              <Typography variant="caption" color="text.secondary">
+                {status(slot)}
+              </Typography>
+            )}
+          </Box>
+          {onUnpin && status?.(slot) === "管理者指定" && (
+            <Button variant="text" size="small" onClick={() => onUnpin(slot)} sx={{ whiteSpace: "nowrap", flexShrink: 0 }}>
+              投票に戻す
+            </Button>
+          )}
           <Button
             variant="outlined"
             size="small"

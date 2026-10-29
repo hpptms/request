@@ -23,6 +23,7 @@ const ViewerPage = lazy(() => import("./pages/ViewerPage"));
 const NoticePage = lazy(() => import("./pages/NoticePage"));
 const GuidePage = lazy(() => import("./pages/GuidePage"));
 const FaqPage = lazy(() => import("./pages/FaqPage"));
+const ThemesPage = lazy(() => import("./pages/ThemesPage"));
 const TermsPage = lazy(() => import("./pages/TermsPage"));
 const CopyrightPage = lazy(() => import("./pages/CopyrightPage"));
 const CopyrightClaimPage = lazy(() => import("./pages/CopyrightClaimPage"));
@@ -104,6 +105,7 @@ function AppRoutes() {
         <Route path="/notice" element={<NoticePage />} />
         <Route path="/guide" element={<GuidePage />} />
         <Route path="/faq" element={<FaqPage />} />
+        <Route path="/themes" element={<ThemesPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/copyright" element={<CopyrightPage />} />
         <Route path="/copyright-request" element={<CopyrightClaimPage />} />

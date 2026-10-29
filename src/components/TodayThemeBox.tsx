@@ -8,6 +8,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import LightbulbIcon from "@mui/icons-material/Lightbulb";
 import SendIcon from "@mui/icons-material/Send";
+import { Link as RouterLink, useLocation } from "react-router-dom";
 import { api } from "../api";
 import { useTodayThemeState } from "../lib/useTodayTheme";
 
@@ -15,7 +16,8 @@ import { useTodayThemeState } from "../lib/useTodayTheme";
 const MAX_LENGTH = 40;
 
 // 今日のテーマ(毎日2つ)の表示と、テーマの提案フォーム。提案は管理者が
-// 承認すると抽選の対象になる(backend/internal/theme)。フォームは普段は畳んでおく。
+// 承認すると投票の候補になる(backend/internal/theme)。フォームは普段は畳んでおく。
+// 翌日のテーマの投票と採用履歴は /themes。
 export function TodayThemeBox({ onLoaded }: { onLoaded?: () => void } = {}) {
   const { texts: todayThemes, loaded } = useTodayThemeState();
   useEffect(() => {
@@ -26,6 +28,8 @@ export function TodayThemeBox({ onLoaded }: { onLoaded?: () => void } = {}) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  // On the player, open the vote page in a new tab so playback isn't cut off.
+  const onPlayer = useLocation().pathname === "/play";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,7 +56,16 @@ export function TodayThemeBox({ onLoaded }: { onLoaded?: () => void } = {}) {
         <Typography variant="subtitle2" sx={{ fontWeight: 800, flexGrow: 1, minWidth: 0, wordBreak: "break-word" }}>
           今日のテーマ{todayThemes.length === 0 && "：準備中"}
         </Typography>
-        <Button size="small" onClick={() => setOpen((v) => !v)} sx={{ whiteSpace: "nowrap", flexShrink: 0 }}>
+        <Button
+          size="small"
+          component={RouterLink}
+          to="/themes"
+          {...(onPlayer && { target: "_blank", rel: "noopener" })}
+          sx={{ whiteSpace: "nowrap", flexShrink: 0, minWidth: 0 }}
+        >
+          投票・履歴
+        </Button>
+        <Button size="small" onClick={() => setOpen((v) => !v)} sx={{ whiteSpace: "nowrap", flexShrink: 0, minWidth: 0 }}>
           {open ? "閉じる" : "テーマを提案"}
         </Button>
       </Stack>
@@ -75,7 +88,7 @@ export function TodayThemeBox({ onLoaded }: { onLoaded?: () => void } = {}) {
       </Typography>
       <Collapse in={open} unmountOnExit>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5, mb: 1.5 }}>
-          「今日のテーマ」にしたいお題を送ってください。管理者が承認すると、毎日のテーマ抽選の候補に入ります。
+          「今日のテーマ」にしたいお題を送ってください。管理者が承認すると、テーマ投票の候補に入ります。
         </Typography>
         <form onSubmit={handleSubmit}>
           <Stack spacing={1.5}>
@@ -100,7 +113,7 @@ export function TodayThemeBox({ onLoaded }: { onLoaded?: () => void } = {}) {
               </Button>
             </Stack>
             {error && <Alert severity="error">{error}</Alert>}
-            {sent && <Alert severity="success">提案を送信しました。承認されると抽選の候補に入ります。</Alert>}
+            {sent && <Alert severity="success">提案を送信しました。承認されると投票の候補に入ります。</Alert>}
           </Stack>
         </form>
       </Collapse>

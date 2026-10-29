@@ -14,6 +14,7 @@ export type PagePath =
   | "/notice"
   | "/guide"
   | "/faq"
+  | "/themes"
   | "/terms"
   | "/copyright"
   | "/copyright-request"
@@ -54,6 +55,11 @@ export const PAGE_SEO: Record<PagePath, { title: string; description: string }> 
     title: "よくある質問 | 動画リクエストキュー",
     description:
       "動画リクエストキューのよくある質問。登録なしでYouTubeを同時視聴できるか、ニコ生・FC2ライブ配信との関係、対応している動画サイト、リクエストの取り消し方、投票の上限などにお答えします。",
+  },
+  "/themes": {
+    title: "テーマ投票 | 動画リクエストキュー",
+    description:
+      "動画リクエストキューの「今日のテーマ」を投票で決めるページです。まだ採用されていないテーマから明日のテーマに投票でき、過去に採用されたテーマの履歴も確認できます。",
   },
   "/terms": {
     title: "利用規約 | 動画リクエストキュー",

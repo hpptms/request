@@ -27,6 +27,8 @@ import type {
   StatsSummary,
   SuspiciousFingerprint,
   AdminThemes,
+  PastTheme,
+  ThemeBallot,
   BanEvasion,
   SafeIP,
   TimeSlot,
@@ -178,6 +180,12 @@ export const api = {
   // Visitor suggestion, shown to the admin for approval before it can be drawn.
   suggestTheme: (text: string) =>
     request<{ ok: boolean }>("/themes", { method: "POST", body: JSON.stringify({ text }) }),
+  // The vote on a coming day's themes; themeId 0 withdraws the caller's vote.
+  getThemeBallot: () => request<ThemeBallot>("/theme/vote"),
+  voteTheme: (themeId: number) =>
+    request<ThemeBallot>("/theme/vote", { method: "POST", body: JSON.stringify({ themeId }) }),
+  // Themes that went live, newest first.
+  getThemeHistory: () => request<{ history: PastTheme[] }>("/theme/history"),
   // Every admin theme call answers with the updated list, today's picks and
   // tomorrow's reservations. slot picks which of the day's themes to change.
   adminListThemes: () => request<AdminThemes>("/admin/themes"),
@@ -194,6 +202,8 @@ export const api = {
   adminSetNextTheme: (id: number, slot: number) =>
     request<AdminThemes>(`/admin/themes/${id}/next?slot=${slot}`, { method: "POST" }),
   adminRedrawNextTheme: (slot: number) => request<AdminThemes>(`/admin/themes/redraw-next?slot=${slot}`, { method: "POST" }),
+  // Hands a pinned slot of tomorrow's back to the vote.
+  adminUnpinNextTheme: (slot: number) => request<AdminThemes>(`/admin/themes/unpin-next?slot=${slot}`, { method: "POST" }),
 
   // /play's throwaway chat (backend/internal/chat).
   // viewerComments: whether /viewer shows these (the admin 機能 tab switch).
