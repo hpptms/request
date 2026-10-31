@@ -78,11 +78,6 @@
          Vite and so can't read VITE_GA_MEASUREMENT_ID themselves. -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=%VITE_GA_MEASUREMENT_ID%"></script>
     <script defer src="/boot.js" data-ga-id="%VITE_GA_MEASUREMENT_ID%"></script>
-
-    <!-- Google AdSense. Its origins are allowed in the CSP (nginx.conf /
-         public/_headers). -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=%VITE_ADSENSE_CLIENT%"
-         crossorigin="anonymous"></script>
   </head>
   <body>
     <div id="root"></div>
