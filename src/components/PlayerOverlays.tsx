@@ -13,6 +13,7 @@ import QueueMusicIcon from "@mui/icons-material/QueueMusic";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import { broadcastImageUrl } from "../api";
 import { formatDuration } from "../lib/formatDuration";
+import { listThumbnail } from "../lib/listThumbnail";
 import { requestAccentColor } from "../lib/requestColor";
 import type { BroadcastState } from "../types";
 import type { VoteStatus } from "../lib/voteStatus";
@@ -30,9 +31,14 @@ interface Props {
   // /viewer only: the playing video's remaining time (null when unknown)
   // and the queued-request count, shown periodically in the duration
   // badge's spot. Content only updates while shown (same lagging-content
-  // pattern as introContent below).
+  // pattern as introContent below). upcoming: the first few queued requests
+  // (oldest first), listed under the count; nothing is listed while empty.
   periodicStatusVisible?: boolean;
-  periodicStatus?: { remainingSeconds: number | null; queueCount: number } | null;
+  periodicStatus?: {
+    remainingSeconds: number | null;
+    queueCount: number;
+    upcoming?: { id: string; title: string; thumbnailUrl: string }[];
+  } | null;
   // New-request toast: fires once per request as it's added to the queue.
   // newRequestNotice only ever updates when showing a new one (see
   // introContent above) — newRequestVisible alone drives the Slide in/out,
@@ -147,7 +153,7 @@ export function PlayerOverlays({
         </Grow>
       </Box>
 
-      {/* Periodic status (/viewer only): remaining time + queued count, in the duration badge's spot and styled to match it. Slides in from / back out to the right edge, same motion as the 早送りタイム「残り1分!」 pop-out. */}
+      {/* Periodic status (/viewer only): remaining time + queued count (+ the next few queued videos, a size smaller), in the duration badge's spot and styled to match it. Slides in from / back out to the right edge, same motion as the 早送りタイム「残り1分!」 pop-out. */}
       <Box sx={{ position: "absolute", top: { xs: 8, sm: 16 }, right: { xs: 8, sm: 16 }, pointerEvents: "none" }}>
         <Slide in={periodicStatusVisible} direction="left" timeout={{ enter: 300, exit: 250 }}>
           <Stack spacing={{ xs: 0.5, sm: 1 }} sx={{ alignItems: "flex-end" }}>
@@ -163,6 +169,18 @@ export function PlayerOverlays({
               label={`キュー ${periodicStatus?.queueCount ?? 0}件`}
               sx={BADGE_CHIP_SX}
             />
+            {periodicStatus?.upcoming && periodicStatus.upcoming.length > 0 && (
+              <Stack spacing={{ xs: 0.25, sm: 0.5, md: 0.75 }} sx={UPCOMING_LIST_SX}>
+                {periodicStatus.upcoming.map((r) => (
+                  <Stack key={r.id} direction="row" spacing={{ xs: 0.5, sm: 0.75, md: 1 }} sx={{ alignItems: "center", minWidth: 0 }}>
+                    <Box component="img" src={listThumbnail(r.thumbnailUrl)} alt="" sx={UPCOMING_THUMB_SX} />
+                    <Typography noWrap sx={UPCOMING_TITLE_SX}>
+                      {r.title}
+                    </Typography>
+                  </Stack>
+                ))}
+              </Stack>
+            )}
           </Stack>
         </Slide>
       </Box>
@@ -380,6 +398,29 @@ const BADGE_CHIP_SX = {
   height: { xs: 28, sm: 44, md: 72 },
   borderRadius: { xs: 2, sm: 3, md: 4 },
   "& .MuiChip-label": { fontSize: { xs: "0.8rem", sm: "1.3rem", md: "2.4rem" }, px: { xs: 0.75, sm: 1.5, md: 2 } },
+};
+
+// Upcoming-queue list under the periodic status count: one size smaller than
+// BADGE_CHIP_SX so five rows don't swamp the video. Thumbnails are cropped to
+// 16:9, which also trims the letterbox bars baked into YouTube's 4:3 default.jpg.
+const UPCOMING_LIST_SX = {
+  bgcolor: "rgba(0,0,0,0.7)",
+  borderRadius: { xs: 2, sm: 3, md: 4 },
+  p: { xs: 0.5, sm: 0.75, md: 1.25 },
+  maxWidth: { xs: 200, sm: 320, md: 560 },
+};
+const UPCOMING_THUMB_SX = {
+  flexShrink: 0,
+  width: { xs: 39, sm: 57, md: 96 },
+  height: { xs: 22, sm: 32, md: 54 },
+  objectFit: "cover",
+  borderRadius: { xs: 0.5, md: 1 },
+};
+const UPCOMING_TITLE_SX = {
+  color: "white",
+  fontWeight: 600,
+  minWidth: 0,
+  fontSize: { xs: "0.7rem", sm: "0.95rem", md: "1.5rem" },
 };
 
 // Neon accent shared by the badge's edge bar, glow and label.

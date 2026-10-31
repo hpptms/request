@@ -16,3 +16,6 @@ export const VOTE_STATUS_VISIBLE_MS = 4000;
 // PERIODIC_STATUS_VISIBLE_MS in the duration badge's spot.
 export const PERIODIC_STATUS_INTERVAL_MS = 90000;
 export const PERIODIC_STATUS_VISIBLE_MS = 5000;
+// How many queued videos (from the head of the queue) the periodic status
+// lists under the count.
+export const PERIODIC_STATUS_UPCOMING_COUNT = 5;

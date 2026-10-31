@@ -27,6 +27,7 @@ import {
   NEW_REQUEST_NOTICE_MS,
   NOW_PLAYING_INTRO_MS,
   PERIODIC_STATUS_INTERVAL_MS,
+  PERIODIC_STATUS_UPCOMING_COUNT,
   PERIODIC_STATUS_VISIBLE_MS,
   VOTE_STATUS_VISIBLE_MS,
 } from "../lib/playerOverlayTiming";
@@ -201,7 +202,11 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // duration badge's spot (skipped while that badge is up) — see the
   // effects next to readPeriodicStatusRef.
   const [periodicStatusVisible, setPeriodicStatusVisible] = useState(false);
-  const [periodicStatus, setPeriodicStatus] = useState<{ remainingSeconds: number | null; queueCount: number } | null>(null);
+  const [periodicStatus, setPeriodicStatus] = useState<{
+    remainingSeconds: number | null;
+    queueCount: number;
+    upcoming: { id: string; title: string; thumbnailUrl: string }[];
+  } | null>(null);
   // New-request toast (feature: notify every time someone adds a request).
   // One at a time, oldest first — see enqueueNewRequestNotice.
   // newRequestNotice only ever updates when showing a new one (same
@@ -956,8 +961,18 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
 
   // Re-assigned every render so the interval effects below always read the
   // latest requests/caps without re-arming themselves.
-  const readPeriodicStatusRef = useRef(() => ({ remainingSeconds: null as number | null, queueCount: 0 }));
-  readPeriodicStatusRef.current = () => ({ remainingSeconds: computeRemainingSeconds(), queueCount: pendingList.length });
+  const readPeriodicStatusRef = useRef(() => ({
+    remainingSeconds: null as number | null,
+    queueCount: 0,
+    upcoming: [] as { id: string; title: string; thumbnailUrl: string }[],
+  }));
+  readPeriodicStatusRef.current = () => ({
+    remainingSeconds: computeRemainingSeconds(),
+    queueCount: pendingList.length,
+    upcoming: pendingList
+      .slice(0, PERIODIC_STATUS_UPCOMING_COUNT)
+      .map((r) => ({ id: r.id, title: r.title, thumbnailUrl: r.thumbnailUrl })),
+  });
 
   // Every PERIODIC_STATUS_INTERVAL_MS, show the periodic status for
   // PERIODIC_STATUS_VISIBLE_MS — skipped while the duration badge (same
