@@ -42,7 +42,7 @@ export function VoteQuotaLabel({ light = false, compact = false }: { light?: boo
         ) : (
           <>
             残り票数(毎時0分に回復): {likeText} ・ {badText}
-            {resetNote && ` ・ ${resetNote}`}
+            {resetNote && <span> ・ {resetNote}</span>}
           </>
         )}
       </Typography>

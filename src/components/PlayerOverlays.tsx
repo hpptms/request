@@ -123,11 +123,11 @@ export function PlayerOverlays({
                 noWrap
                 sx={{ color: "white", fontWeight: 700, lineHeight: 1.25, fontSize: { xs: "0.95rem", sm: "1.4rem", md: "2.5rem" } }}
               >
-                {introContent?.title ?? ""}
+                <span translate="no">{introContent?.title ?? ""}</span>
               </Typography>
               {introContent?.channelTitle && (
                 <Typography variant="body2" noWrap sx={{ color: "grey.400", fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.875rem" } }}>
-                  {introContent.channelTitle}
+                  <span translate="no">{introContent.channelTitle}</span>
                 </Typography>
               )}
             </Box>
@@ -174,7 +174,7 @@ export function PlayerOverlays({
                 {periodicStatus.upcoming.map((r) => (
                   <Stack key={r.id} direction="row" spacing={{ xs: 0.5, sm: 0.75, md: 1 }} sx={{ alignItems: "center", minWidth: 0 }}>
                     <Box component="img" src={listThumbnail(r.thumbnailUrl)} alt="" sx={UPCOMING_THUMB_SX} />
-                    <Typography noWrap sx={UPCOMING_TITLE_SX}>
+                    <Typography noWrap translate="no" sx={UPCOMING_TITLE_SX}>
                       {r.title}
                     </Typography>
                   </Stack>
@@ -211,7 +211,15 @@ export function PlayerOverlays({
           style={{ pointerEvents: "none" }}
         >
           <Chip
-            label={newRequestNotice ? `🎵 新しいリクエスト: ${newRequestNotice.title}` : ""}
+            label={
+              newRequestNotice ? (
+                <>
+                  🎵 新しいリクエスト: <span translate="no">{newRequestNotice.title}</span>
+                </>
+              ) : (
+                ""
+              )
+            }
             sx={{
               maxWidth: "90%",
               height: { xs: 28, sm: 44, md: 64 },
@@ -634,7 +642,7 @@ function RequesterBadge({ name, animate }: { name: string; animate: boolean }) {
             animation: run("todayThemeSlideIn 0.55s 0.5s cubic-bezier(0.22, 1, 0.36, 1) both"),
           }}
         >
-          {name}
+          <span translate="no">{name}</span>
         </Typography>
       </Box>
     </Box>

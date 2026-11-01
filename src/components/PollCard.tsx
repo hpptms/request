@@ -103,7 +103,7 @@ export function PollCard({
       </Stack>
       {collapsible && !open && (
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
-          {poll.voters}人が回答{deadline} ・ タップして{canAnswer ? "回答する" : "結果を見る"}
+          {poll.voters}人が回答{deadline && <span>{deadline}</span>} ・ タップして{canAnswer ? "回答する" : "結果を見る"}
         </Typography>
       )}
       <Collapse in={open}>
@@ -179,7 +179,7 @@ export function PollCard({
           })}
         </Stack>
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.75 }}>
-          {poll.voters}人が回答{deadline}
+          {poll.voters}人が回答{deadline && <span>{deadline}</span>}
           {canAnswer && (poll.multiple ? " ・ 複数選択できます(タップで選択/解除)" : " ・ タップで回答、もう一度タップで取り消し")}
         </Typography>
         {error && (

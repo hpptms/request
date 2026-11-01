@@ -299,7 +299,7 @@ function ChannelTable({
               <TableRow key={row.channelTitle}>
                 <TableCell>{i + 1}</TableCell>
                 <TableCell sx={{ wordBreak: "break-word" }}>
-                  {row.channelTitle}
+                  <span translate="no">{row.channelTitle}</span>
                   {storeLinks && (
                     <Box sx={{ mt: 0.25 }}>
                       <StoreLinksInline keyword={row.channelTitle} withStreaming />
@@ -343,7 +343,7 @@ function RequesterTable({ rows }: { rows: RequesterStat[] }) {
             {rows.slice(0, limit).map((row, i) => (
               <TableRow key={row.name}>
                 <TableCell>{i + 1}</TableCell>
-                <TableCell sx={{ wordBreak: "break-word" }}>{row.name}</TableCell>
+                <TableCell sx={{ wordBreak: "break-word" }} translate="no">{row.name}</TableCell>
                 <TableCell align="right">{row.totalLikes.toLocaleString("ja-JP")}</TableCell>
               </TableRow>
             ))}
@@ -397,17 +397,18 @@ function VideoTable({
                   {(() => {
                     const url = videoUrl(row.platform, row.videoId);
                     return url ? (
-                      <a className="stats-link" href={url} target="_blank" rel="noopener noreferrer">
+                      <a className="stats-link" href={url} target="_blank" rel="noopener noreferrer" translate="no">
                         {row.title}
                       </a>
                     ) : (
-                      row.title
+                      <span translate="no">{row.title}</span>
                     );
                   })()}
                   <Typography
                     variant="caption"
                     color="text.secondary"
                     sx={{ display: { xs: "block", sm: "none" }, wordBreak: "break-word" }}
+                    translate="no"
                   >
                     {row.channelTitle}
                   </Typography>
@@ -415,7 +416,7 @@ function VideoTable({
                     <StoreLinksInline keyword={searchKeyword(row.title)} withStreaming />
                   </Box>
                 </TableCell>
-                <TableCell sx={channelCellSx}>{row.channelTitle}</TableCell>
+                <TableCell sx={channelCellSx} translate="no">{row.channelTitle}</TableCell>
                 <TableCell align="right">{(row[valueKey] ?? 0).toLocaleString("ja-JP")}</TableCell>
               </TableRow>
             ))}

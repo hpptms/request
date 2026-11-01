@@ -21,6 +21,7 @@ import { hasSuberu, markSuberu } from "../lib/suberuStorage";
 import { useUnlimitedLikes } from "../lib/voteQuota";
 import { isMyRequest } from "../lib/myRequestStorage";
 import { listThumbnail } from "../lib/listThumbnail";
+import { ChannelAndRequester } from "./ChannelAndRequester";
 import type { VideoRequest } from "../types";
 
 interface Props {
@@ -100,14 +101,12 @@ export function QueueList({
               sx={{ pr: { xs: 10, sm: 13 } }}
               primary={
                 <Stack direction="row" spacing={0.75} sx={{ alignItems: "center", minWidth: 0 }}>
-                  <Typography component="span" noWrap>
+                  <Typography component="span" noWrap translate="no">
                     {r.title}
                   </Typography>
                 </Stack>
               }
-              secondary={
-                r.channelTitle + (r.requesterName ? ` ・ リクエスト: ${r.requesterName}` : "")
-              }
+              secondary={<ChannelAndRequester channelTitle={r.channelTitle} requesterName={r.requesterName} />}
               slotProps={{
                 secondary: { noWrap: true },
               }}

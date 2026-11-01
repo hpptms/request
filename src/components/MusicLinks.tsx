@@ -31,7 +31,7 @@ export function MusicLinks({ title }: { title: string }) {
   return (
     <div>
       <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
-        この曲を探す{hasAffiliate && "(楽天のリンクは広告です)"}
+        この曲を探す{hasAffiliate && <span>(楽天のリンクは広告です)</span>}
       </Typography>
       <Stack useFlexGap direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
         {links.map((l) => {

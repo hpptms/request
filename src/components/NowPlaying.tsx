@@ -150,13 +150,17 @@ export function NowPlaying({
           <Box>
             <Chip label="NOW PLAYING" color="primary" size="small" sx={{ mb: 1 }} />
             <Typography variant="h6" component="h2" sx={{ lineHeight: 1.3 }}>
-              {nowPlaying.title}
-              {nowPlaying.durationSeconds != null &&
-                `・ ${formatDuration(nowPlaying.durationSeconds)}`}
+              <span translate="no">{nowPlaying.title}</span>
+              {nowPlaying.durationSeconds != null && <span>・ {formatDuration(nowPlaying.durationSeconds)}</span>}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {nowPlaying.channelTitle}
-              {nowPlaying.requesterName && ` ・ リクエスト: ${nowPlaying.requesterName}`}
+              <span translate="no">{nowPlaying.channelTitle}</span>
+              {nowPlaying.requesterName && (
+                <span>
+                  {" ・ リクエスト: "}
+                  <span translate="no">{nowPlaying.requesterName}</span>
+                </span>
+              )}
             </Typography>
           </Box>
           <Stack

@@ -173,7 +173,7 @@ function PlayPage() {
               <TodayThemeBox />
             </Box>
             <Typography variant="subtitle1" sx={{ mb: 1 }}>
-              待機中のリクエスト {pending.length > 0 && `(${pending.length})`}
+              待機中のリクエスト {pending.length > 0 && <span>({pending.length})</span>}
             </Typography>
             <QueueList
               requests={pending}

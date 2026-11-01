@@ -54,7 +54,7 @@ export function TodayThemeBox({ onLoaded }: { onLoaded?: () => void } = {}) {
       <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
         <LightbulbIcon sx={{ color: "#FF9A3C" }} />
         <Typography variant="subtitle2" sx={{ fontWeight: 800, flexGrow: 1, minWidth: 0, wordBreak: "break-word" }}>
-          今日のテーマ{todayThemes.length === 0 && "：準備中"}
+          今日のテーマ{todayThemes.length === 0 && <span>：準備中</span>}
         </Typography>
         <Button
           size="small"
@@ -84,7 +84,7 @@ export function TodayThemeBox({ onLoaded }: { onLoaded?: () => void } = {}) {
         </Stack>
       )}
       <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
-        ※{todayThemes.length > 1 && "どちらのテーマで選んでもOK。"}テーマは曲探しのお題なので、関係なくてもOK
+        ※{todayThemes.length > 1 && <span>どちらのテーマで選んでもOK。</span>}テーマは曲探しのお題なので、関係なくてもOK
       </Typography>
       <Collapse in={open} unmountOnExit>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5, mb: 1.5 }}>

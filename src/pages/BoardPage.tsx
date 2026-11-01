@@ -166,7 +166,7 @@ function BoardPage() {
           <Stack spacing={3}>
             <Box>
               <Typography variant="h6" component="h2" sx={{ mb: 1.5 }}>
-                待機中のリクエスト {pending.length > 0 && `(${pending.length})`}
+                待機中のリクエスト {pending.length > 0 && <span>({pending.length})</span>}
               </Typography>
               <QueueList
                 requests={pending}

@@ -14,6 +14,7 @@ import { trackEvent } from "../lib/analytics";
 import { searchKeyword } from "../lib/affiliate";
 import { AffiliateNotice, StoreLinksInline } from "./MusicLinks";
 import { listThumbnail } from "../lib/listThumbnail";
+import { ChannelAndRequester } from "./ChannelAndRequester";
 import { CancelVoteIconButton, LikeIconButton, SuberuIconButton, SuperLikeIconButton } from "./QueueList";
 
 interface Props {
@@ -66,8 +67,8 @@ export function RecentDoneList({ requests, onVoteCancel, onLike, onSuberu }: Pro
             </ListItemAvatar>
             <ListItemText
               sx={{ flex: "1 1 0", minWidth: 0 }}
-              primary={r.title}
-              secondary={r.channelTitle + (r.requesterName ? ` ・ リクエスト: ${r.requesterName}` : "")}
+              primary={<span translate="no">{r.title}</span>}
+              secondary={<ChannelAndRequester channelTitle={r.channelTitle} requesterName={r.requesterName} />}
               slotProps={{ primary: { noWrap: true }, secondary: { noWrap: true } }}
             />
             <Stack
