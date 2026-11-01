@@ -5,3 +5,9 @@
 export function listThumbnail(url: string): string {
   return url.replace(/^(https:\/\/i\.ytimg\.com\/vi\/[^/]+\/)hqdefault\.jpg$/, "$1default.jpg");
 }
+
+// 「再生が終わった動画」は最大160x90pxの16:9で表示するので、上下に黒帯の
+// ないmqdefault(320x180, ~10KB)を使う。YouTube以外はそのまま返す。
+export function wideListThumbnail(url: string): string {
+  return url.replace(/^(https:\/\/i\.ytimg\.com\/vi\/[^/]+\/)hqdefault\.jpg$/, "$1mqdefault.jpg");
+}

@@ -3,7 +3,6 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
-import ListItemAvatar from "@mui/material/ListItemAvatar";
 import ListItemText from "@mui/material/ListItemText";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
@@ -13,7 +12,7 @@ import type { VideoRequest } from "../types";
 import { trackEvent } from "../lib/analytics";
 import { searchKeyword } from "../lib/affiliate";
 import { AffiliateNotice, StoreLinksInline } from "./MusicLinks";
-import { listThumbnail } from "../lib/listThumbnail";
+import { wideListThumbnail } from "../lib/listThumbnail";
 import { ChannelAndRequester } from "./ChannelAndRequester";
 import { CancelVoteIconButton, LikeIconButton, SuberuIconButton, SuperLikeIconButton } from "./QueueList";
 
@@ -37,8 +36,6 @@ function sourceUrl(r: VideoRequest): string {
   }
 }
 
-const WIDE_LIST = "@container (min-width: 760px)";
-
 // The most recently finished requests, still open to like/bad, each with a
 // link out to the original video.
 export function RecentDoneList({ requests, onVoteCancel, onLike, onSuberu }: Props) {
@@ -51,77 +48,79 @@ export function RecentDoneList({ requests, onVoteCancel, onLike, onSuberu }: Pro
   }
 
   return (
-    // The action row sits beside the title only when the list itself is wide
-    // enough. A viewport breakpoint isn't enough: on PC the board puts this
-    // list in a ~560px column, where inline buttons crushed titles to a few
-    // characters.
-    <Paper elevation={2} sx={{ containerType: "inline-size" }}>
+    // Thumbnail on the left; title, actions and store links stacked beside
+    // it, so a wide row isn't a small thumbnail with empty space to its right.
+    <Paper elevation={2}>
       <List disablePadding>
         {requests.map((r, i) => (
           <ListItem
             key={r.id}
             divider={i < requests.length - 1}
-            sx={{ px: { xs: 1.5, sm: 2 }, alignItems: "flex-start", flexWrap: "wrap", rowGap: 0.5 }}
+            sx={{ px: { xs: 1.5, sm: 2 }, alignItems: "flex-start", gap: { xs: 1.5, sm: 2 } }}
           >
-            <ListItemAvatar sx={{ minWidth: { xs: 56, sm: 72 } }}>
-              <Avatar
-                variant="rounded"
-                src={listThumbnail(r.thumbnailUrl)}
-                alt=""
-                sx={{ width: { xs: 48, sm: 64 }, height: { xs: 36, sm: 48 }, mr: 1 }}
-              />
-            </ListItemAvatar>
-            <ListItemText
-              sx={{ flex: "1 1 0", minWidth: 0 }}
-              primary={<span translate="no">{r.title}</span>}
-              secondary={<ChannelAndRequester channelTitle={r.channelTitle} requesterName={r.requesterName} />}
-              slotProps={{ primary: { noWrap: true }, secondary: { noWrap: true } }}
+            <Avatar
+              variant="rounded"
+              src={wideListThumbnail(r.thumbnailUrl)}
+              alt=""
+              sx={{ width: { xs: 96, sm: 160 }, height: { xs: 54, sm: 90 }, flexShrink: 0 }}
             />
-            <Stack
-              direction="row"
-              spacing={0.5}
-              sx={{ alignItems: "center", flexShrink: 0, width: "100%", pl: { xs: 0, sm: 9.5 }, [WIDE_LIST]: { width: "auto", pl: 0 } }}
-            >
-              <Button
-                component="a"
-                href={sourceUrl(r)}
-                target="_blank"
-                rel="noopener noreferrer"
-                size="small"
-                variant="outlined"
-                color="inherit"
-                startIcon={<OpenInNewIcon fontSize="small" />}
-                onClick={() =>
-                  trackEvent("video_request_open_original", {
-                    request_id: r.id,
-                    video_title: r.title,
-                    platform: r.platform,
-                    source: "recent_done",
-                  })
-                }
-                sx={{ whiteSpace: "nowrap", borderRadius: 999, px: 2 }}
-              >
-                元の動画に飛ぶ
-              </Button>
-              <LikeIconButton request={r} onLike={onLike} />
-              <Typography variant="body2" color="text.secondary" sx={{ minWidth: 20 }} aria-label="いいね数">
-                {r.likes - r.superLikes * 2}
-              </Typography>
-              <SuperLikeIconButton request={r} onLike={onLike} />
-              <Typography variant="body2" color="text.secondary" sx={{ minWidth: 20 }} aria-label="超いいね数">
-                {r.superLikes}
-              </Typography>
-              <CancelVoteIconButton request={r} onVoteCancel={onVoteCancel} />
-              <Typography variant="body2" color="text.secondary" sx={{ minWidth: 20 }} aria-label="bad数">
-                {r.cancelVotes}
-              </Typography>
-              <SuberuIconButton request={r} onSuberu={onSuberu} />
-              <Typography variant="body2" color="text.secondary" sx={{ minWidth: 20 }} aria-label="スベってる数">
-                {r.suberu ?? 0}
-              </Typography>
-            </Stack>
-            <Box sx={{ width: "100%", pl: { xs: 7.5, sm: 9.5 } }}>
-              <StoreLinksInline keyword={searchKeyword(r.title)} withStreaming />
+            <Box sx={{ flex: "1 1 0", minWidth: 0 }}>
+              <ListItemText
+                sx={{ my: 0 }}
+                primary={<span translate="no">{r.title}</span>}
+                secondary={<ChannelAndRequester channelTitle={r.channelTitle} requesterName={r.requesterName} />}
+                slotProps={{ primary: { noWrap: true }, secondary: { noWrap: true } }}
+              />
+              <Stack direction="row" spacing={0.5} useFlexGap sx={{ alignItems: "center", flexWrap: "wrap", mt: 0.75 }}>
+                <Button
+                  component="a"
+                  href={sourceUrl(r)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  size="small"
+                  variant="outlined"
+                  color="inherit"
+                  startIcon={<OpenInNewIcon fontSize="small" />}
+                  onClick={() =>
+                    trackEvent("video_request_open_original", {
+                      request_id: r.id,
+                      video_title: r.title,
+                      platform: r.platform,
+                      source: "recent_done",
+                    })
+                  }
+                  sx={{ whiteSpace: "nowrap", borderRadius: 999, px: 2 }}
+                >
+                  元の動画に飛ぶ
+                </Button>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <LikeIconButton request={r} onLike={onLike} />
+                  <Typography variant="body2" color="text.secondary" sx={{ minWidth: 20 }} aria-label="いいね数">
+                    {r.likes - r.superLikes * 2}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <SuperLikeIconButton request={r} onLike={onLike} />
+                  <Typography variant="body2" color="text.secondary" sx={{ minWidth: 20 }} aria-label="超いいね数">
+                    {r.superLikes}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <CancelVoteIconButton request={r} onVoteCancel={onVoteCancel} />
+                  <Typography variant="body2" color="text.secondary" sx={{ minWidth: 20 }} aria-label="bad数">
+                    {r.cancelVotes}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <SuberuIconButton request={r} onSuberu={onSuberu} />
+                  <Typography variant="body2" color="text.secondary" sx={{ minWidth: 20 }} aria-label="スベってる数">
+                    {r.suberu ?? 0}
+                  </Typography>
+                </Box>
+              </Stack>
+              <Box sx={{ mt: 0.5 }}>
+                <StoreLinksInline keyword={searchKeyword(r.title)} withStreaming />
+              </Box>
             </Box>
           </ListItem>
         ))}
