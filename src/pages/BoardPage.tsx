@@ -19,6 +19,7 @@ import ShieldIcon from "@mui/icons-material/Shield";
 import { cloneElement, useCallback, useEffect, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { Footer } from "../components/Footer";
+import { TEXT_CONTAINER_SX } from "../lib/layout";
 import { NowLive } from "../components/NowLive";
 import { NowPlaying } from "../components/NowPlaying";
 import { QueueList } from "../components/QueueList";
@@ -127,68 +128,52 @@ function BoardPage() {
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth={false} sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1.5, sm: 3 }, maxWidth: { sm: 720, md: 1200 } }}>
-        {/* One column on phones and portrait tablets; from md (landscape
-            tablets and up) the queue moves to a second column so it sits
-            beside the player/form instead of a long scroll below them. */}
-        <Box
-          sx={{
-            minHeight: "100vh",
-            visibility: boardReady ? "visible" : "hidden",
-            display: "grid",
-            gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "minmax(0, 1fr) minmax(0, 1fr)" },
-            gap: { xs: 3, md: 4 },
-            alignItems: "start",
-          }}
-        >
-          <Stack spacing={3}>
-            {/* Live status first, so it is on screen as soon as the page opens;
-                the rules and change log are folded into one box below it. */}
-            <NowLive onLoaded={handleLiveLoaded} />
-            <NowPlaying
-              nowPlaying={nowPlaying}
-              cancelVoteTiers={cancelVoteTiers}
-              fastForwardActive={fastForwardActive}
-              fastForwardCancelVoteTiers={fastForwardCancelVoteTiers}
-              likePriorityThreshold={likePriorityThreshold}
+      <Container maxWidth="sm" sx={TEXT_CONTAINER_SX}>
+        <Stack spacing={3} sx={{ minHeight: "100vh", visibility: boardReady ? "visible" : "hidden" }}>
+          {/* Live status first, so it is on screen as soon as the page opens;
+              the rules and change log are folded into one box below it. */}
+          <NowLive onLoaded={handleLiveLoaded} />
+          <NowPlaying
+            nowPlaying={nowPlaying}
+            cancelVoteTiers={cancelVoteTiers}
+            fastForwardActive={fastForwardActive}
+            fastForwardCancelVoteTiers={fastForwardCancelVoteTiers}
+            likePriorityThreshold={likePriorityThreshold}
+            isAdmin={isAdmin}
+            onMarkDone={handleDone}
+            onVoteCancel={handleVoteCancel}
+            onLike={handleLike}
+            onSuberu={handleSuberu}
+            onCancelMine={handleCancelMine}
+          />
+          <TodayThemeBox onLoaded={handleThemeLoaded} />
+          <PollBox onLoaded={handlePollLoaded} />
+          <RequestForm onSubmit={handleCreate} />
+
+          <Box>
+            <Typography variant="h6" component="h2" sx={{ mb: 1.5 }}>
+              待機中のリクエスト {pending.length > 0 && <span>({pending.length})</span>}
+            </Typography>
+            <QueueList
+              requests={pending}
               isAdmin={isAdmin}
-              onMarkDone={handleDone}
+              onPlay={handlePlay}
+              onDelete={handleDelete}
               onVoteCancel={handleVoteCancel}
               onLike={handleLike}
-              onSuberu={handleSuberu}
               onCancelMine={handleCancelMine}
             />
-            <TodayThemeBox onLoaded={handleThemeLoaded} />
-            <PollBox onLoaded={handlePollLoaded} />
-            <RequestForm onSubmit={handleCreate} />
-          </Stack>
+          </Box>
 
-          <Stack spacing={3}>
-            <Box>
-              <Typography variant="h6" component="h2" sx={{ mb: 1.5 }}>
-                待機中のリクエスト {pending.length > 0 && <span>({pending.length})</span>}
-              </Typography>
-              <QueueList
-                requests={pending}
-                isAdmin={isAdmin}
-                onPlay={handlePlay}
-                onDelete={handleDelete}
-                onVoteCancel={handleVoteCancel}
-                onLike={handleLike}
-                onCancelMine={handleCancelMine}
-              />
-            </Box>
+          <Box>
+            <Typography variant="h6" component="h2" sx={{ mb: 1.5 }}>
+              再生が終わった動画
+            </Typography>
+            <RecentDoneList requests={recentDone} onVoteCancel={handleVoteCancel} onLike={handleLike} onSuberu={handleSuberu} />
+          </Box>
+        </Stack>
 
-            <Box>
-              <Typography variant="h6" component="h2" sx={{ mb: 1.5 }}>
-                再生が終わった動画
-              </Typography>
-              <RecentDoneList requests={recentDone} onVoteCancel={handleVoteCancel} onLike={handleLike} onSuberu={handleSuberu} />
-            </Box>
-          </Stack>
-        </Box>
-
-        <Box component="section" sx={{ mt: 4, maxWidth: 720, mx: "auto" }}>
+        <Box component="section" sx={{ mt: 4 }}>
           <Typography variant="h6" component="h2" gutterBottom>
             みんなで動画を同時視聴する、動画リクエストサイト
           </Typography>
