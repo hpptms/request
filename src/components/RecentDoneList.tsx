@@ -80,7 +80,7 @@ export function RecentDoneList({ requests, onVoteCancel, onLike, onSuberu }: Pro
             <Stack
               direction="row"
               spacing={0.5}
-              sx={{ alignItems: "center", flexShrink: 0, width: "100%", justifyContent: "flex-end", [WIDE_LIST]: { width: "auto" } }}
+              sx={{ alignItems: "center", flexShrink: 0, width: "100%", pl: { xs: 0, sm: 9.5 }, [WIDE_LIST]: { width: "auto", pl: 0 } }}
             >
               <Button
                 component="a"
