@@ -28,7 +28,7 @@ interface Props {
   // Duration badge, shown a few seconds after the title card.
   durationBadgeVisible: boolean;
   durationBadgeSeconds: number | null;
-  // /viewer only: the playing video's remaining time (null when unknown)
+  // /viewer and /play: the playing video's remaining time (null when unknown)
   // and the queued-request count, shown periodically in the duration
   // badge's spot. Content only updates while shown (same lagging-content
   // pattern as introContent below). upcoming: the first few queued requests
@@ -153,7 +153,7 @@ export function PlayerOverlays({
         </Grow>
       </Box>
 
-      {/* Periodic status (/viewer only): remaining time + queued count (+ the next few queued videos, a size smaller), in the duration badge's spot and styled to match it. Slides in from / back out to the right edge, same motion as the 早送りタイム「残り1分!」 pop-out. */}
+      {/* Periodic status (/viewer and /play): remaining time + queued count (+ the next few queued videos, a size smaller), in the duration badge's spot and styled to match it. Slides in from / back out to the right edge, same motion as the 早送りタイム「残り1分!」 pop-out. */}
       <Box sx={{ position: "absolute", top: { xs: 8, sm: 16 }, right: { xs: 8, sm: 16 }, pointerEvents: "none" }}>
         <Slide in={periodicStatusVisible} direction="left" timeout={{ enter: 300, exit: 250 }}>
           <Stack spacing={{ xs: 0.5, sm: 1 }} sx={{ alignItems: "flex-end" }}>

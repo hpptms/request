@@ -20,6 +20,9 @@ import {
   DURATION_BADGE_VISIBLE_MS,
   NEW_REQUEST_NOTICE_MS,
   NOW_PLAYING_INTRO_MS,
+  PERIODIC_STATUS_INTERVAL_MS,
+  PERIODIC_STATUS_UPCOMING_COUNT,
+  PERIODIC_STATUS_VISIBLE_MS,
   VOTE_STATUS_VISIBLE_MS,
 } from "../lib/playerOverlayTiming";
 import { useBroadcastOverlay } from "../lib/useBroadcastOverlay";
@@ -93,6 +96,14 @@ export function RequestSidePlayer({
   const [newRequestNotice, setNewRequestNotice] = useState<{ id: string; title: string; videoId: string } | null>(null);
   const [voteStatusVisible, setVoteStatusVisible] = useState(false);
   const [voteStatusContent, setVoteStatusContent] = useState<VoteStatus | null>(null);
+  // Same periodic status (remaining time + queue count + next few queued
+  // videos) as ViewerPage — see the effects next to readPeriodicStatusRef.
+  const [periodicStatusVisible, setPeriodicStatusVisible] = useState(false);
+  const [periodicStatus, setPeriodicStatus] = useState<{
+    remainingSeconds: number | null;
+    queueCount: number;
+    upcoming: { id: string; title: string; thumbnailUrl: string }[];
+  } | null>(null);
   const broadcastState = useBroadcastOverlay();
   const todayThemes = useTodayTheme();
 
@@ -109,6 +120,7 @@ export function RequestSidePlayer({
   const newRequestTimerRef = useRef<number | null>(null);
   const lastShownVoteCountsRef = useRef<(VoteStatus & { id: string }) | null>(null);
   const voteStatusHideTimerRef = useRef<number | null>(null);
+  const periodicStatusHideTimerRef = useRef<number | null>(null);
 
   const nowPlaying = requests.find((r) => r.status === "playing") ?? null;
   const nowPlayingId = nowPlaying?.id ?? null;
@@ -340,6 +352,11 @@ export function RequestSidePlayer({
     if (durationBadgeShowTimerRef.current !== null) window.clearTimeout(durationBadgeShowTimerRef.current);
     if (durationBadgeHideTimerRef.current !== null) window.clearTimeout(durationBadgeHideTimerRef.current);
     setDurationBadgeVisible(false);
+    if (periodicStatusHideTimerRef.current !== null) {
+      window.clearTimeout(periodicStatusHideTimerRef.current);
+      periodicStatusHideTimerRef.current = null;
+    }
+    setPeriodicStatusVisible(false);
 
     setIntroContent({
       title: nowPlaying.title,
@@ -387,6 +404,60 @@ export function RequestSidePlayer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nowPlaying]);
 
+  // Remaining time of whatever's playing. Only known for YouTube (read off
+  // the player itself); niconico/vimeo are a plain <iframe> with no time
+  // access, so the remaining-time chip is just left out for them.
+  const computeRemainingSeconds = (): number | null => {
+    if (!nowPlaying || nowPlaying.platform !== "youtube") return null;
+    const player = ytPlayerRef.current;
+    if (!player || !ytReady) return null;
+    const now = player.getCurrentTime();
+    const duration = player.getDuration();
+    if (typeof now !== "number" || !Number.isFinite(now) || typeof duration !== "number" || !(duration > 0)) return null;
+    const end = nowPlaying.endSeconds ? Math.min(nowPlaying.endSeconds, duration) : duration;
+    return Math.max(0, end - now);
+  };
+
+  // Re-assigned every render so the interval effects below always read the
+  // latest requests without re-arming themselves.
+  const pendingList = requests.filter((r) => r.status === "pending");
+  const readPeriodicStatusRef = useRef(() => ({
+    remainingSeconds: null as number | null,
+    queueCount: 0,
+    upcoming: [] as { id: string; title: string; thumbnailUrl: string }[],
+  }));
+  readPeriodicStatusRef.current = () => ({
+    remainingSeconds: computeRemainingSeconds(),
+    queueCount: pendingList.length,
+    upcoming: pendingList
+      .slice(0, PERIODIC_STATUS_UPCOMING_COUNT)
+      .map((r) => ({ id: r.id, title: r.title, thumbnailUrl: r.thumbnailUrl })),
+  });
+
+  // Every PERIODIC_STATUS_INTERVAL_MS, show the periodic status for
+  // PERIODIC_STATUS_VISIBLE_MS — skipped while the duration badge (same
+  // spot) is up or about to be. Same as ViewerPage's.
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      if (durationBadgeShowTimerRef.current !== null || durationBadgeHideTimerRef.current !== null) return;
+      if (periodicStatusHideTimerRef.current !== null) window.clearTimeout(periodicStatusHideTimerRef.current);
+      setPeriodicStatus(readPeriodicStatusRef.current());
+      setPeriodicStatusVisible(true);
+      periodicStatusHideTimerRef.current = window.setTimeout(() => {
+        setPeriodicStatusVisible(false);
+        periodicStatusHideTimerRef.current = null;
+      }, PERIODIC_STATUS_VISIBLE_MS);
+    }, PERIODIC_STATUS_INTERVAL_MS);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  // Count the remaining time down live while the periodic status is shown.
+  useEffect(() => {
+    if (!periodicStatusVisible) return;
+    const interval = window.setInterval(() => setPeriodicStatus(readPeriodicStatusRef.current()), 1000);
+    return () => window.clearInterval(interval);
+  }, [periodicStatusVisible]);
+
   useEffect(() => {
     return () => {
       if (introHideTimerRef.current !== null) window.clearTimeout(introHideTimerRef.current);
@@ -394,6 +465,7 @@ export function RequestSidePlayer({
       if (durationBadgeHideTimerRef.current !== null) window.clearTimeout(durationBadgeHideTimerRef.current);
       if (newRequestTimerRef.current !== null) window.clearTimeout(newRequestTimerRef.current);
       if (voteStatusHideTimerRef.current !== null) window.clearTimeout(voteStatusHideTimerRef.current);
+      if (periodicStatusHideTimerRef.current !== null) window.clearTimeout(periodicStatusHideTimerRef.current);
     };
   }, []);
 
@@ -450,6 +522,8 @@ export function RequestSidePlayer({
         todayThemes={todayThemes}
         durationBadgeVisible={durationBadgeVisible}
         durationBadgeSeconds={durationBadgeSeconds}
+        periodicStatusVisible={periodicStatusVisible}
+        periodicStatus={periodicStatus}
         newRequestVisible={newRequestVisible}
         newRequestNotice={newRequestNotice}
         voteStatusVisible={voteStatusVisible}
