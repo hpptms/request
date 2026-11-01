@@ -37,6 +37,8 @@ function sourceUrl(r: VideoRequest): string {
   }
 }
 
+const WIDE_LIST = "@container (min-width: 760px)";
+
 // The most recently finished requests, still open to like/bad, each with a
 // link out to the original video.
 export function RecentDoneList({ requests, onVoteCancel, onLike, onSuberu }: Props) {
@@ -49,7 +51,11 @@ export function RecentDoneList({ requests, onVoteCancel, onLike, onSuberu }: Pro
   }
 
   return (
-    <Paper elevation={2}>
+    // The action row sits beside the title only when the list itself is wide
+    // enough. A viewport breakpoint isn't enough: on PC the board puts this
+    // list in a ~560px column, where inline buttons crushed titles to a few
+    // characters.
+    <Paper elevation={2} sx={{ containerType: "inline-size" }}>
       <List disablePadding>
         {requests.map((r, i) => (
           <ListItem
@@ -74,7 +80,7 @@ export function RecentDoneList({ requests, onVoteCancel, onLike, onSuberu }: Pro
             <Stack
               direction="row"
               spacing={0.5}
-              sx={{ alignItems: "center", flexShrink: 0, width: { xs: "100%", sm: "auto" }, justifyContent: "flex-end" }}
+              sx={{ alignItems: "center", flexShrink: 0, width: "100%", justifyContent: "flex-end", [WIDE_LIST]: { width: "auto" } }}
             >
               <Button
                 component="a"
