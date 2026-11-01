@@ -16,7 +16,7 @@ import MapIcon from "@mui/icons-material/Map";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import ShieldIcon from "@mui/icons-material/Shield";
-import { useCallback, useEffect, useState } from "react";
+import { cloneElement, useCallback, useEffect, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { Footer } from "../components/Footer";
 import { NowLive } from "../components/NowLive";
@@ -34,12 +34,33 @@ import { SiteLogo } from "../components/SiteLogo";
 // anyway (see boardReady below), so a slow/failed API can't blank the page.
 const FIRST_LOAD_TIMEOUT_MS = 2500;
 
+type NavMode = "icon" | "compact" | "full";
+
+function NavButton({ to, label, icon, mode, external = false }: { to: string; label: string; icon: React.ReactElement; mode: NavMode; external?: boolean }) {
+  const link = external ? { component: "a", href: to, target: "_blank", rel: "noopener" } : { component: RouterLink, to };
+  return (
+    <Button
+      {...link}
+      size="small"
+      aria-label={mode === "icon" ? label : undefined}
+      startIcon={mode === "icon" ? undefined : icon}
+      endIcon={external && mode === "full" ? <OpenInNewIcon /> : undefined}
+      sx={{ whiteSpace: "nowrap", minWidth: 0, px: mode === "full" ? 2 : 1 }}
+    >
+      {mode === "icon" ? cloneElement(icon, { fontSize: "small" } as object) : label}
+    </Button>
+  );
+}
+
 function BoardPage() {
   const theme = useTheme();
-  // Icon-only nav buttons below this width: four labeled buttons (再生/
-  // 集計/ヒートマップ/管理者) plus the title don't fit a phone-width
-  // Toolbar and were overflowing it horizontally.
+  // Icon-only nav buttons on phones: five labeled buttons plus the title
+  // don't fit a phone-width Toolbar and were overflowing it horizontally.
+  // Tablets in portrait (sm–md) keep the labels but drop the padding and
+  // the admin link's external-link icon, which was cutting the title off.
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
+  const navMode: NavMode = isMobile ? "icon" : isTablet ? "compact" : "full";
 
   usePageSeo("/");
 
@@ -96,110 +117,78 @@ function BoardPage() {
           >
             動画リクエストキュー
           </Typography>
-          <Stack direction="row" spacing={0.5}>
-            <Button
-              component={RouterLink}
-              to="/play"
-              size="small"
-              aria-label={isMobile ? "再生" : undefined}
-              startIcon={isMobile ? undefined : <PlayCircleIcon />}
-              sx={{ whiteSpace: "nowrap", minWidth: 0, px: isMobile ? 1 : 2 }}
-            >
-              {isMobile ? <PlayCircleIcon fontSize="small" /> : "再生"}
-            </Button>
-            <Button
-              component={RouterLink}
-              to="/notice"
-              size="small"
-              aria-label={isMobile ? "お知らせ" : undefined}
-              startIcon={isMobile ? undefined : <CampaignIcon />}
-              sx={{ whiteSpace: "nowrap", minWidth: 0, px: isMobile ? 1 : 2 }}
-            >
-              {isMobile ? <CampaignIcon fontSize="small" /> : "お知らせ"}
-            </Button>
-            <Button
-              component={RouterLink}
-              to="/stats"
-              size="small"
-              aria-label={isMobile ? "集計" : undefined}
-              startIcon={isMobile ? undefined : <LeaderboardIcon />}
-              sx={{ whiteSpace: "nowrap", minWidth: 0, px: isMobile ? 1 : 2 }}
-            >
-              {isMobile ? <LeaderboardIcon fontSize="small" /> : "集計"}
-            </Button>
-            <Button
-              component={RouterLink}
-              to="/heatmap"
-              size="small"
-              aria-label={isMobile ? "ヒートマップ" : undefined}
-              startIcon={isMobile ? undefined : <MapIcon />}
-              sx={{ whiteSpace: "nowrap", minWidth: 0, px: isMobile ? 1 : 2 }}
-            >
-              {isMobile ? <MapIcon fontSize="small" /> : "ヒートマップ"}
-            </Button>
-            <Button
-              component="a"
-              href="/admin"
-              target="_blank"
-              rel="noopener"
-              size="small"
-              aria-label={isMobile ? "管理者" : undefined}
-              startIcon={isMobile ? undefined : <ShieldIcon />}
-              endIcon={isMobile ? undefined : <OpenInNewIcon />}
-              sx={{ whiteSpace: "nowrap", minWidth: 0, px: isMobile ? 1 : 2 }}
-            >
-              {isMobile ? <ShieldIcon fontSize="small" /> : "管理者"}
-            </Button>
+          <Stack direction="row" spacing={0.5} sx={{ flexShrink: 0 }}>
+            <NavButton to="/play" label="再生" icon={<PlayCircleIcon />} mode={navMode} />
+            <NavButton to="/notice" label="お知らせ" icon={<CampaignIcon />} mode={navMode} />
+            <NavButton to="/stats" label="集計" icon={<LeaderboardIcon />} mode={navMode} />
+            <NavButton to="/heatmap" label="ヒートマップ" icon={<MapIcon />} mode={navMode} />
+            <NavButton to="/admin" label="管理者" icon={<ShieldIcon />} mode={navMode} external />
           </Stack>
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1.5, sm: 3 } }}>
-        <Stack spacing={3} sx={{ minHeight: "100vh", visibility: boardReady ? "visible" : "hidden" }}>
-          {/* Live status first, so it is on screen as soon as the page opens;
-              the rules and change log are folded into one box below it. */}
-          <NowLive onLoaded={handleLiveLoaded} />
-          <NowPlaying
-            nowPlaying={nowPlaying}
-            cancelVoteTiers={cancelVoteTiers}
-            fastForwardActive={fastForwardActive}
-            fastForwardCancelVoteTiers={fastForwardCancelVoteTiers}
-            likePriorityThreshold={likePriorityThreshold}
-            isAdmin={isAdmin}
-            onMarkDone={handleDone}
-            onVoteCancel={handleVoteCancel}
-            onLike={handleLike}
-            onSuberu={handleSuberu}
-            onCancelMine={handleCancelMine}
-          />
-          <TodayThemeBox onLoaded={handleThemeLoaded} />
-          <PollBox onLoaded={handlePollLoaded} />
-          <RequestForm onSubmit={handleCreate} />
-
-          <Box>
-            <Typography variant="h6" component="h2" sx={{ mb: 1.5 }}>
-              待機中のリクエスト {pending.length > 0 && `(${pending.length})`}
-            </Typography>
-            <QueueList
-              requests={pending}
+      <Container maxWidth={false} sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1.5, sm: 3 }, maxWidth: { sm: 720, md: 1200 } }}>
+        {/* One column on phones and portrait tablets; from md (landscape
+            tablets and up) the queue moves to a second column so it sits
+            beside the player/form instead of a long scroll below them. */}
+        <Box
+          sx={{
+            minHeight: "100vh",
+            visibility: boardReady ? "visible" : "hidden",
+            display: "grid",
+            gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "minmax(0, 1fr) minmax(0, 1fr)" },
+            gap: { xs: 3, md: 4 },
+            alignItems: "start",
+          }}
+        >
+          <Stack spacing={3}>
+            {/* Live status first, so it is on screen as soon as the page opens;
+                the rules and change log are folded into one box below it. */}
+            <NowLive onLoaded={handleLiveLoaded} />
+            <NowPlaying
+              nowPlaying={nowPlaying}
+              cancelVoteTiers={cancelVoteTiers}
+              fastForwardActive={fastForwardActive}
+              fastForwardCancelVoteTiers={fastForwardCancelVoteTiers}
+              likePriorityThreshold={likePriorityThreshold}
               isAdmin={isAdmin}
-              onPlay={handlePlay}
-              onDelete={handleDelete}
+              onMarkDone={handleDone}
               onVoteCancel={handleVoteCancel}
               onLike={handleLike}
+              onSuberu={handleSuberu}
               onCancelMine={handleCancelMine}
             />
-          </Box>
+            <TodayThemeBox onLoaded={handleThemeLoaded} />
+            <PollBox onLoaded={handlePollLoaded} />
+            <RequestForm onSubmit={handleCreate} />
+          </Stack>
 
-          <Box>
-            <Typography variant="h6" component="h2" sx={{ mb: 1.5 }}>
-              再生が終わった動画
-            </Typography>
-            <RecentDoneList requests={recentDone} onVoteCancel={handleVoteCancel} onLike={handleLike} onSuberu={handleSuberu} />
-          </Box>
-        </Stack>
+          <Stack spacing={3}>
+            <Box>
+              <Typography variant="h6" component="h2" sx={{ mb: 1.5 }}>
+                待機中のリクエスト {pending.length > 0 && `(${pending.length})`}
+              </Typography>
+              <QueueList
+                requests={pending}
+                isAdmin={isAdmin}
+                onPlay={handlePlay}
+                onDelete={handleDelete}
+                onVoteCancel={handleVoteCancel}
+                onLike={handleLike}
+                onCancelMine={handleCancelMine}
+              />
+            </Box>
 
-        <Box component="section" sx={{ mt: 4 }}>
+            <Box>
+              <Typography variant="h6" component="h2" sx={{ mb: 1.5 }}>
+                再生が終わった動画
+              </Typography>
+              <RecentDoneList requests={recentDone} onVoteCancel={handleVoteCancel} onLike={handleLike} onSuberu={handleSuberu} />
+            </Box>
+          </Stack>
+        </Box>
+
+        <Box component="section" sx={{ mt: 4, maxWidth: 720, mx: "auto" }}>
           <Typography variant="h6" component="h2" gutterBottom>
             みんなで動画を同時視聴する、動画リクエストサイト
           </Typography>

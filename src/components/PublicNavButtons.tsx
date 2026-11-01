@@ -36,3 +36,21 @@ export function PublicNavButtons() {
     </Stack>
   );
 }
+
+// 文章系ページのヘッダー右側の「トップに戻る」。スマホ幅ではアイコンのみに
+// して、「著作権に関するお…」のようにタイトルが潰れるのを防ぐ。
+export function BackToTopButton() {
+  const isMobile = useMediaQuery(useTheme().breakpoints.down("sm"));
+  return (
+    <Button
+      component={RouterLink}
+      to="/"
+      size="small"
+      aria-label={isMobile ? "トップに戻る" : undefined}
+      startIcon={isMobile ? undefined : <ArrowBackIcon />}
+      sx={{ whiteSpace: "nowrap", flexShrink: 0, minWidth: 0, px: isMobile ? 1 : 2 }}
+    >
+      {isMobile ? <ArrowBackIcon fontSize="small" /> : "トップに戻る"}
+    </Button>
+  );
+}

@@ -1,14 +1,13 @@
 import type { ReactNode } from "react";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { Link as RouterLink } from "react-router-dom";
 import { Footer } from "./Footer";
+import { BackToTopButton } from "./PublicNavButtons";
+import { TEXT_CONTAINER_SX } from "../lib/layout";
 import { SiteLogo } from "./SiteLogo";
 
 // 文章主体のページ(使い方ガイド/よくある質問/利用規約)の共通枠。ヘッダー・
@@ -22,13 +21,11 @@ export function ContentPageLayout({ title, lead, children }: { title: string; le
           <Typography variant="h6" component="h1" noWrap sx={{ flexGrow: 1, minWidth: 0 }}>
             {title}
           </Typography>
-          <Button component={RouterLink} to="/" size="small" startIcon={<ArrowBackIcon />} sx={{ whiteSpace: "nowrap" }}>
-            トップに戻る
-          </Button>
+          <BackToTopButton />
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1.5, sm: 3 } }}>
+      <Container maxWidth="sm" sx={TEXT_CONTAINER_SX}>
         <Stack spacing={3.5}>
           {lead && (
             <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.9 }}>

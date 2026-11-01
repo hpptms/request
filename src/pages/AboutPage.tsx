@@ -5,10 +5,11 @@ import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Link as RouterLink } from "react-router-dom";
 import { Footer } from "../components/Footer";
 import { usePageSeo } from "../lib/useSeo";
+import { BackToTopButton } from "../components/PublicNavButtons";
+import { TEXT_CONTAINER_SX } from "../lib/layout";
 import { SiteLogo } from "../components/SiteLogo";
 
 // サイトについて/運営者情報ページ (/about)。誰が何の目的で運営しているかを
@@ -25,13 +26,11 @@ function AboutPage() {
           <Typography variant="h6" component="h1" noWrap sx={{ flexGrow: 1, minWidth: 0 }}>
             サイトについて
           </Typography>
-          <Button component={RouterLink} to="/" size="small" startIcon={<ArrowBackIcon />} sx={{ whiteSpace: "nowrap" }}>
-            トップに戻る
-          </Button>
+          <BackToTopButton />
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1.5, sm: 3 } }}>
+      <Container maxWidth="sm" sx={TEXT_CONTAINER_SX}>
         <Stack spacing={3}>
           <Box>
             <Typography variant="h6" gutterBottom>

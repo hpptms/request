@@ -6,10 +6,11 @@ import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Link as RouterLink } from "react-router-dom";
 import { Footer } from "../components/Footer";
 import { usePageSeo } from "../lib/useSeo";
+import { BackToTopButton } from "../components/PublicNavButtons";
+import { TEXT_CONTAINER_SX } from "../lib/layout";
 import { SiteLogo } from "../components/SiteLogo";
 
 // プライバシーポリシー (/privacy)。Google公式ヘルプが必須としている3点
@@ -28,13 +29,11 @@ function PrivacyPolicyPage() {
           <Typography variant="h6" component="h1" noWrap sx={{ flexGrow: 1, minWidth: 0 }}>
             プライバシーポリシー
           </Typography>
-          <Button component={RouterLink} to="/" size="small" startIcon={<ArrowBackIcon />} sx={{ whiteSpace: "nowrap" }}>
-            トップに戻る
-          </Button>
+          <BackToTopButton />
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="sm" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1.5, sm: 3 } }}>
+      <Container maxWidth="sm" sx={TEXT_CONTAINER_SX}>
         <Stack spacing={3}>
           <Typography variant="body2" color="text.secondary">
             動画リクエストキュー（以下「本サービス」）における、利用者の個人情報の取り扱いについて説明します。

@@ -1,6 +1,5 @@
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
-import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { Link as RouterLink } from "react-router-dom";
 
@@ -19,52 +18,46 @@ import { Link as RouterLink } from "react-router-dom";
 // tall, under the 24px minimum, so pad each one vertically.
 const LINK_SX = { display: "inline-block", py: 0.5 } as const;
 
+const LINKS: [to: string, label: string][] = [
+  ["/", "リクエスト一覧"],
+  ["/play", "再生"],
+  ["/stats", "集計"],
+  ["/heatmap", "ヒートマップ"],
+  ["/notice", "お知らせ"],
+  ["/guide", "使い方ガイド"],
+  ["/faq", "よくある質問"],
+  ["/about", "サイトについて"],
+  ["/privacy", "プライバシーポリシー"],
+  ["/terms", "利用規約"],
+  ["/copyright", "著作権ガイドライン"],
+  ["/contact", "お問い合わせ"],
+];
+
 export function Footer() {
   return (
     <Box component="footer" sx={{ borderTop: 1, borderColor: "divider", mt: 4, py: 3 }}>
-      <Stack
-        direction={{ xs: "column", sm: "row" }}
-        spacing={{ xs: 1.5, sm: 2 }}
-        divider={<Box sx={{ display: { xs: "none", sm: "block" }, borderLeft: 1, borderColor: "divider" }} />}
-        sx={{ justifyContent: "center", alignItems: "center", flexWrap: "wrap", px: 2 }}
+      {/* Phones: a two-column grid — one link per row made the footer
+          alone about a screen tall. Wider: wrapping rows. */}
+      <Box
+        component="nav"
+        aria-label="サイト内リンク"
+        sx={{
+          display: { xs: "grid", sm: "flex" },
+          gridTemplateColumns: "1fr 1fr",
+          justifyItems: "center",
+          justifyContent: "center",
+          flexWrap: "wrap",
+          columnGap: { xs: 1, sm: 3 },
+          rowGap: { xs: 0.5, sm: 0.25 },
+          px: 2,
+        }}
       >
-        <Link component={RouterLink} to="/" variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
-          リクエスト一覧
-        </Link>
-        <Link component={RouterLink} to="/play" variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
-          再生
-        </Link>
-        <Link component={RouterLink} to="/stats" variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
-          集計
-        </Link>
-        <Link component={RouterLink} to="/heatmap" variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
-          ヒートマップ
-        </Link>
-        <Link component={RouterLink} to="/notice" variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
-          お知らせ
-        </Link>
-        <Link component={RouterLink} to="/guide" variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
-          使い方ガイド
-        </Link>
-        <Link component={RouterLink} to="/faq" variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
-          よくある質問
-        </Link>
-        <Link component={RouterLink} to="/about" variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
-          サイトについて
-        </Link>
-        <Link component={RouterLink} to="/privacy" variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
-          プライバシーポリシー
-        </Link>
-        <Link component={RouterLink} to="/terms" variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
-          利用規約
-        </Link>
-        <Link component={RouterLink} to="/copyright" variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
-          著作権ガイドライン
-        </Link>
-        <Link component={RouterLink} to="/contact" variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
-          お問い合わせ
-        </Link>
-      </Stack>
+        {LINKS.map(([to, label]) => (
+          <Link key={to} component={RouterLink} to={to} variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
+            {label}
+          </Link>
+        ))}
+      </Box>
       <Typography variant="caption" color="text.secondary" align="center" sx={{ display: "block", mt: 1.5 }}>
         © 2026 動画リクエストキュー
       </Typography>
