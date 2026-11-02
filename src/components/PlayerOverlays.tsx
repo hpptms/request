@@ -170,9 +170,9 @@ export function PlayerOverlays({
               sx={BADGE_CHIP_SX}
             />
             {periodicStatus?.upcoming && periodicStatus.upcoming.length > 0 && (
-              <Stack spacing={{ xs: 0.25, sm: 0.5, md: 0.75 }} sx={UPCOMING_LIST_SX}>
+              <Stack spacing={{ xs: 0.5, sm: 0.75, md: 1 }} sx={UPCOMING_LIST_SX}>
                 {periodicStatus.upcoming.map((r) => (
-                  <Stack key={r.id} direction="row" spacing={{ xs: 0.5, sm: 0.75, md: 1 }} sx={{ alignItems: "center", minWidth: 0 }}>
+                  <Stack key={r.id} direction="row" spacing={{ xs: 0.5, sm: 0.75, md: 1 }} sx={UPCOMING_ITEM_SX}>
                     <Box component="img" src={listThumbnail(r.thumbnailUrl)} alt="" sx={UPCOMING_THUMB_SX} />
                     <Typography noWrap translate="no" sx={UPCOMING_TITLE_SX}>
                       {r.title}
@@ -404,25 +404,48 @@ const BADGE_CHIP_SX = {
   color: "white",
   fontWeight: 600,
   height: { xs: 28, sm: 44, md: 72 },
-  borderRadius: { xs: 2, sm: 3, md: 4 },
+  borderRadius: 0,
+  borderLeft: { xs: "3px solid #00E5FF", md: "5px solid #00E5FF" },
   "& .MuiChip-label": { fontSize: { xs: "0.8rem", sm: "1.3rem", md: "2.4rem" }, px: { xs: 0.75, sm: 1.5, md: 2 } },
 };
 
+// Neon accent shared by the badge's edge bar, glow and label.
+const THEME_NEON = "linear-gradient(180deg, #00E5FF, #B14DFF)";
+
 // Upcoming-queue list under the periodic status count: one size smaller than
-// BADGE_CHIP_SX so five rows don't swamp the video. Thumbnails are cropped to
-// 16:9, which also trims the letterbox bars baked into YouTube's 4:3 default.jpg.
+// BADGE_CHIP_SX so five rows don't swamp the video. Each song is its own
+// square-cornered card with a neon edge bar, spaced apart rather than packed
+// into one panel. Thumbnails are cropped to 16:9, which also trims the
+// letterbox bars baked into YouTube's 4:3 default.jpg.
 const UPCOMING_LIST_SX = {
-  bgcolor: "rgba(0,0,0,0.7)",
-  borderRadius: { xs: 2, sm: 3, md: 4 },
-  p: { xs: 0.5, sm: 0.75, md: 1.25 },
+  alignItems: "flex-end",
   maxWidth: { xs: 200, sm: 320, md: 560 },
+};
+const UPCOMING_ITEM_SX = {
+  position: "relative",
+  alignItems: "center",
+  minWidth: 0,
+  maxWidth: "100%",
+  bgcolor: "rgba(0,0,0,0.7)",
+  boxShadow: "0 2px 8px rgba(0,0,0,0.35)",
+  py: { xs: 0.4, sm: 0.5, md: 0.75 },
+  pr: { xs: 0.75, sm: 1, md: 1.5 },
+  pl: { xs: "7px", sm: "9px", md: "14px" },
+  "&::before": {
+    content: '""',
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: { xs: 3, md: 5 },
+    background: THEME_NEON,
+  },
 };
 const UPCOMING_THUMB_SX = {
   flexShrink: 0,
   width: { xs: 39, sm: 57, md: 96 },
   height: { xs: 22, sm: 32, md: 54 },
   objectFit: "cover",
-  borderRadius: { xs: 0.5, md: 1 },
 };
 const UPCOMING_TITLE_SX = {
   color: "white",
@@ -430,9 +453,6 @@ const UPCOMING_TITLE_SX = {
   minWidth: 0,
   fontSize: { xs: "0.7rem", sm: "0.95rem", md: "1.5rem" },
 };
-
-// Neon accent shared by the badge's edge bar, glow and label.
-const THEME_NEON = "linear-gradient(180deg, #00E5FF, #B14DFF)";
 
 // Animations shared by TodayThemeBadge and RequesterBadge. Spread into each
 // badge's sx so they're injected even when only one badge is showing.
