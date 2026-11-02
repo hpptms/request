@@ -171,6 +171,9 @@ function AdminFeaturesPage() {
                   checked={longVideoWeekdays.includes(day)}
                   onChange={(e) =>
                     saveDurationLimit({
+                      // Sent along so a backend without longVideoWeekdays
+                      // doesn't read the missing threshold as 0 (短縮しない).
+                      thresholdSeconds,
                       longVideoWeekdays: e.target.checked
                         ? [...longVideoWeekdays, day]
                         : longVideoWeekdays.filter((d) => d !== day),
