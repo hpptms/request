@@ -25,6 +25,9 @@ interface Props {
   // 今日のテーマ (see useTodayTheme): shown just above the title card, popping
   // in and out together with it. Nothing extra is shown while empty.
   todayThemes: string[];
+  // 長い動画もOKモードの日 (see AppConfig.longVideoModeActive): a 普通の動画OK
+  // badge just above 今日のテーマ, shown and hidden together with it.
+  longVideoMode?: boolean;
   // Duration badge, shown a few seconds after the title card.
   durationBadgeVisible: boolean;
   durationBadgeSeconds: number | null;
@@ -70,6 +73,7 @@ export function PlayerOverlays({
   introVisible,
   introContent,
   todayThemes,
+  longVideoMode = false,
   durationBadgeVisible,
   durationBadgeSeconds,
   periodicStatusVisible = false,
@@ -92,10 +96,11 @@ export function PlayerOverlays({
       {/* Music-program-style title card (with 今日のテーマ stacked above it): pops in when a video starts, pops out after NOW_PLAYING_INTRO_MS. Border color varies per video (requestAccentColor) instead of always the theme red. */}
       <Box sx={{ position: "absolute", left: 0, right: 0, bottom: { xs: 8, sm: 16, md: 24 }, display: "flex", flexDirection: "column", alignItems: "center", gap: { xs: 0.5, sm: 1, md: 1.5 }, px: { xs: 1.5, sm: 3 }, pointerEvents: "none" }}>
         {/* Requester name stacked above 今日のテーマ (side by side they didn't fit next to two themes): same introVisible as the title card below, so they show and hide together. The name badge only appears when the requester filled one in. */}
-        {(todayThemes.length > 0 || introContent?.requesterName) && (
+        {(todayThemes.length > 0 || longVideoMode || introContent?.requesterName) && (
           <Fade in={introVisible} timeout={{ enter: 200, exit: 250 }}>
             <Box sx={{ maxWidth: "90%", display: "flex", flexDirection: "column", alignItems: "center", gap: { xs: 0.5, sm: 1, md: 1.5 }, px: { xs: 1, md: 2 }, "& > *": { maxWidth: "100%" } }}>
               {introContent?.requesterName && <RequesterBadge name={introContent.requesterName} animate={introVisible} />}
+              {longVideoMode && <LongVideoOkBadge animate={introVisible} />}
               {todayThemes.length > 0 && <TodayThemeBadge texts={todayThemes} animate={introVisible} />}
             </Box>
           </Fade>
@@ -572,6 +577,76 @@ function TodayThemeBadge({ texts, animate }: { texts: string[]; animate: boolean
             {text}
           </Typography>
         ))}
+      </Box>
+    </Box>
+  );
+}
+
+// "普通の動画OK" on 長い動画もOKモード days: same slanted glass plate and
+// animation sequence as TodayThemeBadge, in green so it reads as a notice
+// rather than a second theme.
+function LongVideoOkBadge({ animate }: { animate: boolean }) {
+  const run = (value: string) => (animate ? value : "none");
+  return (
+    <Box
+      sx={{
+        position: "relative",
+        minWidth: 0,
+        display: "flex",
+        overflow: "hidden",
+        transform: "skewX(-14deg)",
+        bgcolor: "rgba(6, 18, 10, 0.82)",
+        backdropFilter: "blur(6px)",
+        borderRadius: { xs: 0.5, md: 1 },
+        boxShadow: "0 0 0 1px rgba(105, 240, 174, 0.45), 0 0 22px rgba(105, 240, 174, 0.35), 0 10px 30px rgba(0, 0, 0, 0.55)",
+        pl: { xs: 2, sm: 2.75, md: 4 },
+        pr: { xs: 1.5, sm: 2.25, md: 3.5 },
+        py: { xs: 0.5, sm: 0.75, md: 1.1 },
+        animation: run("todayThemeWipe 0.6s cubic-bezier(0.22, 1, 0.36, 1) both"),
+        "&::before": {
+          content: '""',
+          position: "absolute",
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: { xs: 5, sm: 7, md: 10 },
+          background: "linear-gradient(180deg, #69F0AE, #00C853)",
+          boxShadow: "0 0 14px rgba(105, 240, 174, 0.9)",
+          animation: run("todayThemeBreathe 2.2s 0.6s ease-in-out infinite"),
+        },
+        "&::after": {
+          content: '""',
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.22) 50%, transparent 65%)",
+          transform: "translateX(-110%)",
+          animation: run("todayThemeSweep 3.6s 0.7s ease-in-out infinite"),
+        },
+        ...BADGE_KEYFRAMES,
+        "@media (prefers-reduced-motion: reduce)": {
+          animation: "none",
+          "&::before, &::after": { animation: "none" },
+          "& *": { animation: "none !important" },
+        },
+      }}
+    >
+      <Box sx={{ transform: "skewX(14deg)", minWidth: 0, display: "flex" }}>
+        <Typography
+          component="span"
+          noWrap
+          sx={{
+            minWidth: 0,
+            color: "#FFFFFF",
+            fontWeight: 900,
+            lineHeight: 1.25,
+            letterSpacing: "0.04em",
+            fontSize: { xs: "0.9rem", sm: "1.3rem", md: "2.1rem" },
+            textShadow: "0 0 12px rgba(105, 240, 174, 0.55), 0 2px 4px rgba(0, 0, 0, 0.6)",
+            animation: run("todayThemeSlideIn 0.55s 0.35s cubic-bezier(0.22, 1, 0.36, 1) both"),
+          }}
+        >
+          普通の動画OK
+        </Typography>
       </Box>
     </Box>
   );

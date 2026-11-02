@@ -1219,6 +1219,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
               introVisible={introVisible}
               introContent={introContent}
               todayThemes={todayThemes}
+              longVideoMode={longVideoFastForward.active}
               durationBadgeVisible={durationBadgeVisible}
               durationBadgeSeconds={durationBadgeSeconds}
               periodicStatusVisible={periodicStatusVisible}
