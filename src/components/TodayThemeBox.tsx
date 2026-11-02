@@ -11,6 +11,7 @@ import SendIcon from "@mui/icons-material/Send";
 import { Link as RouterLink, useLocation } from "react-router-dom";
 import { api } from "../api";
 import { useTodayThemeState } from "../lib/useTodayTheme";
+import { useLongVideoModeActive } from "../lib/useLongVideoModeActive";
 
 // Mirrors backend theme.MaxTextRunes.
 const MAX_LENGTH = 40;
@@ -20,6 +21,7 @@ const MAX_LENGTH = 40;
 // 翌日のテーマの投票と採用履歴は /themes。
 export function TodayThemeBox({ onLoaded }: { onLoaded?: () => void } = {}) {
   const { texts: todayThemes, loaded } = useTodayThemeState();
+  const longVideoMode = useLongVideoModeActive();
   useEffect(() => {
     if (loaded) onLoaded?.();
   }, [loaded, onLoaded]);
@@ -81,6 +83,29 @@ export function TodayThemeBox({ onLoaded }: { onLoaded?: () => void } = {}) {
               </Typography>
             </Stack>
           ))}
+        </Stack>
+      )}
+      {/* 長い動画もOKモードの日 (see AppConfig.longVideoModeActive): highlighted so it isn't missed under the themes. */}
+      {longVideoMode && (
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            alignItems: "baseline",
+            mt: 0.75,
+            px: 1,
+            py: 0.5,
+            borderRadius: 1,
+            background: "linear-gradient(90deg, #FFD600, #FF9100)",
+            color: "#1A1000",
+          }}
+        >
+          <Typography variant="caption" sx={{ fontWeight: 900, fontStyle: "italic", flexShrink: 0 }}>
+            ex
+          </Typography>
+          <Typography variant="subtitle1" sx={{ fontWeight: 900, lineHeight: 1.3 }}>
+            普通の動画もOK
+          </Typography>
         </Stack>
       )}
       <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
