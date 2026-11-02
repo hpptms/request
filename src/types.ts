@@ -88,6 +88,15 @@ export interface AppConfig {
   // admin has turned this off ("短縮しない").
   durationLimitThresholdSeconds: number;
   durationLimitCapSeconds: number;
+  // 長い動画もOKモード (see AdminFeaturesPage): on the admin-chosen weekdays
+  // durationLimitThresholdSeconds is already raised to cover videos up to
+  // longVideoMaxSeconds, and while fastForwardActive a video longer than
+  // longVideoFastForwardThresholdSeconds uses longVideoFastForwardCapSeconds
+  // in place of fastForwardCapSeconds (and fastForwardJoinSeconds).
+  longVideoModeActive?: boolean;
+  longVideoMaxSeconds?: number;
+  longVideoFastForwardThresholdSeconds?: number;
+  longVideoFastForwardCapSeconds?: number;
   // A request made with the "2分でリクエスト" button (VideoRequest's
   // twoMinuteRequest) is capped at this many seconds — see ViewerPage's
   // playback-capping effect.
@@ -275,6 +284,11 @@ export interface KeywordLimit {
 export interface DurationLimit {
   thresholdSeconds: number;
   capSeconds: number;
+  // 長い動画もOKモードの曜日 (JST, 0=日曜 … 6=土曜) and its fixed limits.
+  longVideoWeekdays: number[];
+  longVideoMaxSeconds: number;
+  longVideoFastForwardThresholdSeconds: number;
+  longVideoFastForwardCapSeconds: number;
 }
 
 // A daily fast-forward window (see backend/internal/fastforward): starting

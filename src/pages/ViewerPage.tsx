@@ -21,6 +21,9 @@ import { usePlayChat } from "../lib/usePlayChat";
 import { useTodayTheme } from "../lib/useTodayTheme";
 import { useFastForwardPacingPopups } from "../lib/useFastForwardPacingPopups";
 import { getPlayableSeconds } from "../lib/playableSeconds";
+import { useStableState } from "../lib/useStableState";
+import { DEFAULT_LONG_VIDEO_FAST_FORWARD, longVideoFastForwardCap } from "../lib/longVideoMode";
+import type { LongVideoFastForward } from "../lib/longVideoMode";
 import {
   DURATION_BADGE_DELAY_MS,
   DURATION_BADGE_VISIBLE_MS,
@@ -172,6 +175,10 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // 長い動画の短縮(see AppConfig.durationLimitThresholdSeconds): 0はオフ。
   const [durationLimitThresholdSeconds, setDurationLimitThresholdSeconds] = useState(0);
   const [durationLimitCapSeconds, setDurationLimitCapSeconds] = useState(30);
+  // 長い動画もOKモードの時短ルール (see AppConfig.longVideoModeActive).
+  const [longVideoFastForward, setLongVideoFastForward] = useStableState<LongVideoFastForward>(
+    DEFAULT_LONG_VIDEO_FAST_FORWARD,
+  );
   // "2分でリクエスト" cap (see AppConfig.twoMinuteRequestCapSeconds).
   const [twoMinuteRequestCapSeconds, setTwoMinuteRequestCapSeconds] = useState(120);
   // Always true: this screen auto-starts as soon as it's opened, no click
@@ -230,8 +237,9 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     playingRequest?.id ?? null,
     fastForwardActive,
     playingRequest?.fastForwardCutoffSeconds
-      ? fastForwardJoinSeconds
-      : fastForwardCapSeconds + fastForwardPerLikeSeconds * (playingRequest?.likes ?? 0),
+      ? (longVideoFastForwardCap(playingRequest, longVideoFastForward) ?? fastForwardJoinSeconds)
+      : (longVideoFastForwardCap(playingRequest, longVideoFastForward) ?? fastForwardCapSeconds) +
+          fastForwardPerLikeSeconds * (playingRequest?.likes ?? 0),
   );
   const [fallbackNowPlayingId, setFallbackNowPlayingId] = useState<string | null>(null);
   // World/Japan Top 100 tracks from the backend; empty until resolved (or
@@ -354,6 +362,12 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
           setFastForwardCancelVoteTiers(config.fastForwardCancelVoteTiers);
           setDurationLimitThresholdSeconds(config.durationLimitThresholdSeconds);
           setDurationLimitCapSeconds(config.durationLimitCapSeconds);
+          setLongVideoFastForward({
+            active: config.longVideoModeActive ?? false,
+            thresholdSeconds:
+              config.longVideoFastForwardThresholdSeconds ?? DEFAULT_LONG_VIDEO_FAST_FORWARD.thresholdSeconds,
+            capSeconds: config.longVideoFastForwardCapSeconds ?? DEFAULT_LONG_VIDEO_FAST_FORWARD.capSeconds,
+          });
           setTwoMinuteRequestCapSeconds(config.twoMinuteRequestCapSeconds);
         })
         .catch(() => {});
@@ -787,7 +801,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
         caps.push(twoMinuteRequestCapSeconds);
       }
     } else if (fastForwardActive) {
-      caps.push(fastForwardCapSeconds);
+      caps.push(longVideoFastForwardCap(current, longVideoFastForward) ?? fastForwardCapSeconds);
       for (const tier of fastForwardCancelVoteTiers) {
         if (current.cancelVotes >= tier.votes) caps.push(tier.capSeconds);
       }

@@ -5,6 +5,8 @@ import { trackEvent } from "./analytics";
 import { markMyRequest } from "./myRequestStorage";
 import { setVoteQuota } from "./voteQuota";
 import { useStableState } from "./useStableState";
+import { DEFAULT_LONG_VIDEO_FAST_FORWARD, longVideoFastForwardCap } from "./longVideoMode";
+import type { LongVideoFastForward } from "./longVideoMode";
 import { visibleInterval } from "./visibleInterval";
 
 const POLL_INTERVAL_MS = 4000;
@@ -60,6 +62,11 @@ export function useRequestQueue(source: string) {
   // meaningful while fastForwardActive.
   const [fastForwardCapSeconds, setFastForwardCapSeconds] = useState(0);
   const [fastForwardPerLikeSeconds, setFastForwardPerLikeSeconds] = useState(0);
+  // 長い動画もOKモードの時短ルール — replaces fastForwardCapSeconds for a
+  // long playing request (see AppConfig.longVideoModeActive).
+  const [longVideoFastForward, setLongVideoFastForward] = useStableState<LongVideoFastForward>(
+    DEFAULT_LONG_VIDEO_FAST_FORWARD,
+  );
   const [likePriorityThreshold, setLikePriorityThreshold] = useState(DEFAULT_LIKE_PRIORITY_THRESHOLD);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -87,6 +94,12 @@ export function useRequestQueue(source: string) {
           setFastForwardActive(config.fastForwardActive);
           setFastForwardCapSeconds(config.fastForwardCapSeconds);
           setFastForwardPerLikeSeconds(config.fastForwardPerLikeSeconds ?? 0);
+          setLongVideoFastForward({
+            active: config.longVideoModeActive ?? false,
+            thresholdSeconds:
+              config.longVideoFastForwardThresholdSeconds ?? DEFAULT_LONG_VIDEO_FAST_FORWARD.thresholdSeconds,
+            capSeconds: config.longVideoFastForwardCapSeconds ?? DEFAULT_LONG_VIDEO_FAST_FORWARD.capSeconds,
+          });
           setFastForwardCancelVoteTiers(config.fastForwardCancelVoteTiers);
           setLikePriorityThreshold(config.likePriorityThreshold);
         })
@@ -256,7 +269,9 @@ export function useRequestQueue(source: string) {
     cancelVoteThreshold,
     cancelVoteTiers: cancelVoteTiers.length > 0 ? cancelVoteTiers : DEFAULT_CANCEL_VOTE_TIERS,
     fastForwardActive,
-    fastForwardCapSeconds: fastForwardCapSeconds + fastForwardPerLikeSeconds * (nowPlaying?.likes ?? 0),
+    fastForwardCapSeconds:
+      (longVideoFastForwardCap(nowPlaying, longVideoFastForward) ?? fastForwardCapSeconds) +
+      fastForwardPerLikeSeconds * (nowPlaying?.likes ?? 0),
     fastForwardCancelVoteTiers:
       fastForwardCancelVoteTiers.length > 0 ? fastForwardCancelVoteTiers : DEFAULT_FAST_FORWARD_CANCEL_VOTE_TIERS,
     likePriorityThreshold,

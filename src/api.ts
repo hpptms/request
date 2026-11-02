@@ -389,10 +389,11 @@ export const api = {
 
   adminGetDurationLimit: () => request<DurationLimit>("/admin/durationlimit"),
 
-  adminSetDurationLimit: (thresholdSeconds: number) =>
+  // Omitted fields are left unchanged.
+  adminSetDurationLimit: (settings: { thresholdSeconds?: number; longVideoWeekdays?: number[] }) =>
     request<DurationLimit>("/admin/durationlimit", {
       method: "PUT",
-      body: JSON.stringify({ thresholdSeconds }),
+      body: JSON.stringify(settings),
     }),
 
   // Polled by useBroadcastOverlay (viewer/play screens) to detect a new

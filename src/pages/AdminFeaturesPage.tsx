@@ -3,12 +3,14 @@ import Alert from "@mui/material/Alert";
 import Checkbox from "@mui/material/Checkbox";
 import FormControl from "@mui/material/FormControl";
 import FormControlLabel from "@mui/material/FormControlLabel";
+import FormGroup from "@mui/material/FormGroup";
 import Paper from "@mui/material/Paper";
 import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { api } from "../api";
+import type { DurationLimit } from "../types";
 
 // 長い動画を短縮する閾値のプリセット。値は秒。0は「短縮しない」(機能オフ)。
 const thresholdOptions = [
@@ -23,13 +25,20 @@ const thresholdOptions = [
   { value: 0, label: "短縮しない" },
 ] as const;
 
+// 長い動画もOKモードの曜日チェックボックス。値はJSTの曜日 (0=日曜)。
+const weekdayLabels = ["日", "月", "火", "水", "木", "金", "土"] as const;
+
 // 機能タブ (/admin/features): 長い動画をリクエストされた際、一定の長さ以上
 // なら再生時間を一律capSeconds(backend/internal/durationlimit)まで短縮する
 // かどうかと、その閾値を設定する。あわせて/viewer左下のコメント表示の
-// オン/オフも切り替える。
+// オン/オフも切り替え、長い動画もOKモードを有効にする曜日を選ぶ。
 function AdminFeaturesPage() {
   const [thresholdSeconds, setThresholdSeconds] = useState(0);
   const [capSeconds, setCapSeconds] = useState(30);
+  const [longVideoWeekdays, setLongVideoWeekdays] = useState<number[]>([]);
+  const [longVideoMaxSeconds, setLongVideoMaxSeconds] = useState(3600);
+  const [longVideoFastForwardThresholdSeconds, setLongVideoFastForwardThresholdSeconds] = useState(600);
+  const [longVideoFastForwardCapSeconds, setLongVideoFastForwardCapSeconds] = useState(300);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -61,25 +70,29 @@ function AdminFeaturesPage() {
     }
   };
 
+  const applyDurationLimit = (limit: DurationLimit) => {
+    setThresholdSeconds(limit.thresholdSeconds);
+    setCapSeconds(limit.capSeconds);
+    setLongVideoWeekdays(limit.longVideoWeekdays ?? []);
+    setLongVideoMaxSeconds(limit.longVideoMaxSeconds);
+    setLongVideoFastForwardThresholdSeconds(limit.longVideoFastForwardThresholdSeconds);
+    setLongVideoFastForwardCapSeconds(limit.longVideoFastForwardCapSeconds);
+  };
+
   useEffect(() => {
     api
       .adminGetDurationLimit()
-      .then((limit) => {
-        setThresholdSeconds(limit.thresholdSeconds);
-        setCapSeconds(limit.capSeconds);
-      })
+      .then(applyDurationLimit)
       .catch((err) => setErrorMessage(err instanceof Error ? err.message : "取得に失敗しました"))
       .finally(() => setLoading(false));
   }, []);
 
-  const handleChange = async (value: number) => {
+  const saveDurationLimit = async (settings: { thresholdSeconds?: number; longVideoWeekdays?: number[] }) => {
     setSaving(true);
     setErrorMessage(null);
     setSavedMessage(false);
     try {
-      const limit = await api.adminSetDurationLimit(value);
-      setThresholdSeconds(limit.thresholdSeconds);
-      setCapSeconds(limit.capSeconds);
+      applyDurationLimit(await api.adminSetDurationLimit(settings));
       setSavedMessage(true);
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "保存に失敗しました");
@@ -124,13 +137,52 @@ function AdminFeaturesPage() {
         <FormControl disabled={loading || saving}>
           <RadioGroup
             value={thresholdSeconds}
-            onChange={(e) => handleChange(Number(e.target.value))}
+            onChange={(e) => saveDurationLimit({ thresholdSeconds: Number(e.target.value) })}
           >
             {thresholdOptions.map((opt) => (
               <FormControlLabel key={opt.value} value={opt.value} control={<Radio />} label={opt.label} />
             ))}
           </RadioGroup>
         </FormControl>
+      </Paper>
+
+      <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
+        <Typography variant="h6" gutterBottom>
+          長い動画もOKモード
+        </Typography>
+        <Typography variant="body2" color="text.secondary" component="div" sx={{ mb: 2 }}>
+          チェックした曜日（日本時間 0:00〜24:00）は長い動画をそのまま再生します。
+          <ul style={{ margin: "4px 0 0", paddingLeft: "1.5em" }}>
+            <li>{longVideoMaxSeconds / 60}分までの動画は「長い動画の短縮」の対象外になります</li>
+            <li>
+              時短タイム中は{longVideoFastForwardThresholdSeconds / 60}分を超える動画を
+              {longVideoFastForwardCapSeconds / 60}分で切り替えます（
+              {longVideoFastForwardThresholdSeconds / 60}分以下の動画はいつも通り）
+            </li>
+            <li>いいねでの延長・badでの短縮はいつも通り効きます</li>
+          </ul>
+        </Typography>
+        <FormGroup row>
+          {weekdayLabels.map((label, day) => (
+            <FormControlLabel
+              key={day}
+              control={
+                <Checkbox
+                  checked={longVideoWeekdays.includes(day)}
+                  onChange={(e) =>
+                    saveDurationLimit({
+                      longVideoWeekdays: e.target.checked
+                        ? [...longVideoWeekdays, day]
+                        : longVideoWeekdays.filter((d) => d !== day),
+                    })
+                  }
+                />
+              }
+              label={label}
+              disabled={loading || saving}
+            />
+          ))}
+        </FormGroup>
       </Paper>
     </Stack>
   );
