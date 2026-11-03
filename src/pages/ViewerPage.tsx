@@ -463,12 +463,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
         // all. cc_load_policy=0 keeps captions off; since that alone can
         // still be overridden by the viewer's own YouTube caption settings,
         // the captions module is also unloaded whenever playback starts
-        // (see onStateChange). hl=ja sets the player language to Japanese so
-        // that, for videos with multiple audio tracks (e.g. YouTube's
-        // dubbed tracks), YouTube's default track choice leans Japanese —
-        // the IFrame API has no official way to pick an audio track
-        // directly. Music videos almost never carry dubbed tracks, so they
-        // keep playing in their original language.
+        // (see onStateChange).
         playerVars: {
           autoplay: 1,
           rel: 0,
@@ -479,7 +474,6 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
           iv_load_policy: 3,
           fs: 0,
           cc_load_policy: 0,
-          hl: "ja",
         },
         events: {
           onReady: () => setPlayerReady(true),
