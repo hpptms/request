@@ -19,3 +19,6 @@ export const PERIODIC_STATUS_VISIBLE_MS = 5000;
 // How many queued videos (from the head of the queue) the periodic status
 // lists under the count.
 export const PERIODIC_STATUS_UPCOMING_COUNT = 5;
+// The upcoming list only rides along on every Nth periodic status (the 1st,
+// (N+1)th, ...); the others show just the remaining time + queued count.
+export const PERIODIC_STATUS_UPCOMING_EVERY = 3;

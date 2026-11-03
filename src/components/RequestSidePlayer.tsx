@@ -22,6 +22,7 @@ import {
   NOW_PLAYING_INTRO_MS,
   PERIODIC_STATUS_INTERVAL_MS,
   PERIODIC_STATUS_UPCOMING_COUNT,
+  PERIODIC_STATUS_UPCOMING_EVERY,
   PERIODIC_STATUS_VISIBLE_MS,
   VOTE_STATUS_VISIBLE_MS,
 } from "../lib/playerOverlayTiming";
@@ -427,12 +428,18 @@ export function RequestSidePlayer({
     queueCount: 0,
     upcoming: [] as { id: string; title: string; thumbnailUrl: string }[],
   }));
+  // Which periodic status this is (0-based) — the upcoming list is only
+  // included on every PERIODIC_STATUS_UPCOMING_EVERY-th one.
+  const periodicStatusCountRef = useRef(0);
+  const periodicStatusShowUpcomingRef = useRef(false);
   readPeriodicStatusRef.current = () => ({
     remainingSeconds: computeRemainingSeconds(),
     queueCount: pendingList.length,
-    upcoming: pendingList
-      .slice(0, PERIODIC_STATUS_UPCOMING_COUNT)
-      .map((r) => ({ id: r.id, title: r.title, thumbnailUrl: r.thumbnailUrl })),
+    upcoming: periodicStatusShowUpcomingRef.current
+      ? pendingList
+          .slice(0, PERIODIC_STATUS_UPCOMING_COUNT)
+          .map((r) => ({ id: r.id, title: r.title, thumbnailUrl: r.thumbnailUrl }))
+      : [],
   });
 
   // Every PERIODIC_STATUS_INTERVAL_MS, show the periodic status for
@@ -442,6 +449,8 @@ export function RequestSidePlayer({
     const interval = window.setInterval(() => {
       if (durationBadgeShowTimerRef.current !== null || durationBadgeHideTimerRef.current !== null) return;
       if (periodicStatusHideTimerRef.current !== null) window.clearTimeout(periodicStatusHideTimerRef.current);
+      periodicStatusShowUpcomingRef.current = periodicStatusCountRef.current % PERIODIC_STATUS_UPCOMING_EVERY === 0;
+      periodicStatusCountRef.current += 1;
       setPeriodicStatus(readPeriodicStatusRef.current());
       setPeriodicStatusVisible(true);
       periodicStatusHideTimerRef.current = window.setTimeout(() => {
