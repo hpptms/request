@@ -1,9 +1,10 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import AdminReplyDialog from "./components/AdminReplyDialog";
 import LikeRankDialog from "./components/LikeRankDialog";
+import { AffiliateAdLayout } from "./components/AffiliateAds";
 import BoardPage from "./pages/BoardPage";
 import { api } from "./api";
 import { usePageViewTracking } from "./lib/usePageViewTracking";
@@ -83,6 +84,10 @@ function LazyPageFallback() {
   );
 }
 
+function AdWrapper({ show, seed, children }: { show: boolean; seed: string; children: ReactNode }) {
+  return show ? <AffiliateAdLayout seed={seed}>{children}</AffiliateAdLayout> : children;
+}
+
 function AppRoutes() {
   usePageViewTracking();
 
@@ -94,48 +99,53 @@ function AppRoutes() {
   // Replies are for visitors: not on the OBS page, and not in the admin
   // section (the admin's own IP would otherwise pop up their own replies).
   const showReplies = pathname !== "/viewer" && !pathname.startsWith("/admin");
+  // Affiliate banners: not on /play (video/queue fill the screen), the OBS
+  // page, or the admin section.
+  const showAds = pathname !== "/play" && pathname !== "/viewer" && !pathname.startsWith("/admin");
 
   return (
     <Suspense fallback={<LazyPageFallback />}>
       {showLikeRank && <LikeRankDialog />}
       {showReplies && <AdminReplyDialog />}
-      <Routes>
-        <Route path="/" element={<BoardPage />} />
-        <Route path="/play" element={<PlayPage />} />
-        <Route path="/stats" element={<StatsPage />} />
-        <Route path="/heatmap" element={<HeatmapPage />} />
-        <Route path="/notice" element={<NoticePage />} />
-        <Route path="/guide" element={<GuidePage />} />
-        <Route path="/faq" element={<FaqPage />} />
-        <Route path="/themes" element={<ThemesPage />} />
-        <Route path="/polls" element={<PollsPage />} />
-        <Route path="/terms" element={<TermsPage />} />
-        <Route path="/copyright" element={<CopyrightPage />} />
-        <Route path="/copyright-request" element={<CopyrightClaimPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/privacy" element={<PrivacyPolicyPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/viewer" element={<ViewerPage />} />
-        <Route path="/admin" element={<AdminPage />}>
-          <Route index element={<AdminBansPage />} />
-          <Route path="playlist" element={<AdminPlaylistPage />} />
-          <Route path="keywords" element={<AdminBlockedWordsPage />} />
-          <Route path="safewords" element={<AdminSafeListsPage />} />
-          {/* Old tab paths, now merged into the two tabs above. */}
-          <Route path="keywordlimits" element={<Navigate to="/admin/keywords" replace />} />
-          <Route path="safeips" element={<Navigate to="/admin/safewords" replace />} />
-          <Route path="fastforward" element={<AdminFastForwardPage />} />
-          <Route path="features" element={<AdminFeaturesPage />} />
-          <Route path="broadcast" element={<AdminBroadcastPage />} />
-          <Route path="interrupt" element={<AdminInterruptPage />} />
-          <Route path="messages" element={<AdminMessagesPage />} />
-          <Route path="live" element={<AdminNowLivePage />} />
-          <Route path="themes" element={<AdminThemesPage />} />
-          <Route path="polls" element={<AdminPollsPage />} />
-          <Route path="copyright" element={<AdminCopyrightClaimsPage />} />
-        </Route>
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+      <AdWrapper show={showAds} seed={pathname}>
+        <Routes>
+          <Route path="/" element={<BoardPage />} />
+          <Route path="/play" element={<PlayPage />} />
+          <Route path="/stats" element={<StatsPage />} />
+          <Route path="/heatmap" element={<HeatmapPage />} />
+          <Route path="/notice" element={<NoticePage />} />
+          <Route path="/guide" element={<GuidePage />} />
+          <Route path="/faq" element={<FaqPage />} />
+          <Route path="/themes" element={<ThemesPage />} />
+          <Route path="/polls" element={<PollsPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/copyright" element={<CopyrightPage />} />
+          <Route path="/copyright-request" element={<CopyrightClaimPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/viewer" element={<ViewerPage />} />
+          <Route path="/admin" element={<AdminPage />}>
+            <Route index element={<AdminBansPage />} />
+            <Route path="playlist" element={<AdminPlaylistPage />} />
+            <Route path="keywords" element={<AdminBlockedWordsPage />} />
+            <Route path="safewords" element={<AdminSafeListsPage />} />
+            {/* Old tab paths, now merged into the two tabs above. */}
+            <Route path="keywordlimits" element={<Navigate to="/admin/keywords" replace />} />
+            <Route path="safeips" element={<Navigate to="/admin/safewords" replace />} />
+            <Route path="fastforward" element={<AdminFastForwardPage />} />
+            <Route path="features" element={<AdminFeaturesPage />} />
+            <Route path="broadcast" element={<AdminBroadcastPage />} />
+            <Route path="interrupt" element={<AdminInterruptPage />} />
+            <Route path="messages" element={<AdminMessagesPage />} />
+            <Route path="live" element={<AdminNowLivePage />} />
+            <Route path="themes" element={<AdminThemesPage />} />
+            <Route path="polls" element={<AdminPollsPage />} />
+            <Route path="copyright" element={<AdminCopyrightClaimsPage />} />
+          </Route>
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </AdWrapper>
     </Suspense>
   );
 }
