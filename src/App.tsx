@@ -84,8 +84,8 @@ function LazyPageFallback() {
   );
 }
 
-function AdWrapper({ show, seed, children }: { show: boolean; seed: string; children: ReactNode }) {
-  return show ? <AffiliateAdLayout seed={seed}>{children}</AffiliateAdLayout> : children;
+function AdWrapper({ show, pathname, children }: { show: boolean; pathname: string; children: ReactNode }) {
+  return show ? <AffiliateAdLayout pathname={pathname}>{children}</AffiliateAdLayout> : children;
 }
 
 function AppRoutes() {
@@ -107,7 +107,7 @@ function AppRoutes() {
     <Suspense fallback={<LazyPageFallback />}>
       {showLikeRank && <LikeRankDialog />}
       {showReplies && <AdminReplyDialog />}
-      <AdWrapper show={showAds} seed={pathname}>
+      <AdWrapper show={showAds} pathname={pathname}>
         <Routes>
           <Route path="/" element={<BoardPage />} />
           <Route path="/play" element={<PlayPage />} />

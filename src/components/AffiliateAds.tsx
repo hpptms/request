@@ -73,26 +73,43 @@ function AdLabel() {
   );
 }
 
-// Right-hand column on md+ screens; sticks to the top while the page scrolls.
-// Remounted per route (key) so each page view can draw a different banner.
-function AdSidebar() {
+// The pages lay themselves out (full-width header, centered content column),
+// so the ads are overlaid with position: fixed instead of squeezing the page
+// into a flex row — that cut every page's header short. The sidebar only
+// shows when the viewport leaves room for it beside the content column;
+// narrower screens get the bottom bar instead.
+const SIDEBAR_WIDTH = 300;
+const SIDEBAR_MARGIN = 16;
+// Content column widths: TEXT_CONTAINER_SX caps most pages at 720px; the
+// stats/heatmap pages use MUI's "md" container (900px).
+const WIDE_PAGES = new Set(["/stats", "/heatmap"]);
+function sidebarMediaQuery(pathname: string) {
+  const content = WIDE_PAGES.has(pathname) ? 900 : 720;
+  const minWidth = content + 2 * (SIDEBAR_WIDTH + SIDEBAR_MARGIN * 2);
+  return {
+    sidebar: `@media (min-width: ${minWidth}px)`,
+    bar: `@media (max-width: ${minWidth - 0.02}px)`,
+  };
+}
+
+// Fixed to the right edge, below the page header. Remounted per route (key)
+// so each page view can draw a different banner.
+function AdSidebar({ media }: { media: string }) {
   const [banner] = useState(() => SIDEBAR_BANNERS[Math.floor(Math.random() * SIDEBAR_BANNERS.length)]);
   return (
     <Box
       component="aside"
       aria-label="広告"
       sx={{
-        display: { xs: "none", md: "flex" },
+        display: "none",
+        [media]: { display: "flex" },
+        position: "fixed",
+        top: 80,
+        right: SIDEBAR_MARGIN,
+        width: SIDEBAR_WIDTH,
         flexDirection: "column",
         alignItems: "center",
         gap: 1,
-        width: 300,
-        flexShrink: 0,
-        position: "sticky",
-        top: 16,
-        alignSelf: "flex-start",
-        mt: 2,
-        mr: 2,
       }}
     >
       <AdLabel />
@@ -104,14 +121,15 @@ function AdSidebar() {
   );
 }
 
-// Fixed bar at the bottom of the screen below md.
-function MobileAdBar() {
+// Fixed bar at the bottom of the screen when there's no room for the sidebar.
+function MobileAdBar({ media }: { media: string }) {
   return (
     <Box
       component="aside"
       aria-label="広告"
       sx={{
-        display: { xs: "flex", md: "none" },
+        display: "none",
+        [media]: { display: "flex" },
         position: "fixed",
         left: 0,
         right: 0,
@@ -133,17 +151,17 @@ function MobileAdBar() {
   );
 }
 
-// Wraps a page with the ad sidebar (PC) / fixed bottom bar (phones).
-export function AffiliateAdLayout({ seed, children }: { seed: string; children: ReactNode }) {
+// Adds the ad sidebar (wide screens) / fixed bottom bar (others) on top of a
+// page without touching the page's own layout.
+export function AffiliateAdLayout({ pathname, children }: { pathname: string; children: ReactNode }) {
+  const media = sidebarMediaQuery(pathname);
   return (
-    <Box sx={{ display: "flex", alignItems: "stretch" }}>
-      <Box sx={{ flex: 1, minWidth: 0 }}>
-        {children}
-        {/* Keeps the page's last content (footer) from ending up under the fixed bar. */}
-        <Box sx={{ display: { xs: "block", md: "none" }, height: `calc(${MOBILE_AD_BAR_HEIGHT}px + env(safe-area-inset-bottom))` }} />
-      </Box>
-      <AdSidebar key={`side-${seed}`} />
-      <MobileAdBar key={`bar-${seed}`} />
-    </Box>
+    <>
+      {children}
+      {/* Keeps the page's last content (footer) from ending up under the fixed bar. */}
+      <Box sx={{ display: "none", [media.bar]: { display: "block" }, height: `calc(${MOBILE_AD_BAR_HEIGHT}px + env(safe-area-inset-bottom))` }} />
+      <AdSidebar key={`side-${pathname}`} media={media.sidebar} />
+      <MobileAdBar key={`bar-${pathname}`} media={media.bar} />
+    </>
   );
 }
