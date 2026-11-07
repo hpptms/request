@@ -85,7 +85,10 @@ function AdminThemesPage() {
   };
 
   const pending = themes.filter((t) => t.status === "pending");
-  const approved = themes.filter((t) => t.status === "approved");
+  // Never-picked themes first; otherwise keep the server's order (stable sort).
+  const approved = themes
+    .filter((t) => t.status === "approved")
+    .sort((a, b) => Number(a.pickCount > 0) - Number(b.pickCount > 0));
   // The current round is whichever pick count is lowest among approved
   // themes; those still at it are next in line.
   const minPicks = approved.length > 0 ? Math.min(...approved.map((t) => t.pickCount)) : 0;
