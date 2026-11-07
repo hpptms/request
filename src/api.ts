@@ -32,6 +32,7 @@ import type {
   ThemeBallot,
   BanEvasion,
   SafeIP,
+  Watchlist,
   TimeSlot,
   VideoRequest,
   VoteOnlyVoter,
@@ -349,6 +350,32 @@ export const api = {
 
   adminRemoveSafeWord: (word: string) =>
     request<void>(`/admin/safewords/${encodeURIComponent(word)}`, { method: "DELETE" }),
+
+  // 制限モード (backend/internal/watchlist): lift a ban on probation, with
+  // stricter keyword checks and an automatic re-ban after repeated strikes.
+  adminGetWatchlist: () => request<Watchlist>("/admin/watchlist"),
+
+  adminAddWatchlist: (ip: string, note = "") =>
+    request<{ ok: boolean }>("/admin/watchlist", {
+      method: "POST",
+      body: JSON.stringify({ ip, note }),
+    }),
+
+  // Moves every permanent manual ban (手動BAN) to restricted mode at once.
+  adminConvertPermanentBans: () =>
+    request<{ converted: number }>("/admin/watchlist/convert-permanent-bans", { method: "POST" }),
+
+  adminRemoveWatchlist: (ip: string) =>
+    request<void>(`/admin/watchlist/users/${encodeURIComponent(ip)}`, { method: "DELETE" }),
+
+  adminAddWatchlistKeyword: (keyword: string) =>
+    request<{ ok: boolean }>("/admin/watchlist/keywords", {
+      method: "POST",
+      body: JSON.stringify({ keyword }),
+    }),
+
+  adminRemoveWatchlistKeyword: (keyword: string) =>
+    request<void>(`/admin/watchlist/keywords/${encodeURIComponent(keyword)}`, { method: "DELETE" }),
 
   // Safe IPs: keep working even while banned and are never auto-banned
   // (backend/internal/safeip).

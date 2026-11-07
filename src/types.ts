@@ -582,3 +582,41 @@ export interface SafeIP {
   note: string;
   addedAt: string;
 }
+
+// 制限モード (backend/internal/watchlist): a user whose permanent ban an
+// admin lifted on probation. Requests matching the watchlist keywords (title
+// or channel title), global banned keywords, blocked uploaders or
+// sensitive/age-restricted videos are refused and counted as strikes;
+// strikeLimit strikes ban them permanently again.
+export interface WatchlistLinkedIP {
+  ip: string;
+  linkedAt: string;
+}
+
+export interface WatchlistStrike {
+  at: string;
+  ip: string;
+  title?: string;
+  channelTitle?: string;
+  url?: string;
+  reason: string;
+}
+
+export interface WatchlistUser {
+  ip: string;
+  note: string;
+  banReason?: string;
+  addedAt: string;
+  fingerprints: string[];
+  linkedIPs: WatchlistLinkedIP[];
+  strikeCount: number;
+  strikes: WatchlistStrike[];
+  // Set once the user reached strikeLimit and was banned again.
+  bannedAt?: string;
+}
+
+export interface Watchlist {
+  users: WatchlistUser[];
+  keywords: string[];
+  strikeLimit: number;
+}

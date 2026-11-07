@@ -26,8 +26,10 @@ import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 import TimerIcon from "@mui/icons-material/Timer";
 import VpnLockIcon from "@mui/icons-material/VpnLock";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import GppMaybeIcon from "@mui/icons-material/GppMaybe";
 import { api } from "../api";
 import { visibleInterval } from "../lib/visibleInterval";
+import AdminWatchlistSection from "./AdminWatchlistSection";
 import type {
   AdminVideoRequest,
   BanEvasion,
@@ -103,6 +105,8 @@ function AdminBansPage() {
   const [multiDeviceIPs, setMultiDeviceIPs] = useState<MultiDeviceIP[]>([]);
   const [banEvasions, setBanEvasions] = useState<BanEvasion[]>([]);
   const [manualIP, setManualIP] = useState("");
+  // Bumped after moving a ban to 制限モード so AdminWatchlistSection refetches.
+  const [watchlistRefreshKey, setWatchlistRefreshKey] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   // Which flagged IP's request history is currently expanded (see
   // suspiciousUsers below); null = all collapsed.
@@ -188,6 +192,19 @@ function AdminBansPage() {
       await refresh();
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "解除に失敗しました");
+    }
+  };
+
+  // Lifts a permanent manual ban and puts the IP under 制限モード (see
+  // AdminWatchlistSection).
+  const handleToWatchlist = async (ip: string) => {
+    if (!window.confirm(`${ip} のBANを解除し、制限モードに切り替えます。よろしいですか？`)) return;
+    try {
+      await api.adminAddWatchlist(ip);
+      await refresh();
+      setWatchlistRefreshKey((k) => k + 1);
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "制限モードへの切り替えに失敗しました");
     }
   };
 
@@ -380,15 +397,24 @@ function AdminBansPage() {
                   key={b.ip}
                   divider={i < bans.length - 1}
                   secondaryAction={
-                    <Tooltip title="解除">
-                      <IconButton edge="end" onClick={() => handleUnban(b.ip)}>
-                        <LockOpenIcon />
-                      </IconButton>
-                    </Tooltip>
+                    <Stack direction="row" spacing={0.5}>
+                      {b.reason === "manual" && !b.expiresAt && (
+                        <Tooltip title="BANを解除して制限モードに切り替え">
+                          <IconButton color="warning" onClick={() => handleToWatchlist(b.ip)}>
+                            <GppMaybeIcon />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                      <Tooltip title="解除">
+                        <IconButton edge="end" onClick={() => handleUnban(b.ip)}>
+                          <LockOpenIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </Stack>
                   }
                 >
                   <ListItemText
-                    sx={{ pr: 6 }}
+                    sx={{ pr: b.reason === "manual" && !b.expiresAt ? 12 : 6 }}
                     primary={
                       <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                         <span>{b.ip}</span>
@@ -433,6 +459,10 @@ function AdminBansPage() {
           </Paper>
         )}
       </Box>
+
+      <Divider />
+      <AdminWatchlistSection refreshKey={watchlistRefreshKey} onChanged={refresh} />
+      <Divider />
 
       {recentBadVoteUsers.length > 0 && (
         <Box>
