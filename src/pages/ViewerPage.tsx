@@ -453,7 +453,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
       playerRef.current = new YTApi.Player(PLAYER_ELEMENT_ID, {
         width: "100%",
         height: "100%",
-        // disablekb off (controls left at YouTube's default for now): seeking to the end here fires the same
+        // controls/disablekb off: seeking to the end here fires the same
         // ENDED event handleEnded uses to advance the queue. iv_load_policy
         // drops the old annotations overlay; modestbranding/fs trim what
         // YouTube's own chrome would otherwise draw on top of the video —
@@ -468,6 +468,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
           autoplay: 1,
           rel: 0,
           playsinline: 1,
+          controls: 0,
           disablekb: 1,
           modestbranding: 1,
           iv_load_policy: 3,
