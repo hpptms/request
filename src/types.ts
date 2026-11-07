@@ -270,10 +270,12 @@ export interface RecentBadVoter {
 // A "semi-banned" keyword (see backend/internal/keywordlimit): unlike
 // BannedKeyword-style outright bans, a title/channel-title match here is
 // perfectly allowed content — it just can't have more than limit requests
-// pending/playing in the queue at once.
+// pending/playing in the queue at once. A positive cooldownMinutes also
+// allows only one matching request (by anyone) per that many minutes.
 export interface KeywordLimit {
   keyword: string;
   limit: number;
+  cooldownMinutes?: number;
 }
 
 // The admin-configured long-video shortening rule (see

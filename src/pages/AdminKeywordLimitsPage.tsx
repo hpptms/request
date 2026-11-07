@@ -20,7 +20,9 @@ import type { KeywordLimit } from "../types";
 // タイトルまたはチャンネル名に含まれる動画は、禁止ワードと違いリクエスト
 // 自体は許可されるが、待機中/再生中の件数が指定した上限に達すると
 // それ以上キューに追加できなくなる(backend/internal/keywordlimit,
-// store.Store.Add の ErrKeywordQueueLimitReached)。
+// store.Store.Add の ErrKeywordQueueLimitReached)。間隔(時間)を指定すると、
+// 曲が違っても誰か1人がリクエストしてからその時間内は追加できない
+// (ErrKeywordCooldown)。
 function AdminKeywordLimitsPage() {
   const [entries, setEntries] = useState<KeywordLimit[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +30,7 @@ function AdminKeywordLimitsPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [newKeyword, setNewKeyword] = useState("");
   const [newLimit, setNewLimit] = useState("2");
+  const [newCooldownHours, setNewCooldownHours] = useState("0");
 
   useEffect(() => {
     api
@@ -58,12 +61,18 @@ function AdminKeywordLimitsPage() {
       setErrorMessage("上限件数は1以上の整数で入力してください");
       return;
     }
+    const cooldownHours = Number(newCooldownHours);
+    if (!Number.isFinite(cooldownHours) || cooldownHours < 0) {
+      setErrorMessage("リクエスト間隔は0以上の数値(時間)で入力してください");
+      return;
+    }
     if (entries.some((e) => e.keyword === keyword)) {
       setErrorMessage(`「${keyword}」は既に設定されています。先に削除してください`);
       return;
     }
-    await saveEntries([...entries, { keyword, limit }]);
+    await saveEntries([...entries, { keyword, limit, cooldownMinutes: Math.round(cooldownHours * 60) }]);
     setNewKeyword("");
+    setNewCooldownHours("0");
   };
 
   const handleRemove = async (keyword: string) => {
@@ -79,7 +88,7 @@ function AdminKeywordLimitsPage() {
           セミ禁止ワードを追加
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          禁止ワードと違い、この文字列を含む動画のリクエスト自体は許可されます。ただし、タイトルまたはチャンネル名にこの文字列を含む待機中/再生中のリクエストが指定件数に達すると、それ以上は追加できなくなります。
+          禁止ワードと違い、この文字列を含む動画のリクエスト自体は許可されます。ただし、タイトルまたはチャンネル名にこの文字列を含む待機中/再生中のリクエストが指定件数に達すると、それ以上は追加できなくなります。リクエスト間隔(時間)を指定すると、曲が違っても、誰かがリクエストしてからその時間が経つまで次のリクエストを受け付けません(0で無制限)。
         </Typography>
         <Box component="form" onSubmit={handleAdd}>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
@@ -97,6 +106,15 @@ function AdminKeywordLimitsPage() {
               onChange={(e) => setNewLimit(e.target.value)}
               size="small"
               slotProps={{ htmlInput: { min: 1 } }}
+              sx={{ minWidth: 160 }}
+            />
+            <TextField
+              label="リクエスト間隔(時間)"
+              type="number"
+              value={newCooldownHours}
+              onChange={(e) => setNewCooldownHours(e.target.value)}
+              size="small"
+              slotProps={{ htmlInput: { min: 0, step: 0.5 } }}
               sx={{ minWidth: 160 }}
             />
             <Button type="submit" variant="contained" startIcon={<AddIcon />} disabled={loading || saving}>
@@ -131,7 +149,11 @@ function AdminKeywordLimitsPage() {
                     </Tooltip>
                   }
                 >
-                  <ListItemText sx={{ pr: 6 }} primary={e.keyword} secondary={`キュー内上限: ${e.limit}件`} />
+                  <ListItemText sx={{ pr: 6 }} primary={e.keyword} secondary={
+                      e.cooldownMinutes
+                        ? `キュー内上限: ${e.limit}件 / ${e.cooldownMinutes / 60}時間に1件`
+                        : `キュー内上限: ${e.limit}件`
+                    } />
                 </ListItem>
               ))}
             </List>
