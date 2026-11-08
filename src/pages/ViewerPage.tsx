@@ -42,6 +42,9 @@ const PLAYER_ELEMENT_ID = "yt-viewer-player";
 // How far the YouTube iframe overhangs its box top and bottom, so its
 // title bar / bottom chrome are cropped off (see the player container).
 const YT_CHROME_CROP_PX = 60;
+// How long after a video starts playing before the automatic pause/resume
+// that clears YouTube's centre pause button.
+const CHROME_NUDGE_DELAY_MS = 500;
 // How long each comment (from /play or the live streams' chats) stays in
 // the bottom-left column, shown only while the admin 機能 tab's switch is on.
 const VIEWER_COMMENT_MS = 15000;
@@ -257,6 +260,9 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
 
   const playerRef = useRef<YT.Player | null>(null);
   const loadedVideoIdRef = useRef<string | null>(null);
+  // Whether the current video has had its one automatic pause/resume
+  // "nudge" yet (see onStateChange). Reset whenever a new video loads.
+  const chromeNudgedRef = useRef(false);
   const currentRequestIdRef = useRef<string | null>(null);
   const endedHandledRef = useRef(false);
   const claimedIdsRef = useRef<Set<string>>(new Set());
@@ -481,7 +487,30 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
         events: {
           onReady: () => setPlayerReady(true),
           onStateChange: (event) => {
-            if (event.data === YTApi.PlayerState.PLAYING) event.target.unloadModule("captions");
+            if (
+              event.data === YTApi.PlayerState.UNSTARTED ||
+              event.data === YTApi.PlayerState.CUED ||
+              event.data === YTApi.PlayerState.ENDED
+            ) {
+              chromeNudgedRef.current = false;
+            }
+            if (event.data === YTApi.PlayerState.PLAYING) {
+              event.target.unloadModule("captions");
+              // Every video start leaves YouTube's big centre pause button
+              // ("ll") on screen until the player is toggled by hand. Do
+              // that once automatically: pause shortly after playback
+              // starts, and the PAUSED handler below resumes straight away.
+              if (!chromeNudgedRef.current) {
+                chromeNudgedRef.current = true;
+                const nudgedVideoId = event.target.getVideoData().video_id;
+                window.setTimeout(() => {
+                  const player = playerRef.current;
+                  if (!player || player.getVideoData().video_id !== nudgedVideoId) return;
+                  if (player.getPlayerState() !== YTApi.PlayerState.PLAYING) return;
+                  player.pauseVideo();
+                }, CHROME_NUDGE_DELAY_MS);
+              }
+            }
             // Undo a viewer click-pause: since the overlay is now pointer-events:none
             // (so YouTube's own UI chrome fades out normally), viewers can click the
             // player directly — immediately resume playback to keep it from pausing.
