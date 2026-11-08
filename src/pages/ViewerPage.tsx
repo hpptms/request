@@ -38,10 +38,11 @@ import {
 import type { CancelVoteTier, FallbackTrack, PlaylistTrack, VideoRequest } from "../types";
 
 const POLL_INTERVAL_MS = 3000;
-const PLAYER_ELEMENT_ID = "yt-viewer-player";
 // How far the YouTube iframe overhangs its box top and bottom, so its
 // title bar / bottom chrome are cropped off (see the player container).
 const YT_CHROME_CROP_PX = 60;
+
+type VideoToLoad = Parameters<YT.Player["loadVideoById"]>[0];
 // How long each comment (from /play or the live streams' chats) stays in
 // the bottom-left column, shown only while the admin 機能 tab's switch is on.
 const VIEWER_COMMENT_MS = 15000;
@@ -255,7 +256,11 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // fallback above whenever it's non-empty.
   const [playlistTracks, setPlaylistTracks] = useState<PlaylistTrack[]>([]);
 
+  // The ready YouTube player (null while a fresh one is still loading —
+  // see createPlayer), the one still loading, and the element they live in.
   const playerRef = useRef<YT.Player | null>(null);
+  const pendingPlayerRef = useRef<YT.Player | null>(null);
+  const playerHostRef = useRef<HTMLDivElement | null>(null);
   const loadedVideoIdRef = useRef<string | null>(null);
   const currentRequestIdRef = useRef<string | null>(null);
   const endedHandledRef = useRef(false);
@@ -441,88 +446,139 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     return () => clearInterval(interval);
   }, [onSessionExpired]);
 
+  // Every video gets a brand-new player instead of loadVideoById on one
+  // long-lived player: after a while YouTube's own controls (the centre
+  // "ll", the time readout and progress bar) can get stuck on screen while
+  // playing, with no mouse involved, and nothing outside its cross-origin
+  // iframe can hide them again — only a fresh player (as a page reload
+  // shows) comes up clean. Recreating per video caps any such glitch at the
+  // end of the current video. The old player is destroyed straight away so
+  // nothing keeps reading its clock; playerRef stays null until the new
+  // one is ready, which every caller already tolerates.
+  const createPlayer = (YTApi: typeof YT, video?: VideoToLoad) => {
+    const host = playerHostRef.current;
+    if (!host) return;
+    for (const old of [playerRef.current, pendingPlayerRef.current]) {
+      try {
+        old?.destroy();
+      } catch {
+        // Already torn down.
+      }
+    }
+    playerRef.current = null;
+    pendingPlayerRef.current = null;
+    host.replaceChildren();
+    const element = document.createElement("div");
+    host.appendChild(element);
+    const player: YT.Player = new YTApi.Player(element, {
+      width: "100%",
+      height: "100%",
+      // controls left at YouTube's default: with controls=0 the embed draws
+      // a big centre play/pause button ("ll") that often gets stuck on
+      // screen after a video starts. With controls on, the control bar
+      // autohides during playback and sits in the bottom band that the
+      // container crops off (YT_CHROME_CROP_PX), so it's never reachable.
+      // disablekb off: seeking to the end here fires the same
+      // ENDED event handleEnded uses to advance the queue. iv_load_policy
+      // drops the old annotations overlay; modestbranding/fs trim what
+      // YouTube's own chrome would otherwise draw on top of the video —
+      // though YouTube's branding requirements mean a small logo
+      // watermark and (briefly, right as a video ends) its
+      // related-videos end screen can't be suppressed via this API at
+      // all. cc_load_policy=0 keeps captions off; since that alone can
+      // still be overridden by the viewer's own YouTube caption settings,
+      // the captions module is also unloaded whenever playback starts
+      // (see onStateChange).
+      playerVars: {
+        autoplay: 1,
+        rel: 0,
+        playsinline: 1,
+        disablekb: 1,
+        modestbranding: 1,
+        iv_load_policy: 3,
+        fs: 0,
+        cc_load_policy: 0,
+      },
+      events: {
+        onReady: () => {
+          if (pendingPlayerRef.current !== player) return;
+          pendingPlayerRef.current = null;
+          playerRef.current = player;
+          setPlayerReady(true);
+          if (video) player.loadVideoById(video);
+        },
+        onStateChange: (event) => {
+          // A destroyed predecessor's late events must not drive the queue.
+          if (playerRef.current !== player) return;
+          if (event.data === YTApi.PlayerState.PLAYING) event.target.unloadModule("captions");
+          // Undo a viewer click-pause: since the overlay is now pointer-events:none
+          // (so YouTube's own UI chrome fades out normally), viewers can click the
+          // player directly — immediately resume playback to keep it from pausing.
+          if (event.data === YTApi.PlayerState.PAUSED) {
+            event.target.playVideo();
+          }
+          if (event.data === YTApi.PlayerState.ENDED) {
+            // stopVideo() on the video that just finished can deliver one
+            // more ENDED after the next request has already been loaded;
+            // taking it for the new video's end would try to finish it
+            // immediately (rejected as too early) and then seek it back
+            // to 0, losing its startSeconds. Only accept an ENDED that
+            // belongs to the video currently loaded.
+            const endedVideoId = playerRef.current?.getVideoData().video_id;
+            if (endedVideoId && loadedVideoIdRef.current && endedVideoId !== loadedVideoIdRef.current) return;
+            handleEnded();
+          }
+        },
+        // YouTube itself refusing to play something (age restriction,
+        // embedding disabled by the uploader, region lock, video
+        // deleted, ...) never fires ENDED, so without this the screen
+        // would just sit frozen forever. Treat it like a manual skip
+        // (doneRequest, not finishRequest) since nothing actually
+        // played — there's no reason to wait out
+        // MinPlaybackBeforeFinish for a video that never started.
+        onError: (event) => {
+          if (playerRef.current !== player) return;
+          console.warn("YouTube player error, skipping:", event.data);
+          handleSkip();
+        },
+      },
+    });
+    pendingPlayerRef.current = player;
+  };
+
+  const loadVideo = (video: VideoToLoad) => {
+    const YTApi = window.YT;
+    if (!YTApi?.Player) return;
+    createPlayer(YTApi, video);
+  };
+
   // Create the player as soon as this screen mounts (autoplay:1 below, no
   // click needed). Relies on the browser allowing autoplay-with-sound with
   // no user gesture for this origin — Chrome blocks that by default unless
   // the site's Sound setting is set to Allow (chrome://settings/content/sound),
   // which only needs doing once per browser/device. A browser source inside
-  // OBS isn't subject to this restriction.
+  // OBS isn't subject to this restriction. The same permission covers the
+  // fresh player each video gets (see createPlayer).
   useEffect(() => {
     if (!started) return;
 
     let cancelled = false;
     loadYouTubeIframeApi().then((YTApi) => {
       if (cancelled) return;
-      playerRef.current = new YTApi.Player(PLAYER_ELEMENT_ID, {
-        width: "100%",
-        height: "100%",
-        // controls left at YouTube's default: with controls=0 the embed draws
-        // a big centre play/pause button ("ll") that often gets stuck on
-        // screen after a video starts. With controls on, the control bar
-        // autohides during playback and sits in the bottom band that the
-        // container crops off (YT_CHROME_CROP_PX), so it's never reachable.
-        // disablekb off: seeking to the end here fires the same
-        // ENDED event handleEnded uses to advance the queue. iv_load_policy
-        // drops the old annotations overlay; modestbranding/fs trim what
-        // YouTube's own chrome would otherwise draw on top of the video —
-        // though YouTube's branding requirements mean a small logo
-        // watermark and (briefly, right as a video ends) its
-        // related-videos end screen can't be suppressed via this API at
-        // all. cc_load_policy=0 keeps captions off; since that alone can
-        // still be overridden by the viewer's own YouTube caption settings,
-        // the captions module is also unloaded whenever playback starts
-        // (see onStateChange).
-        playerVars: {
-          autoplay: 1,
-          rel: 0,
-          playsinline: 1,
-          disablekb: 1,
-          modestbranding: 1,
-          iv_load_policy: 3,
-          fs: 0,
-          cc_load_policy: 0,
-        },
-        events: {
-          onReady: () => setPlayerReady(true),
-          onStateChange: (event) => {
-            if (event.data === YTApi.PlayerState.PLAYING) event.target.unloadModule("captions");
-            // Undo a viewer click-pause: since the overlay is now pointer-events:none
-            // (so YouTube's own UI chrome fades out normally), viewers can click the
-            // player directly — immediately resume playback to keep it from pausing.
-            if (event.data === YTApi.PlayerState.PAUSED) {
-              event.target.playVideo();
-            }
-            if (event.data === YTApi.PlayerState.ENDED) {
-              // stopVideo() on the video that just finished can deliver one
-              // more ENDED after the next request has already been loaded;
-              // taking it for the new video's end would try to finish it
-              // immediately (rejected as too early) and then seek it back
-              // to 0, losing its startSeconds. Only accept an ENDED that
-              // belongs to the video currently loaded.
-              const endedVideoId = playerRef.current?.getVideoData().video_id;
-              if (endedVideoId && loadedVideoIdRef.current && endedVideoId !== loadedVideoIdRef.current) return;
-              handleEnded();
-            }
-          },
-          // YouTube itself refusing to play something (age restriction,
-          // embedding disabled by the uploader, region lock, video
-          // deleted, ...) never fires ENDED, so without this the screen
-          // would just sit frozen forever. Treat it like a manual skip
-          // (doneRequest, not finishRequest) since nothing actually
-          // played — there's no reason to wait out
-          // MinPlaybackBeforeFinish for a video that never started.
-          onError: (event) => {
-            console.warn("YouTube player error, skipping:", event.data);
-            handleSkip();
-          },
-        },
-      });
+      createPlayer(YTApi);
     });
 
     return () => {
       cancelled = true;
-      playerRef.current?.destroy();
+      for (const player of [playerRef.current, pendingPlayerRef.current]) {
+        try {
+          player?.destroy();
+        } catch {
+          // Already torn down.
+        }
+      }
       playerRef.current = null;
+      pendingPlayerRef.current = null;
       setPlayerReady(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -650,7 +706,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
       endedHandledRef.current = false;
       setFallbackNowPlayingId(track.videoId);
       resetSeekGuard(playlistPositionRef.current);
-      playerRef.current?.loadVideoById({ videoId: track.videoId, startSeconds: playlistPositionRef.current });
+      loadVideo({ videoId: track.videoId, startSeconds: playlistPositionRef.current });
       startNowPlayingIntro(track.title, track.channelTitle, track.videoId, () => playerRef.current?.getDuration() ?? null);
       return;
     }
@@ -663,7 +719,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     endedHandledRef.current = false;
     setFallbackNowPlayingId(videoId);
     resetSeekGuard();
-    playerRef.current?.loadVideoById(videoId);
+    loadVideo(videoId);
     const fallbackInfo = fallbackTracks.find((t) => t.videoId === videoId);
     startNowPlayingIntro(
       fallbackInfo?.title ?? "自動再生",
@@ -765,7 +821,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
         endedHandledRef.current = false;
         setFallbackNowPlayingId(track.videoId);
         resetSeekGuard();
-        playerRef.current?.loadVideoById(track.videoId);
+        loadVideo(track.videoId);
         startNowPlayingIntro(track.title, track.channelTitle, track.videoId, () => playerRef.current?.getDuration() ?? null);
         return;
       }
@@ -777,7 +833,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     endedHandledRef.current = false;
     setFallbackNowPlayingId(nextVideoId);
     resetSeekGuard();
-    playerRef.current?.loadVideoById(nextVideoId);
+    loadVideo(nextVideoId);
     const fallbackInfo = fallbackTracks.find((t) => t.videoId === nextVideoId);
     startNowPlayingIntro(
       fallbackInfo?.title ?? "自動再生",
@@ -1103,11 +1159,11 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // completion; cancel votes and backlog fast-forward can still cut it
   // short earlier, same as YouTube — see the cap-checking effect above.
   useEffect(() => {
-    if (!started || !playerReady || !playerRef.current) return;
+    if (!started || !playerReady) return;
 
     if (target) {
       if (isPlaylistActiveRef.current && currentRequestIdRef.current === null) {
-        const elapsed = playerRef.current.getCurrentTime();
+        const elapsed = playerRef.current?.getCurrentTime();
         if (typeof elapsed === "number" && Number.isFinite(elapsed)) {
           playlistPositionRef.current = elapsed;
         }
@@ -1121,7 +1177,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
       clearNonYouTubeTimer();
 
       if (target.platform !== "youtube" && target.embedUrl) {
-        playerRef.current.stopVideo();
+        playerRef.current?.stopVideo();
         resetSeekGuard();
         nonYouTubePlatformRef.current = target.platform;
         setNonYouTubeEmbedUrl(target.embedUrl);
@@ -1154,7 +1210,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
 
       setNonYouTubeEmbedUrl(null);
       resetSeekGuard();
-      playerRef.current.loadVideoById({
+      loadVideo({
         videoId: target.videoId,
         startSeconds: target.startSeconds ?? 0,
         endSeconds: target.endSeconds || undefined,
@@ -1196,26 +1252,24 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
             position: "relative",
             bgcolor: "black",
             overflow: "hidden",
-            // The click-absorbing cover below also swallows the mouse events
-            // YouTube uses to hide its own start-of-playback chrome (title
-            // bar, share/watch-later buttons), so that chrome never fades
-            // out. Instead of uncovering the player, make the iframe taller
-            // than its box and let overflow:hidden crop those bands off.
-            // (The API replaces the placeholder div with an iframe that
-            // keeps its id but not its MUI class, hence this selector.)
-            [`& > #${PLAYER_ELEMENT_ID}`]: {
-              position: "absolute",
-              left: 0,
-              top: `-${YT_CHROME_CROP_PX}px`,
-              width: "100%",
-              height: `calc(100% + ${YT_CHROME_CROP_PX * 2}px)`,
-              border: 0,
-            },
           }}
           onContextMenu={(e) => e.preventDefault()}
         >
           <>
-            <Box id={PLAYER_ELEMENT_ID} />
+            {/* Holds the YouTube player's iframe (created by createPlayer, not
+                React). It overhangs the box top and bottom so overflow:hidden
+                crops YouTube's title band and bottom chrome. */}
+            <Box
+              ref={playerHostRef}
+              sx={{
+                position: "absolute",
+                left: 0,
+                top: `-${YT_CHROME_CROP_PX}px`,
+                width: "100%",
+                height: `calc(100% + ${YT_CHROME_CROP_PX * 2}px)`,
+                "& iframe": { display: "block", width: "100%", height: "100%", border: 0 },
+              }}
+            />
             {/* Transparent overlay: pointer-events:none lets mouse events reach the
                 player so YouTube's own start-of-playback chrome fades out normally;
                 onPAUSED above immediately resumes playback if a viewer clicks to pause. */}
