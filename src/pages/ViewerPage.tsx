@@ -260,9 +260,11 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
 
   const playerRef = useRef<YT.Player | null>(null);
   const loadedVideoIdRef = useRef<string | null>(null);
-  // Whether the current video has had its one automatic pause/resume
-  // "nudge" yet (see onStateChange). Reset whenever a new video loads.
-  const chromeNudgedRef = useRef(false);
+  // Video id that last got its one automatic pause/resume "nudge" (see
+  // onStateChange). Keyed by id rather than a flag reset on ENDED, since a
+  // fast-forward cutoff stops a video mid-play and loads the next one
+  // without any ENDED/UNSTARTED in between.
+  const chromeNudgedVideoIdRef = useRef<string | null>(null);
   const currentRequestIdRef = useRef<string | null>(null);
   const endedHandledRef = useRef(false);
   const claimedIdsRef = useRef<Set<string>>(new Set());
@@ -492,7 +494,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
               event.data === YTApi.PlayerState.CUED ||
               event.data === YTApi.PlayerState.ENDED
             ) {
-              chromeNudgedRef.current = false;
+              chromeNudgedVideoIdRef.current = null;
             }
             if (event.data === YTApi.PlayerState.PLAYING) {
               event.target.unloadModule("captions");
@@ -500,13 +502,18 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
               // ("ll") on screen until the player is toggled by hand. Do
               // that once automatically: pause shortly after playback
               // starts, and the PAUSED handler below resumes straight away.
-              if (!chromeNudgedRef.current) {
-                chromeNudgedRef.current = true;
-                const nudgedVideoId = event.target.getVideoData().video_id;
+              const nudgedVideoId = event.target.getVideoData().video_id;
+              if (nudgedVideoId && chromeNudgedVideoIdRef.current !== nudgedVideoId) {
+                chromeNudgedVideoIdRef.current = nudgedVideoId;
                 window.setTimeout(() => {
                   const player = playerRef.current;
                   if (!player || player.getVideoData().video_id !== nudgedVideoId) return;
-                  if (player.getPlayerState() !== YTApi.PlayerState.PLAYING) return;
+                  if (player.getPlayerState() !== YTApi.PlayerState.PLAYING) {
+                    // Still buffering (e.g. seeking to startSeconds): retry on
+                    // the next PLAYING instead of skipping this video.
+                    chromeNudgedVideoIdRef.current = null;
+                    return;
+                  }
                   player.pauseVideo();
                 }, CHROME_NUDGE_DELAY_MS);
               }
