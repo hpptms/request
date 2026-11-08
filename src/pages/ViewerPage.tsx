@@ -482,6 +482,12 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
           onReady: () => setPlayerReady(true),
           onStateChange: (event) => {
             if (event.data === YTApi.PlayerState.PLAYING) event.target.unloadModule("captions");
+            // Undo a viewer click-pause: since the overlay is now pointer-events:none
+            // (so YouTube's own UI chrome fades out normally), viewers can click the
+            // player directly — immediately resume playback to keep it from pausing.
+            if (event.data === YTApi.PlayerState.PAUSED) {
+              event.target.playVideo();
+            }
             if (event.data === YTApi.PlayerState.ENDED) {
               // stopVideo() on the video that just finished can deliver one
               // more ENDED after the next request has already been loaded;
@@ -1202,11 +1208,14 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
               border: 0,
             },
           }}
+          onContextMenu={(e) => e.preventDefault()}
         >
           <>
             <Box id={PLAYER_ELEMENT_ID} />
-            {/* Absorbs clicks/drags so visitors can't reach the player under it (see the playerVars comment above). */}
-            <Box sx={{ position: "absolute", inset: 0 }} onContextMenu={(e) => e.preventDefault()} />
+            {/* Transparent overlay: pointer-events:none lets mouse events reach the
+                player so YouTube's own start-of-playback chrome fades out normally;
+                onPAUSED above immediately resumes playback if a viewer clicks to pause. */}
+            <Box sx={{ position: "absolute", inset: 0, pointerEvents: "none" }} />
             {/* niconico/vimeo: plain embed layered over the (stopped) YouTube player, with no seek-guard/click-blocking equivalent — see nonYouTubeEmbedUrl. */}
             {nonYouTubeEmbedUrl && (
               <Box
