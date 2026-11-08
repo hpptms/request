@@ -39,6 +39,9 @@ import type { CancelVoteTier, FallbackTrack, PlaylistTrack, VideoRequest } from 
 
 const POLL_INTERVAL_MS = 3000;
 const PLAYER_ELEMENT_ID = "yt-viewer-player";
+// How far the YouTube iframe overhangs its box top and bottom, so its
+// title bar / bottom chrome are cropped off (see the player container).
+const YT_CHROME_CROP_PX = 60;
 // How long each comment (from /play or the live streams' chats) stays in
 // the bottom-left column, shown only while the admin 機能 tab's switch is on.
 const VIEWER_COMMENT_MS = 15000;
@@ -1177,9 +1180,31 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   return (
     <Box sx={{ position: "fixed", inset: 0, bgcolor: "black", display: "flex", flexDirection: "column" }}>
       <Box sx={{ flex: 1, minHeight: 0, display: "flex" }}>
-        <Box sx={{ flex: "1 1 0%", position: "relative", bgcolor: "black" }}>
+        <Box
+          sx={{
+            flex: "1 1 0%",
+            position: "relative",
+            bgcolor: "black",
+            overflow: "hidden",
+            // The click-absorbing cover below also swallows the mouse events
+            // YouTube uses to hide its own start-of-playback chrome (title
+            // bar, share/watch-later buttons), so that chrome never fades
+            // out. Instead of uncovering the player, make the iframe taller
+            // than its box and let overflow:hidden crop those bands off.
+            // (The API replaces the placeholder div with an iframe that
+            // keeps its id but not its MUI class, hence this selector.)
+            [`& > #${PLAYER_ELEMENT_ID}`]: {
+              position: "absolute",
+              left: 0,
+              top: `-${YT_CHROME_CROP_PX}px`,
+              width: "100%",
+              height: `calc(100% + ${YT_CHROME_CROP_PX * 2}px)`,
+              border: 0,
+            },
+          }}
+        >
           <>
-            <Box id={PLAYER_ELEMENT_ID} sx={{ width: "100%", height: "100%" }} />
+            <Box id={PLAYER_ELEMENT_ID} />
             {/* Absorbs clicks/drags so visitors can't reach the player under it (see the playerVars comment above). */}
             <Box sx={{ position: "absolute", inset: 0 }} onContextMenu={(e) => e.preventDefault()} />
             {/* niconico/vimeo: plain embed layered over the (stopped) YouTube player, with no seek-guard/click-blocking equivalent — see nonYouTubeEmbedUrl. */}
