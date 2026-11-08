@@ -45,6 +45,8 @@ const YT_CHROME_CROP_PX = 60;
 // How long after a video starts playing before the automatic pause/resume
 // that clears YouTube's centre pause button.
 const CHROME_NUDGE_DELAY_MS = 500;
+// Upper bound on automatic nudges per video, as a safety net against loops.
+const CHROME_NUDGE_MAX_PER_VIDEO = 5;
 // How long each comment (from /play or the live streams' chats) stays in
 // the bottom-left column, shown only while the admin 機能 tab's switch is on.
 const VIEWER_COMMENT_MS = 15000;
@@ -260,11 +262,13 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
 
   const playerRef = useRef<YT.Player | null>(null);
   const loadedVideoIdRef = useRef<string | null>(null);
-  // Video id that last got its one automatic pause/resume "nudge" (see
-  // onStateChange). Keyed by id rather than a flag reset on ENDED, since a
-  // fast-forward cutoff stops a video mid-play and loads the next one
-  // without any ENDED/UNSTARTED in between.
-  const chromeNudgedVideoIdRef = useRef<string | null>(null);
+  // Automatic pause/resume "nudge" that clears YouTube's centre pause icon
+  // (see onStateChange): how many nudges the current video has had, the
+  // pending nudge timer, and whether the next PLAYING is just the nudge's
+  // own resume (which must not schedule another nudge).
+  const chromeNudgeRef = useRef<{ videoId: string | null; count: number }>({ videoId: null, count: 0 });
+  const chromeNudgeTimerRef = useRef<number | null>(null);
+  const chromeNudgeResumingRef = useRef(false);
   const currentRequestIdRef = useRef<string | null>(null);
   const endedHandledRef = useRef(false);
   const claimedIdsRef = useRef<Set<string>>(new Set());
@@ -494,28 +498,44 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
               event.data === YTApi.PlayerState.CUED ||
               event.data === YTApi.PlayerState.ENDED
             ) {
-              chromeNudgedVideoIdRef.current = null;
+              // A video change/stop: drop any half-finished nudge so the next
+              // video's first PLAYING isn't mistaken for the nudge's resume.
+              chromeNudgeResumingRef.current = false;
+              if (chromeNudgeTimerRef.current !== null) {
+                window.clearTimeout(chromeNudgeTimerRef.current);
+                chromeNudgeTimerRef.current = null;
+              }
             }
             if (event.data === YTApi.PlayerState.PLAYING) {
               event.target.unloadModule("captions");
-              // Every video start leaves YouTube's big centre pause button
-              // ("ll") on screen until the player is toggled by hand. Do
-              // that once automatically: pause shortly after playback
-              // starts, and the PAUSED handler below resumes straight away.
-              const nudgedVideoId = event.target.getVideoData().video_id;
-              if (nudgedVideoId && chromeNudgedVideoIdRef.current !== nudgedVideoId) {
-                chromeNudgedVideoIdRef.current = nudgedVideoId;
-                window.setTimeout(() => {
-                  const player = playerRef.current;
-                  if (!player || player.getVideoData().video_id !== nudgedVideoId) return;
-                  if (player.getPlayerState() !== YTApi.PlayerState.PLAYING) {
-                    // Still buffering (e.g. seeking to startSeconds): retry on
-                    // the next PLAYING instead of skipping this video.
-                    chromeNudgedVideoIdRef.current = null;
-                    return;
-                  }
-                  player.pauseVideo();
-                }, CHROME_NUDGE_DELAY_MS);
+              // YouTube's big centre pause button ("ll") reappears whenever
+              // playback (re)starts — a new video, a fast-forward switch, a
+              // seek to startSeconds or back by the seek guard — and stays
+              // until the player is toggled by hand. Toggle it automatically:
+              // pause shortly after each such start, and the PAUSED handler
+              // below resumes straight away. The resume's own PLAYING is
+              // skipped, and each video gets at most CHROME_NUDGE_MAX_PER_VIDEO
+              // nudges, so this can't loop.
+              if (chromeNudgeResumingRef.current) {
+                chromeNudgeResumingRef.current = false;
+              } else {
+                const videoId = event.target.getVideoData().video_id;
+                if (chromeNudgeRef.current.videoId !== videoId) {
+                  chromeNudgeRef.current = { videoId, count: 0 };
+                }
+                if (videoId && chromeNudgeRef.current.count < CHROME_NUDGE_MAX_PER_VIDEO) {
+                  if (chromeNudgeTimerRef.current !== null) window.clearTimeout(chromeNudgeTimerRef.current);
+                  chromeNudgeTimerRef.current = window.setTimeout(() => {
+                    chromeNudgeTimerRef.current = null;
+                    const player = playerRef.current;
+                    if (!player || player.getVideoData().video_id !== videoId) return;
+                    // Still buffering: the next PLAYING schedules a fresh nudge.
+                    if (player.getPlayerState() !== YTApi.PlayerState.PLAYING) return;
+                    chromeNudgeRef.current.count += 1;
+                    chromeNudgeResumingRef.current = true;
+                    player.pauseVideo();
+                  }, CHROME_NUDGE_DELAY_MS);
+                }
               }
             }
             // Undo a viewer click-pause: since the overlay is now pointer-events:none
