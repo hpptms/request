@@ -31,5 +31,17 @@
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.youtube.com https://static.cloudflareinsights.com https://www.googletagmanager.com https://*.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ytimg.com https://*.ytimg.com https://*.nimg.jp https://*.vimeocdn.com https://api.request.tokyo https://*.doubleclick.net https://*.google.com https://*.google-analytics.com https://*.googletagmanager.com https://*.g.doubleclick.net https://*.google.co.jp; frame-src https://www.youtube.com https://embed.nicovideo.jp https://player.vimeo.com https://www.google.com https://aff.i-mobile.co.jp; connect-src 'self' https://cloudflareinsights.com https://api.request.tokyo https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://*.google.com https://www.googletagmanager.com https://*.doubleclick.net https://*.googletagmanager.com https://*.g.doubleclick.net https://*.google.co.jp; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.youtube.com https://static.cloudflareinsights.com https://www.googletagmanager.com https://*.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ytimg.com https://*.ytimg.com https://*.nimg.jp https://*.vimeocdn.com https://api.request.tokyo https://*.doubleclick.net https://*.google.com https://*.google-analytics.com https://*.googletagmanager.com https://*.g.doubleclick.net https://*.google.co.jp; frame-src 'self' https://www.youtube.com https://embed.nicovideo.jp https://player.vimeo.com https://www.google.com https://aff.i-mobile.co.jp; connect-src 'self' https://cloudflareinsights.com https://api.request.tokyo https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://*.google.com https://www.googletagmanager.com https://*.doubleclick.net https://*.googletagmanager.com https://*.g.doubleclick.net https://*.google.co.jp; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
 
+
+# The i-mobile 728x90 rotating banner (public/ad/pc-banner.html) loads
+# spot.js, which in turn pulls creatives/scripts from many ad-network hosts,
+# so it can't run under the strict CSP above. It lives in its own document,
+# embedded by AffiliateAds.tsx as a same-origin iframe: the site-wide CSP
+# and X-Frame-Options are detached here and replaced with a policy that only
+# restricts who may frame it (this site) and blocks plugins/<base> tricks.
+/ad/*
+  ! Content-Security-Policy
+  ! X-Frame-Options
+  Content-Security-Policy: object-src 'none'; base-uri 'self'; frame-ancestors 'self'
+  X-Frame-Options: SAMEORIGIN
