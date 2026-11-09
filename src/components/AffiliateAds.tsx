@@ -5,8 +5,15 @@ import Typography from "@mui/material/Typography";
 // i-mobile ad banners. Their tag (spot.js) pulls scripts from many
 // ad-network hosts, which the SPA's strict CSP blocks, so each tag lives in
 // its own page under public/ad/ (served with a relaxed CSP — see
-// public/_headers /ad/*) and is framed here. The frames stay mounted across
+// public/_headers /ad/*) and is framed here from the separate origin
+// https://ads.request.tokyo (an extra custom domain on the same Cloudflare
+// Pages project), so ad scripts are isolated from the main site. The frame
+// is also sandboxed: allow-same-origin only grants the ads.request.tokyo
+// origin (i-mobile's script needs its storage), and leaving out
+// allow-top-navigation keeps an ad from redirecting the main page. The frames stay mounted across
 // route changes; the banners rotate by themselves.
+const AD_ORIGIN = import.meta.env.DEV ? "" : "https://ads.request.tokyo";
+
 interface Banner {
   src: string;
   width: number;
@@ -14,7 +21,7 @@ interface Banner {
 }
 
 // Phones: smartphone banner (320x50) in a fixed bottom bar.
-const MOBILE_BANNER: Banner = { src: "/ad/sp-banner", width: 320, height: 50 };
+const MOBILE_BANNER: Banner = { src: `${AD_ORIGIN}/ad/sp-banner`, width: 320, height: 50 };
 export const MOBILE_AD_BAR_HEIGHT = MOBILE_BANNER.height + 8;
 
 function BannerFrame({ banner }: { banner: Banner }) {
@@ -26,6 +33,7 @@ function BannerFrame({ banner }: { banner: Banner }) {
       width={banner.width}
       height={banner.height}
       scrolling="no"
+      sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
       sx={{ display: "block", border: 0, overflow: "hidden", flexShrink: 0 }}
     />
   );
@@ -40,7 +48,7 @@ function AdLabel() {
 }
 
 // PC: half-page banner (300x600) in a sidebar on the right.
-const PC_BANNER: Banner = { src: "/ad/pc-sidebar", width: 300, height: 600 };
+const PC_BANNER: Banner = { src: `${AD_ORIGIN}/ad/pc-sidebar`, width: 300, height: 600 };
 
 // The pages lay themselves out (full-width header, centered content column),
 // so the ads are overlaid with position: fixed instead of squeezing the page
