@@ -76,15 +76,33 @@
          gtag('config', ...) would never fire. The measurement ID is passed
          to it via data-ga-id, since files in public/ aren't processed by
          Vite and so can't read VITE_GA_MEASUREMENT_ID themselves. -->
+    <!-- Pre-React cover: while the JS bundle loads, a fixed overlay in the
+         app's background color (theme.ts background.default) sits over the
+         static #seo-static content, so visitors see the same dark backdrop
+         the app paints instead of a flash of unstyled HTML. It is part of
+         #seo-static, so it goes away together with it when React mounts.
+         Inline <style> is allowed by the CSP (style-src 'unsafe-inline'). -->
+    <style>
+      html, body { background: #0f0f0f; color: #f1f1f1; }
+      #seo-static { padding: 24px 16px; font-family: system-ui, sans-serif; line-height: 1.7; }
+      #seo-static a { color: #7fdbff; }
+      #seo-static::after { content: ""; position: fixed; inset: 0; z-index: 2147483647; background: #0f0f0f; }
+    </style>
+    <!-- Without JS React never mounts, so drop the cover and let the static
+         content be read as the page itself. -->
+    <noscript><style>#seo-static::after { display: none; }</style></noscript>
+
     <script async src="https://www.googletagmanager.com/gtag/js?id=%VITE_GA_MEASUREMENT_ID%"></script>
     <script defer src="/boot.js" data-ga-id="%VITE_GA_MEASUREMENT_ID%"></script>
   </head>
   <body>
-    <div id="root"></div>
-    <noscript>
-      <h1>動画リクエストキュー</h1>
-      <p>動画リクエストキューは、YouTube・ニコニコ動画・Vimeoの動画をリクエストして、知らない人とみんなで同時視聴できる登録不要の動画リクエストサイトです。FC2ライブ・ニコ生でも同時視聴配信を行っています。ご利用にはJavaScriptを有効にしてください。</p>
-    </noscript>
+    <!-- Static, crawlable content shown before React mounts. It lives
+         inside #root on purpose: createRoot().render() replaces #root's
+         children on its first commit, so this disappears by itself the
+         moment the app draws — no cleanup code needed. The seo-static comment marker
+         marker is expanded by the seo-static plugin in vite.config.ts
+         (per-route h1/description/nav; dist/<route>.html get their own). -->
+    <div id="root"><!--seo-static--></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
