@@ -127,7 +127,9 @@ function CredentialsForm({ mode }: { mode: "login" | "register" }) {
 }
 
 function LoggedOut({ me }: { me: AccountMe }) {
-  const [tab, setTab] = useState<"login" | "register">("login");
+  // The header's 新規登録 button links here with ?tab=register.
+  const [params] = useSearchParams();
+  const [tab, setTab] = useState<"login" | "register">(params.get("tab") === "register" ? "register" : "login");
   return (
     <>
       <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>

@@ -24,6 +24,7 @@ import { usePlayChat } from "../lib/usePlayChat";
 import { useRequestQueue } from "../lib/useRequestQueue";
 import { usePageSeo } from "../lib/useSeo";
 import { SiteLogo } from "../components/SiteLogo";
+import { AccountHeaderButtons } from "../components/AccountHeaderButtons";
 import { AlertSettingsButton } from "../components/AlertSettingsDialog";
 
 // 公開の再生画面 (/play): キュー制御(シークガード・投票による短縮・終了時の
@@ -80,6 +81,7 @@ function PlayPage() {
               同時視聴
             </Typography>
             <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
+              <AccountHeaderButtons />
               <AlertSettingsButton />
               <Button
                 component={RouterLink}

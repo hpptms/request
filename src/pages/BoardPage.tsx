@@ -28,6 +28,7 @@ import { QueueList } from "../components/QueueList";
 import { RecentDoneList } from "../components/RecentDoneList";
 import { RequestForm } from "../components/RequestForm";
 import { PlanComparisonBox } from "../components/PlanComparison";
+import { AccountHeaderButtons } from "../components/AccountHeaderButtons";
 import { TodayThemeBox } from "../components/TodayThemeBox";
 import { PollBox } from "../components/PollBox";
 import { useRequestQueue } from "../lib/useRequestQueue";
@@ -128,6 +129,7 @@ function BoardPage() {
             <NavButton to="/heatmap" label="ヒートマップ" icon={<MapIcon />} mode={navMode} />
             <NavButton to="/admin" label="管理者" icon={<ShieldIcon />} mode={navMode} external />
             <AlertSettingsButton />
+            <AccountHeaderButtons compact={isTablet} />
           </Stack>
         </Toolbar>
       </AppBar>

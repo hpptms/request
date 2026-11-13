@@ -5,6 +5,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { Link as RouterLink } from "react-router-dom";
+import { AccountHeaderButtons } from "./AccountHeaderButtons";
 
 // 集計・ヒートマップ画面のヘッダー右側の「再生」「トップに戻る」。スマホ幅
 // (sm未満)ではアイコンのみにして、タイトルが「アクテ…」のように潰れるのを防ぐ。
@@ -13,6 +14,7 @@ export function PublicNavButtons() {
   const sx = { whiteSpace: "nowrap", minWidth: 0, px: isMobile ? 1 : 2 } as const;
   return (
     <Stack direction="row" spacing={0.5} sx={{ flexShrink: 0 }}>
+      <AccountHeaderButtons />
       <Button
         component={RouterLink}
         to="/play"
@@ -42,15 +44,18 @@ export function PublicNavButtons() {
 export function BackToTopButton() {
   const isMobile = useMediaQuery(useTheme().breakpoints.down("sm"));
   return (
-    <Button
-      component={RouterLink}
-      to="/"
-      size="small"
-      aria-label={isMobile ? "トップに戻る" : undefined}
-      startIcon={isMobile ? undefined : <ArrowBackIcon />}
-      sx={{ whiteSpace: "nowrap", flexShrink: 0, minWidth: 0, px: isMobile ? 1 : 2 }}
-    >
-      {isMobile ? <ArrowBackIcon fontSize="small" /> : "トップに戻る"}
-    </Button>
+    <Stack direction="row" spacing={0.5} sx={{ flexShrink: 0, alignItems: "center" }}>
+      <AccountHeaderButtons />
+      <Button
+        component={RouterLink}
+        to="/"
+        size="small"
+        aria-label={isMobile ? "トップに戻る" : undefined}
+        startIcon={isMobile ? undefined : <ArrowBackIcon />}
+        sx={{ whiteSpace: "nowrap", flexShrink: 0, minWidth: 0, px: isMobile ? 1 : 2 }}
+      >
+        {isMobile ? <ArrowBackIcon fontSize="small" /> : "トップに戻る"}
+      </Button>
+    </Stack>
   );
 }
