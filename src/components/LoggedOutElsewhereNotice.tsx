@@ -20,7 +20,7 @@ export function LoggedOutElsewhereNotice() {
           </Button>
         }
       >
-        別の端末で同じユーザーIDにログインされたため、ログアウトしました
+        別の端末で同じユーザーIDにログインされたため、ログアウトしました。このログイン中にキューに入れた曲（再生中のものを除く）はキャンセルされました
       </Alert>
     </Snackbar>
   );
