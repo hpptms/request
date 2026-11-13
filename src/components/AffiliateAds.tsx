@@ -61,31 +61,38 @@ function AdLabel() {
 // PC: half-page banner (300x600) in a sidebar on the right.
 const PC_BANNER: Banner = { src: `${AD_ORIGIN}/ad/pc-sidebar`, width: 300, height: 600 };
 
+// PC only: Ninja AdMax skyscraper (160x600) in a sidebar on the left.
+const PC_LEFT_BANNER: Banner = { src: `${AD_ORIGIN}/ad/pc-left`, width: 160, height: 600 };
+
 // The pages lay themselves out (full-width header, centered content column),
-// so the sidebar is overlaid with position: fixed. On a wide screen the
-// centered column already leaves room for it on both sides. On a narrower PC
-// window the page gets right padding instead, which shifts the column left
-// (and narrows it if needed) so the sidebar never covers it. Below
-// PC_SIDEBAR_MIN_WIDTH there's no room left, so no ad.
-const SIDEBAR_WIDTH = PC_BANNER.width;
+// so the sidebars are overlaid with position: fixed. On a wide screen the
+// centered column already leaves room for them on both sides. On a narrower
+// PC window the page gets side padding instead, which shifts the column
+// (and narrows it if needed) so no sidebar ever covers it. The right sidebar
+// shows from PC_SIDEBAR_MIN_WIDTH, the left one only from
+// PC_LEFT_SIDEBAR_MIN_WIDTH so the column keeps its full 720px width.
 const SIDEBAR_MARGIN = 16;
-const SIDEBAR_RESERVE = SIDEBAR_WIDTH + SIDEBAR_MARGIN * 2;
+const SIDEBAR_RESERVE = PC_BANNER.width + SIDEBAR_MARGIN * 2;
+const LEFT_SIDEBAR_RESERVE = PC_LEFT_BANNER.width + SIDEBAR_MARGIN * 2;
 const PC_SIDEBAR_MIN_WIDTH = 1024;
+const PC_LEFT_SIDEBAR_MIN_WIDTH = 720 + SIDEBAR_RESERVE + LEFT_SIDEBAR_RESERVE + 32;
 // Content column widths: TEXT_CONTAINER_SX caps most pages at 720px; the
 // stats/heatmap pages use MUI's "md" container (900px).
 const WIDE_PAGES = new Set(["/stats", "/heatmap"]);
 function mediaQueries(pathname: string) {
   // /stats/2026-11-13 etc. are the same stats page (see lib/statsPath).
   const content = WIDE_PAGES.has(pathname) || pathname.startsWith("/stats/") ? 900 : 720;
+  // Centering clears both sidebars once each side has the wider one's room.
   const centeredMinWidth = content + 2 * SIDEBAR_RESERVE;
   return {
     sidebar: `@media (min-width: ${PC_SIDEBAR_MIN_WIDTH}px)`,
+    leftSidebar: `@media (min-width: ${PC_LEFT_SIDEBAR_MIN_WIDTH}px)`,
     needsReserve: `@media (max-width: ${centeredMinWidth - 0.02}px)`,
   };
 }
 
-// Fixed to the right edge, below the page header.
-function AdSidebar() {
+// Fixed to the left or right edge, below the page header.
+function AdSidebar({ banner, side }: { banner: Banner; side: "left" | "right" }) {
   return (
     <Box
       component="aside"
@@ -94,15 +101,15 @@ function AdSidebar() {
         display: "flex",
         position: "fixed",
         top: 80,
-        right: SIDEBAR_MARGIN,
-        width: SIDEBAR_WIDTH,
+        [side]: SIDEBAR_MARGIN,
+        width: banner.width,
         flexDirection: "column",
         alignItems: "center",
         gap: 1,
       }}
     >
       <AdLabel />
-      <BannerFrame banner={PC_BANNER} />
+      <BannerFrame banner={banner} />
     </Box>
   );
 }
@@ -136,13 +143,14 @@ function AdBar({ banner }: { banner: Banner }) {
   );
 }
 
-// Adds the ad sidebar (PC) / fixed bottom bar (smartphones) on top of a page.
+// Adds the ad sidebars (PC: right, plus left when wide enough) / fixed bottom bar (smartphones) on top of a page.
 // Only the matching banner is rendered: an iframe hidden with display: none
 // still loads and requests an ad, which would count impressions that can
 // never be viewed.
 export function AffiliateAdLayout({ pathname, children }: { pathname: string; children: ReactNode }) {
   const media = mediaQueries(pathname);
   const sidebarFits = useMediaQuery(media.sidebar, { noSsr: true });
+  const leftFits = useMediaQuery(media.leftSidebar, { noSsr: true });
   if (IS_SMARTPHONE) {
     return (
       <>
@@ -156,8 +164,15 @@ export function AffiliateAdLayout({ pathname, children }: { pathname: string; ch
   if (!sidebarFits) return <>{children}</>;
   return (
     <>
-      <Box sx={{ [media.needsReserve]: { pr: `${SIDEBAR_RESERVE}px` } }}>{children}</Box>
-      <AdSidebar />
+      <Box
+        sx={{
+          [media.needsReserve]: { pr: `${SIDEBAR_RESERVE}px`, pl: leftFits ? `${LEFT_SIDEBAR_RESERVE}px` : 0 },
+        }}
+      >
+        {children}
+      </Box>
+      {leftFits && <AdSidebar banner={PC_LEFT_BANNER} side="left" />}
+      <AdSidebar banner={PC_BANNER} side="right" />
     </>
   );
 }
