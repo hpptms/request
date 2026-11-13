@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
@@ -21,6 +22,9 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { api } from "../api";
 import { searchKeyword } from "../lib/affiliate";
+import { buildStatsPath, todayJst, type StatsSelection } from "../lib/statsPath";
+import { useSeo } from "../lib/useSeo";
+import { PAGE_SEO } from "../lib/pageSeo";
 import { AffiliateNotice, StoreLinksInline } from "./MusicLinks";
 import type { ChannelStat, RequesterStat, StatsPeriod, StatsSummary, TimeSlot, VideoStat } from "../types";
 
@@ -49,6 +53,51 @@ function formatDateLabel(dateStr: string): string {
   return `${y}年${m}月${d}日`;
 }
 
+// Per-URL <title>/description, so each day/week/slot page reads as its own
+// ranking in search results rather than a copy of /stats. The description
+// names the top artists once loaded, which is what actually differs from
+// page to page. Pages with nothing recorded are noindex: there's no
+// ranking to find there.
+function useStatsSeo(selection: StatsSelection, stats: StatsSummary | null) {
+  const path = buildStatsPath(selection);
+  const slotLabel = selection.slot ? `${TIME_SLOT_LABELS[selection.slot]}の` : "";
+  let subject: string | null = null;
+  if (selection.period === "all") {
+    subject = `累計${selection.slot ? `・${TIME_SLOT_LABELS[selection.slot]}` : ""}`;
+  } else if (selection.date || selection.slot) {
+    const start = stats?.rangeStart;
+    const end = stats?.rangeEnd;
+    const range =
+      selection.period === "week"
+        ? start && end
+          ? `${formatDateLabel(start)}〜${formatDateLabel(end)}の週`
+          : "今週"
+        : selection.date
+          ? formatDateLabel(selection.date)
+          : "今日";
+    subject = `${range}${slotLabel ? `・${slotLabel.slice(0, -1)}` : ""}`;
+  } else if (selection.period === "week") {
+    subject = "今週";
+  }
+
+  let title = PAGE_SEO["/stats"].title;
+  let description = PAGE_SEO["/stats"].description;
+  if (subject !== null) {
+    title = `${subject}の動画リクエストランキング | 動画リクエストキュー`;
+    const artists = (stats?.topArtistsByRequests ?? []).slice(0, 3).map((a) => a.artist);
+    description =
+      `動画リクエストキューの${subject}の集計。` +
+      (artists.length > 0 ? `リクエストの多かったアーティストは${artists.join("、")}など。` : "") +
+      "リクエストの多いアーティスト・チャンネル、いいね・bad・スベってるの多い動画のランキングです。";
+  }
+  const empty =
+    stats !== null &&
+    [stats.topArtistsByRequests, stats.topChannelsByRequests, stats.topVideosByLikes, stats.topVideosByCancelVotes].every(
+      (rows) => (rows ?? []).length === 0,
+    );
+  useSeo(title, description, path, { noindex: empty && subject !== null });
+}
+
 // Shared body for the stats screen: backend/internal/analytics に蓄積された
 // 「動画/チャンネルごとの日別リクエスト数・いいね数・bad(キャンセル投票)数」
 // を、日別/週別/累計で切り替えて表示する。store.Store は再生済み(done)
@@ -56,49 +105,56 @@ function formatDateLabel(dateStr: string): string {
 // ここに出る数字だけが再起動をまたいで残る唯一の履歴。集計自体は
 // GET /api/stats が公開エンドポイントのため、公開の集計画面(StatsPage)で
 // このコンポーネントを使う。
-export function StatsView() {
-  const [periodTab, setPeriodTab] = useState<StatsPeriod>("day");
-  // "" means every time of day (no filter) — the pre-existing behavior.
-  const [timeSlot, setTimeSlot] = useState<TimeSlot>("");
-  // The date (YYYY-MM-DD) driving prev/next navigation for "day"/"week";
-  // null means "let the server pick today" (see load below). Kept in sync
-  // with whatever rangeStart the server actually returns.
+export function StatsView({ selection }: { selection: StatsSelection }) {
+  const { period: periodTab, date, slot: timeSlot } = selection;
+  const navigate = useNavigate();
+  // The date (YYYY-MM-DD) driving prev/next navigation for "day"/"week" —
+  // whatever rangeStart the server actually returned, since a dateless URL
+  // ("today") or a mid-week date only resolves to a concrete range there.
   const [refDate, setRefDate] = useState<string | null>(null);
   const [stats, setStats] = useState<StatsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
-  const load = useCallback((period: StatsPeriod, date: string | null, slot: TimeSlot) => {
+  useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     setErrorMessage(null);
     api
-      .getStats(period, date ?? undefined, slot || undefined)
+      .getStats(periodTab, date ?? undefined, timeSlot || undefined)
       .then((result) => {
+        if (cancelled) return;
         setStats(result);
-        if (result.rangeStart) setRefDate(result.rangeStart);
+        setRefDate(result.rangeStart ?? null);
+        // A week URL naming a mid-week day is the same page as the week's
+        // first day: settle on that one address.
+        if (periodTab === "week" && date && result.rangeStart && result.rangeStart !== date) {
+          navigate(buildStatsPath({ period: "week", date: result.rangeStart, slot: timeSlot }), { replace: true });
+        }
       })
-      .catch((err) => setErrorMessage(err instanceof Error ? err.message : "取得に失敗しました"))
-      .finally(() => setLoading(false));
-  }, []);
+      .catch((err) => !cancelled && setErrorMessage(err instanceof Error ? err.message : "取得に失敗しました"))
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [periodTab, date, timeSlot, reloadKey, navigate]);
 
-  useEffect(() => {
-    load("day", null, "");
-  }, [load]);
+  const pathFor = (changes: Partial<StatsSelection>) => buildStatsPath({ ...selection, ...changes });
 
   const handlePeriodChange = (_: unknown, value: StatsPeriod) => {
-    setPeriodTab(value);
-    load(value, refDate, timeSlot);
+    navigate(pathFor({ period: value, date: value === "all" ? null : date }));
   };
 
   const handleTimeSlotChange = (_: unknown, value: TimeSlot) => {
-    setTimeSlot(value);
-    load(periodTab, refDate, value);
+    navigate(pathFor({ slot: value }));
   };
 
   const step = periodTab === "week" ? 7 : 1;
-  const handlePrev = () => refDate && load(periodTab, addDays(refDate, -step), timeSlot);
-  const handleNext = () => refDate && load(periodTab, addDays(refDate, step), timeSlot);
-  const handleJumpToToday = () => load(periodTab, null, timeSlot);
+  const prevPath = refDate ? pathFor({ date: addDays(refDate, -step) }) : null;
+  // No links into the future: those pages are always empty.
+  const nextDate = refDate ? addDays(refDate, step) : null;
+  const nextPath = nextDate && nextDate <= todayJst() ? pathFor({ date: nextDate }) : null;
 
   let rangeLabel = "";
   if (stats?.period === "day" && stats.rangeStart) {
@@ -106,6 +162,8 @@ export function StatsView() {
   } else if (stats?.period === "week" && stats.rangeStart && stats.rangeEnd) {
     rangeLabel = `${formatDateLabel(stats.rangeStart)} 〜 ${formatDateLabel(stats.rangeEnd)}`;
   }
+
+  useStatsSeo(selection, stats);
 
   return (
     <Stack spacing={3}>
@@ -128,16 +186,29 @@ export function StatsView() {
 
       {periodTab !== "all" && (
         <Stack direction="row" sx={{ alignItems: "center", justifyContent: "center", gap: { xs: 0.5, sm: 1 }, flexWrap: "wrap" }}>
-          <IconButton onClick={handlePrev} disabled={loading || !refDate} aria-label="前へ">
-            <ChevronLeftIcon />
-          </IconButton>
-          <Typography variant="subtitle1" sx={{ minWidth: { sm: 200 }, textAlign: "center" }}>
+          {/* Real links (not onClick), so crawlers can walk from day to day. */}
+          {prevPath && !loading ? (
+            <IconButton component={RouterLink} to={prevPath} aria-label="前へ">
+              <ChevronLeftIcon />
+            </IconButton>
+          ) : (
+            <IconButton disabled aria-label="前へ">
+              <ChevronLeftIcon />
+            </IconButton>
+          )}
+          <Typography variant="subtitle1" component="h2" sx={{ minWidth: { sm: 200 }, textAlign: "center" }}>
             {rangeLabel || " "}
           </Typography>
-          <IconButton onClick={handleNext} disabled={loading || !refDate} aria-label="次へ">
-            <ChevronRightIcon />
-          </IconButton>
-          <Button size="small" onClick={handleJumpToToday} disabled={loading} sx={{ ml: 1 }}>
+          {nextPath && !loading ? (
+            <IconButton component={RouterLink} to={nextPath} aria-label="次へ">
+              <ChevronRightIcon />
+            </IconButton>
+          ) : (
+            <IconButton disabled aria-label="次へ">
+              <ChevronRightIcon />
+            </IconButton>
+          )}
+          <Button size="small" component={RouterLink} to={pathFor({ date: null })} disabled={loading} sx={{ ml: 1 }}>
             {periodTab === "week" ? "今週" : "今日"}
           </Button>
         </Stack>
@@ -147,7 +218,7 @@ export function StatsView() {
         <Typography variant="body2" color="text.secondary">
           プレイリスト再生・フォールバック再生分は含まれません。
         </Typography>
-        <Button size="small" startIcon={<RefreshIcon />} onClick={() => load(periodTab, refDate, timeSlot)} disabled={loading}>
+        <Button size="small" startIcon={<RefreshIcon />} onClick={() => setReloadKey((k) => k + 1)} disabled={loading}>
           更新
         </Button>
       </Stack>

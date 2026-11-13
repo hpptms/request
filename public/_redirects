@@ -5,4 +5,9 @@
 /report   /  301
 /report/  /  301
 
+# Dated stats pages (/stats/2026-11-13, /stats/week/..., see
+# src/lib/statsPath.ts) get the prerendered stats page without its /stats
+# canonical (see prerenderSeo in vite.config.ts) instead of the home page's.
+/stats/*  /stats-dated.html  200
+
 /*  /index.html  200

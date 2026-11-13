@@ -111,7 +111,7 @@ function AppRoutes() {
         <Routes>
           <Route path="/" element={<BoardPage />} />
           <Route path="/play" element={<PlayPage />} />
-          <Route path="/stats" element={<StatsPage />} />
+          <Route path="/stats/*" element={<StatsPage />} />
           <Route path="/heatmap" element={<HeatmapPage />} />
           <Route path="/notice" element={<NoticePage />} />
           <Route path="/guide" element={<GuidePage />} />

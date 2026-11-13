@@ -60,7 +60,8 @@ const SIDEBAR_MARGIN = 16;
 // stats/heatmap pages use MUI's "md" container (900px).
 const WIDE_PAGES = new Set(["/stats", "/heatmap"]);
 function mediaQueries(pathname: string) {
-  const content = WIDE_PAGES.has(pathname) ? 900 : 720;
+  // /stats/2026-11-13 etc. are the same stats page (see lib/statsPath).
+  const content = WIDE_PAGES.has(pathname) || pathname.startsWith("/stats/") ? 900 : 720;
   const minWidth = content + 2 * (SIDEBAR_WIDTH + SIDEBAR_MARGIN * 2);
   return {
     sidebar: `@media (min-width: ${minWidth}px)`,

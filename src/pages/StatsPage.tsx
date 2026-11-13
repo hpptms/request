@@ -5,15 +5,17 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import { Footer } from "../components/Footer";
 import { StatsView } from "../components/StatsView";
-import { usePageSeo } from "../lib/useSeo";
+import { Navigate, useParams } from "react-router-dom";
+import { parseStatsPath } from "../lib/statsPath";
 import { PublicNavButtons } from "../components/PublicNavButtons";
 import { SiteLogo } from "../components/SiteLogo";
 
 // 公開の集計画面 (/stats): backend/internal/analytics の日別/週別/累計
 // ランキング(GET /api/stats、認証不要)を誰でも見られる形で表示する。
-// 中身は StatsView。
+// 中身は StatsView。期間・日付・時間帯はURLのパスで表す(lib/statsPath)。
 function StatsPage() {
-  usePageSeo("/stats");
+  const selection = parseStatsPath(useParams()["*"] ?? "");
+  if (!selection) return <Navigate to="/stats" replace />;
 
   return (
     <Box sx={{ minHeight: "100%", bgcolor: "background.default" }}>
@@ -28,7 +30,7 @@ function StatsPage() {
       </AppBar>
 
       <Container maxWidth="md" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1.5, sm: 3 } }}>
-        <StatsView />
+        <StatsView selection={selection} />
         <Footer />
       </Container>
     </Box>

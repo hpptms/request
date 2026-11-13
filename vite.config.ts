@@ -112,6 +112,13 @@ function prerenderSeo(): Plugin {
         html = replaceOnce(html, /<div id="seo-static">[\s\S]*?<\/nav><noscript>[\s\S]*?<\/noscript><\/div>/, seoStaticBlock(path), path)
 
         writeFileSync(resolve(outDir, `${path.slice(1)}.html`), html)
+        // /stats/2026-11-13, /stats/week/... (see src/lib/statsPath.ts) are
+        // served this copy of /stats via public/_redirects, minus the
+        // canonical: pointing those pages at /stats would tell crawlers
+        // they're duplicates of it. useSeo sets each one's own canonical.
+        if (path === '/stats') {
+          writeFileSync(resolve(outDir, 'stats-dated.html'), replaceOnce(html, /\s*<link rel="canonical" href="[^"]*" \/>/, '', path))
+        }
       }
     },
   }
