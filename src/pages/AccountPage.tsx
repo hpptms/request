@@ -56,13 +56,25 @@ function PlanComparison({ me }: { me: AccountMe }) {
         <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
           無料プラン
         </Typography>
-        <ContentList items={[`リクエストは${me.freeRequestIntervalMinutes / 60}時間に1回まで`, "広告が表示されます"]} />
+        <ContentList
+          items={[
+            `リクエストは${me.freeRequestIntervalMinutes / 60}時間に1回まで`,
+            `1時間あたり いいね${me.freeVoteLimits.like}票・bad${me.freeVoteLimits.bad}票まで`,
+            "広告が表示されます",
+          ]}
+        />
       </Paper>
       <Paper variant="outlined" sx={{ p: 2, flex: 1, borderColor: "primary.main" }}>
         <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
           {PLAN_NAME}（{PLAN_PRICE}）
         </Typography>
-        <ContentList items={[`キューに${me.supporterMaxPending}曲まで入れられます（待ち時間なし）`, "広告が表示されません"]} />
+        <ContentList
+          items={[
+            `キューに${me.supporterMaxPending}曲まで入れられます（待ち時間なし）`,
+            `1時間あたり いいね${me.supporterVoteLimits.like}票・bad${me.supporterVoteLimits.bad}票まで`,
+            "広告が表示されません",
+          ]}
+        />
       </Paper>
     </Stack>
   );
@@ -217,7 +229,7 @@ function LoggedIn({ me, user }: { me: AccountMe; user: AccountUser }) {
           <Typography variant="body1">
             {supporter
               ? `ご支援ありがとうございます。キューに${me.supporterMaxPending}曲まで入れられ、広告は表示されません。`
-              : `リクエストは${me.freeRequestIntervalMinutes / 60}時間に1回までです。`}
+              : `リクエストは${me.freeRequestIntervalMinutes / 60}時間に1回、いいねは1時間${me.freeVoteLimits.like}票・badは${me.freeVoteLimits.bad}票までです。`}
           </Typography>
           {!supporter && me.freeRequestWaitSeconds > 0 && (
             <Typography variant="body2" color="text.secondary">

@@ -128,6 +128,9 @@ export interface AccountMe {
   supporterMaxPending: number;
   freeRequestIntervalMinutes: number;
   freeRequestWaitSeconds: number;
+  // Hourly いいね/bad allowance per plan (free = 1/5 of the usual).
+  freeVoteLimits: { like: number; bad: number };
+  supporterVoteLimits: { like: number; bad: number };
 }
 
 // The admin panel's 意思表示 feature (see AdminBroadcastPage): a one-off
