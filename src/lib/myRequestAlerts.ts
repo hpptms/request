@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { VideoRequest } from "../types";
 import { isMyRequest } from "./myRequestStorage";
-import { playChime } from "./playChime";
 
 // Tells a visitor when their own request is about to play / starts playing,
 // so they can request a video, leave the tab in the background and still get
@@ -9,9 +8,9 @@ import { playChime } from "./playChime";
 // visitors coming back the next day; "your video is up" is the strongest
 // reason this site has to bring someone back to the tab.
 //
-// Three channels, each best-effort:
+// Two silent channels, each best-effort (no sound on purpose — an unasked-for
+// chime from a background tab would annoy more than it helps):
 // - a 【…】 prefix on document.title while the tab is hidden (always works),
-// - a chime when the tab is hidden (may be muted by autoplay policy),
 // - a system notification, only if the visitor opted in via
 //   requestAlertPermission() (see RequestForm's post-submit panel).
 
@@ -70,7 +69,7 @@ export function queuePosition(pending: VideoRequest[], id: string): number | nul
 
 export function useMyRequestAlerts(requests: VideoRequest[], requestsLoaded: boolean) {
   // Last alerted state per own request id. Seeded silently from the first
-  // load so a reload while your video is already up doesn't chime again.
+  // load so a reload while your video is already up doesn't alert again.
   const seen = useRef<Map<string, MyState> | null>(null);
   const activeMark = useRef<string | null>(null);
 
@@ -99,13 +98,9 @@ export function useMyRequestAlerts(requests: VideoRequest[], requestsLoaded: boo
     if (first) return;
     for (const [id, { state, request }] of current) {
       if (prev.get(id) === state) continue;
-      if (state === "playing") {
-        if (document.hidden) playChime();
-        if (document.hidden) notify("あなたのリクエストが再生中です", request.title, `playing-${id}`);
-      } else {
-        if (document.hidden) playChime();
-        if (document.hidden) notify("次はあなたのリクエストです", request.title, `next-${id}`);
-      }
+      if (!document.hidden) continue;
+      if (state === "playing") notify("あなたのリクエストが再生中です", request.title, `playing-${id}`);
+      else notify("次はあなたのリクエストです", request.title, `next-${id}`);
     }
   }, [requests, requestsLoaded]);
 
