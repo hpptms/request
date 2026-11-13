@@ -17,6 +17,11 @@ export type AccountState =
   | { status: "ready"; me: AccountMe };
 
 let state: AccountState = { status: "loading" };
+// Likes a request needs to be played ahead of others (AppConfig.
+// likePriorityThreshold) — a サポーター プラン request gets that priority from
+// the start. Kept here since refreshAccount already reads the config.
+let likePriorityThreshold = 5;
+export const getLikePriorityThreshold = () => likePriorityThreshold;
 let started = false;
 const listeners = new Set<() => void>();
 
@@ -34,6 +39,7 @@ export function setAccountMe(me: AccountMe) {
 export async function refreshAccount(): Promise<void> {
   try {
     const config = await api.getConfig();
+    likePriorityThreshold = config.likePriorityThreshold;
     if (!config.membershipEnabled) {
       set({ status: "disabled" });
       return;

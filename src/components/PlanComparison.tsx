@@ -9,7 +9,7 @@ import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import { Link as RouterLink } from "react-router-dom";
-import { useAccount } from "../lib/account";
+import { getLikePriorityThreshold, useAccount } from "../lib/account";
 import type { AccountMe } from "../types";
 
 export const PLAN_NAME = "サポーター プラン";
@@ -21,6 +21,7 @@ export function PlanComparisonTable({ me, current }: { me: AccountMe; current?: 
   const rows: [string, string, string][] = [
     ["料金", "無料", PLAN_PRICE],
     ["リクエスト", `${me.freeRequestIntervalMinutes / 60}時間に1回まで`, `待ち時間なし（キューに${me.supporterMaxPending}曲まで）`],
+    ["再生の順番", `いいね${getLikePriorityThreshold()}票で優先`, `最初から優先（いいね${getLikePriorityThreshold()}票と同じ）`],
     ["いいね（1時間あたり）", `${me.freeVoteLimits.like}票`, `${me.supporterVoteLimits.like}票`],
     ["bad（1時間あたり）", `${me.freeVoteLimits.bad}票`, `${me.supporterVoteLimits.bad}票`],
     ["広告", "表示あり", "表示なし"],
