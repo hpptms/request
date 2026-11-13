@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 // i-mobile ad banners. Their tag (spot.js) pulls scripts from many
 // ad-network hosts, which the SPA's strict CSP blocks, so each tag lives in
@@ -63,21 +64,17 @@ function mediaQueries(pathname: string) {
   // /stats/2026-11-13 etc. are the same stats page (see lib/statsPath).
   const content = WIDE_PAGES.has(pathname) || pathname.startsWith("/stats/") ? 900 : 720;
   const minWidth = content + 2 * (SIDEBAR_WIDTH + SIDEBAR_MARGIN * 2);
-  return {
-    sidebar: `@media (min-width: ${minWidth}px)`,
-    bar: `@media (max-width: ${minWidth - 0.02}px)`,
-  };
+  return { sidebar: `@media (min-width: ${minWidth}px)` };
 }
 
 // Fixed to the right edge, below the page header.
-function AdSidebar({ media }: { media: string }) {
+function AdSidebar() {
   return (
     <Box
       component="aside"
       aria-label="広告"
       sx={{
-        display: "none",
-        [media]: { display: "flex" },
+        display: "flex",
         position: "fixed",
         top: 80,
         right: SIDEBAR_MARGIN,
@@ -94,14 +91,13 @@ function AdSidebar({ media }: { media: string }) {
 }
 
 // Fixed bar at the bottom of the screen when there's no room for the sidebar.
-function MobileAdBar({ media }: { media: string }) {
+function MobileAdBar() {
   return (
     <Box
       component="aside"
       aria-label="広告"
       sx={{
-        display: "none",
-        [media]: { display: "flex" },
+        display: "flex",
         position: "fixed",
         left: 0,
         right: 0,
@@ -124,16 +120,24 @@ function MobileAdBar({ media }: { media: string }) {
 }
 
 // Adds the ad sidebar (wide screens) / fixed bottom bar (others) on top of a
-// page without touching the page's own layout.
+// page without touching the page's own layout. Only the matching banner is
+// rendered: an iframe hidden with display: none still loads and requests an
+// ad, which would count impressions that can never be viewed.
 export function AffiliateAdLayout({ pathname, children }: { pathname: string; children: ReactNode }) {
   const media = mediaQueries(pathname);
+  const wide = useMediaQuery(media.sidebar, { noSsr: true });
   return (
     <>
       {children}
-      {/* Keeps the page's last content (footer) from ending up under the fixed bar. */}
-      <Box sx={{ display: "none", [media.bar]: { display: "block" }, height: `calc(${MOBILE_AD_BAR_HEIGHT}px + env(safe-area-inset-bottom))` }} />
-      <AdSidebar media={media.sidebar} />
-      <MobileAdBar media={media.bar} />
+      {wide ? (
+        <AdSidebar />
+      ) : (
+        <>
+          {/* Keeps the page's last content (footer) from ending up under the fixed bar. */}
+          <Box sx={{ height: `calc(${MOBILE_AD_BAR_HEIGHT}px + env(safe-area-inset-bottom))` }} />
+          <MobileAdBar />
+        </>
+      )}
     </>
   );
 }
