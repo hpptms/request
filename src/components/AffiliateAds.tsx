@@ -21,9 +21,21 @@ interface Banner {
   height: number;
 }
 
-// Phones: smartphone banner (320x50) in a fixed bottom bar.
+// i-mobile registers PC and smartphone sites as separate "media" (mid 598064
+// = PC, 598127 = smartphone) and only fills a spot for the matching device,
+// decided by the user agent in spot.js. So the banner has to be picked by
+// device first and by viewport width second: a PC browser window too narrow
+// for the sidebar used to get the smartphone bar, which i-mobile never fills
+// on a PC, so no ad showed at all. This regex mirrors spot.js's own check
+// (iPadOS Safari reports a Mac UA, so i-mobile — and we — treat it as a PC).
+const SMARTPHONE_UA = /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i;
+const IS_SMARTPHONE = typeof navigator !== "undefined" && SMARTPHONE_UA.test(navigator.userAgent);
+
+// Smartphones: smartphone banner (320x50) in a fixed bottom bar.
 const MOBILE_BANNER: Banner = { src: `${AD_ORIGIN}/ad/sp-banner`, width: 320, height: 50 };
-export const MOBILE_AD_BAR_HEIGHT = MOBILE_BANNER.height + 8;
+// PCs too narrow for the sidebar: big banner (728x90) in the same bottom bar.
+const PC_BAR_BANNER: Banner = { src: `${AD_ORIGIN}/ad/pc-banner`, width: 728, height: 90 };
+const PC_BAR_MIN_WIDTH = PC_BAR_BANNER.width + 32;
 
 function BannerFrame({ banner }: { banner: Banner }) {
   return (
@@ -64,7 +76,10 @@ function mediaQueries(pathname: string) {
   // /stats/2026-11-13 etc. are the same stats page (see lib/statsPath).
   const content = WIDE_PAGES.has(pathname) || pathname.startsWith("/stats/") ? 900 : 720;
   const minWidth = content + 2 * (SIDEBAR_WIDTH + SIDEBAR_MARGIN * 2);
-  return { sidebar: `@media (min-width: ${minWidth}px)` };
+  return {
+    sidebar: `@media (min-width: ${minWidth}px)`,
+    pcBar: `@media (min-width: ${PC_BAR_MIN_WIDTH}px)`,
+  };
 }
 
 // Fixed to the right edge, below the page header.
@@ -91,7 +106,7 @@ function AdSidebar() {
 }
 
 // Fixed bar at the bottom of the screen when there's no room for the sidebar.
-function MobileAdBar() {
+function AdBar({ banner }: { banner: Banner }) {
   return (
     <Box
       component="aside"
@@ -114,28 +129,33 @@ function MobileAdBar() {
       <Box sx={{ position: "absolute", top: 2, left: 4 }}>
         <AdLabel />
       </Box>
-      <BannerFrame banner={MOBILE_BANNER} />
+      <BannerFrame banner={banner} />
     </Box>
   );
 }
 
-// Adds the ad sidebar (wide screens) / fixed bottom bar (others) on top of a
-// page without touching the page's own layout. Only the matching banner is
-// rendered: an iframe hidden with display: none still loads and requests an
-// ad, which would count impressions that can never be viewed.
+// Adds the ad sidebar (wide PC screens) / fixed bottom bar (others) on top
+// of a page without touching the page's own layout. Only the matching banner
+// is rendered: an iframe hidden with display: none still loads and requests
+// an ad, which would count impressions that can never be viewed. A PC window
+// narrower than even the 728px banner gets no ad (the smartphone spot would
+// stay empty there anyway).
 export function AffiliateAdLayout({ pathname, children }: { pathname: string; children: ReactNode }) {
   const media = mediaQueries(pathname);
   const wide = useMediaQuery(media.sidebar, { noSsr: true });
+  const pcBarFits = useMediaQuery(media.pcBar, { noSsr: true });
+  let bar: Banner | null = null;
+  if (IS_SMARTPHONE) bar = MOBILE_BANNER;
+  else if (!wide && pcBarFits) bar = PC_BAR_BANNER;
   return (
     <>
       {children}
-      {wide ? (
-        <AdSidebar />
-      ) : (
+      {!IS_SMARTPHONE && wide && <AdSidebar />}
+      {bar && (
         <>
           {/* Keeps the page's last content (footer) from ending up under the fixed bar. */}
-          <Box sx={{ height: `calc(${MOBILE_AD_BAR_HEIGHT}px + env(safe-area-inset-bottom))` }} />
-          <MobileAdBar />
+          <Box sx={{ height: `calc(${bar.height + 8}px + env(safe-area-inset-bottom))` }} />
+          <AdBar banner={bar} />
         </>
       )}
     </>
