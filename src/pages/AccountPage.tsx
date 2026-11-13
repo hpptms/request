@@ -18,6 +18,9 @@ import { api } from "../api";
 import { ContentPageLayout, ContentList } from "../components/ContentPageLayout";
 import { refreshAccount, setAccountMe, useAccount } from "../lib/account";
 import { useSeo } from "../lib/useSeo";
+import { sellerInfoReady } from "../lib/sellerInfo";
+import { Link as RouterLink } from "react-router-dom";
+import MuiLink from "@mui/material/Link";
 import type { AccountMe, AccountUser } from "../types";
 
 // Mirrors backend internal/account (MinUsernameLen etc.).
@@ -239,7 +242,7 @@ function LoggedIn({ me, user }: { me: AccountMe; user: AccountUser }) {
           {note && <Alert severity={supporter ? "info" : "warning"}>{note}</Alert>}
           {error && <Alert severity="error">{error}</Alert>}
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-            {!supporter && me.billingEnabled && (
+            {!supporter && me.billingEnabled && sellerInfoReady() && (
               <Button
                 variant="contained"
                 startIcon={<FavoriteIcon />}
@@ -258,7 +261,7 @@ function LoggedIn({ me, user }: { me: AccountMe; user: AccountUser }) {
               ログアウト
             </Button>
           </Stack>
-          {!supporter && !me.billingEnabled && (
+          {!supporter && (!me.billingEnabled || !sellerInfoReady()) && (
             <Typography variant="body2" color="text.secondary">
               {PLAN_NAME}は現在準備中です。
             </Typography>
@@ -273,6 +276,14 @@ function LoggedIn({ me, user }: { me: AccountMe; user: AccountUser }) {
           <PlanComparison me={me} />
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
             お支払いはStripeの決済ページで行います（クレジットカード情報は当サイトには保存されません）。毎月自動更新され、いつでも解約できます。
+            {sellerInfoReady() && (
+              <>
+                {" "}
+                <MuiLink component={RouterLink} to="/tokushoho">
+                  特定商取引法に基づく表記
+                </MuiLink>
+              </>
+            )}
           </Typography>
         </Box>
       )}

@@ -33,6 +33,7 @@ const CopyrightClaimPage = lazy(() => import("./pages/CopyrightClaimPage"));
 const AdminCopyrightClaimsPage = lazy(() => import("./pages/AdminCopyrightClaimsPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 const AccountPage = lazy(() => import("./pages/AccountPage"));
+const TokushohoPage = lazy(() => import("./pages/TokushohoPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const AdminBansPage = lazy(() => import("./pages/AdminBansPage"));
 const AdminPlaylistPage = lazy(() => import("./pages/AdminPlaylistPage"));
@@ -136,6 +137,7 @@ function AppRoutes() {
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/account" element={<AccountPage />} />
+          <Route path="/tokushoho" element={<TokushohoPage />} />
           <Route path="/viewer" element={<ViewerPage />} />
           <Route path="/admin" element={<AdminPage />}>
             <Route index element={<AdminBansPage />} />
