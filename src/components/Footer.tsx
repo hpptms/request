@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import { Link as RouterLink } from "react-router-dom";
+import { useAccount } from "../lib/account";
 
 // Shared bottom-of-page links to the site's other public pages (再生/集計/
 // ヒートマップ/お知らせ, plus 使い方ガイド/よくある質問/サイトについて/
@@ -34,6 +35,9 @@ const LINKS: [to: string, label: string][] = [
 ];
 
 export function Footer() {
+  // /account only once memberships are switched on (see lib/account.ts).
+  const account = useAccount();
+  const links: [string, string][] = account.status === "ready" ? [...LINKS, ["/account", "アカウント"]] : LINKS;
   return (
     <Box component="footer" sx={{ borderTop: 1, borderColor: "divider", mt: 4, py: 3 }}>
       {/* Phones: a two-column grid — one link per row made the footer
@@ -52,7 +56,7 @@ export function Footer() {
           px: 2,
         }}
       >
-        {LINKS.map(([to, label]) => (
+        {links.map(([to, label]) => (
           <Link key={to} component={RouterLink} to={to} variant="body2" color="text.secondary" underline="hover" sx={LINK_SX}>
             {label}
           </Link>

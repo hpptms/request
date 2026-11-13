@@ -6,10 +6,13 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import Link from "@mui/material/Link";
+import { Link as RouterLink } from "react-router-dom";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import TimerIcon from "@mui/icons-material/Timer";
 import { RequestSubmittedPanel } from "./RequestSubmittedPanel";
 import type { VideoRequest } from "../types";
+import { refreshAccount, useAccount, type AccountState } from "../lib/account";
 
 // Mirrors backend api.maxRequesterNameLen.
 const MAX_NAME_LENGTH = 30;
@@ -52,7 +55,30 @@ const inlineButtonSx = {
   "& .MuiButton-startIcon": { display: { xs: "none", sm: "inherit" } },
 } as const;
 
+// One line on the visitor's plan limits, linking to /account — only while
+// memberships are switched on (see lib/account.ts).
+function PlanNote({ account }: { account: AccountState }) {
+  if (account.status !== "ready") return null;
+  const { me } = account;
+  const text =
+    me.user?.plan === "supporter"
+      ? `サポーター プラン: キューに${me.supporterMaxPending}曲まで`
+      : me.freeRequestWaitSeconds > 0
+        ? `無料プラン: 次のリクエストまであと${Math.ceil(me.freeRequestWaitSeconds / 60)}分`
+        : `無料プラン: リクエストは${me.freeRequestIntervalMinutes / 60}時間に1回まで`;
+  return (
+    <Typography variant="caption" color="text.secondary" component="p" sx={{ mt: 1 }}>
+      {text}
+      {" ・ "}
+      <Link component={RouterLink} to="/account">
+        {me.user?.plan === "supporter" ? "アカウント" : "サポーター プランについて"}
+      </Link>
+    </Typography>
+  );
+}
+
 export function RequestForm({ onSubmit, inline = false }: Props) {
+  const account = useAccount();
   const [url, setUrl] = useState("");
   const [name, setName] = useState(loadSavedName);
   const [submitting, setSubmitting] = useState(false);
@@ -74,6 +100,8 @@ export function RequestForm({ onSubmit, inline = false }: Props) {
     } catch (err) {
       setError(err instanceof Error ? err.message : "リクエストの追加に失敗しました");
     } finally {
+      // The free-plan wait shown in PlanNote may have changed.
+      if (account.status === "ready") void refreshAccount();
       setSubmitting(false);
     }
   };
@@ -155,6 +183,7 @@ export function RequestForm({ onSubmit, inline = false }: Props) {
           </Stack>
         </Box>
         {errorAlert}
+        {error && <PlanNote account={account} />}
         {submittedPanel}
       </Box>
     );
@@ -176,6 +205,7 @@ export function RequestForm({ onSubmit, inline = false }: Props) {
         </Stack>
       </Box>
       {errorAlert}
+      <PlanNote account={account} />
       {submittedPanel}
     </Paper>
   );

@@ -101,6 +101,33 @@ export interface AppConfig {
   // twoMinuteRequest) is capped at this many seconds — see ViewerPage's
   // playback-capping effect.
   twoMinuteRequestCapSeconds: number;
+  // Visitor accounts + サポーター プラン (backend internal/api/account.go).
+  // Absent/false until the backend's MEMBERSHIP_ENABLED is switched on —
+  // the login/plan UI stays hidden and ads show for everyone until then.
+  membershipEnabled?: boolean;
+}
+
+// GET /api/account/me (and the register/login/sync responses).
+export interface AccountUser {
+  username: string;
+  plan: "supporter" | "free";
+  subscription?: {
+    // Stripe's status: "active", "trialing", "past_due", "canceled", ...
+    status: string;
+    // ISO 8601: the next renewal, or when a cancelled plan stops.
+    periodEnd?: string;
+    cancelAtPeriodEnd: boolean;
+  };
+  // Has a Stripe customer, so the billing portal can be opened.
+  hasBilling: boolean;
+}
+
+export interface AccountMe {
+  billingEnabled: boolean;
+  user: AccountUser | null;
+  supporterMaxPending: number;
+  freeRequestIntervalMinutes: number;
+  freeRequestWaitSeconds: number;
 }
 
 // The admin panel's 意思表示 feature (see AdminBroadcastPage): a one-off

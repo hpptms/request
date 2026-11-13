@@ -1,4 +1,5 @@
 import type {
+  AccountMe,
   AdminVideoRequest,
   AppConfig,
   BannedIP,
@@ -73,6 +74,22 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   getConfig: () => request<AppConfig>("/config"),
+
+  // Visitor accounts + サポーター プラン (see lib/account.ts). These routes
+  // only exist while the backend has memberships switched on
+  // (AppConfig.membershipEnabled).
+  accountMe: () => request<AccountMe>("/account/me"),
+  accountRegister: (username: string, password: string) =>
+    request<AccountMe>("/account/register", { method: "POST", body: JSON.stringify({ username, password }) }),
+  accountLogin: (username: string, password: string) =>
+    request<AccountMe>("/account/login", { method: "POST", body: JSON.stringify({ username, password }) }),
+  accountLogout: () => request<void>("/account/logout", { method: "POST" }),
+  // Returns Stripe-hosted page URLs to send the browser to.
+  billingCheckout: () => request<{ url: string }>("/billing/checkout", { method: "POST" }),
+  billingPortal: () => request<{ url: string }>("/billing/portal", { method: "POST" }),
+  // Re-reads the plan from Stripe (on return from Checkout, in case the
+  // webhook hasn't arrived yet).
+  billingSync: () => request<AccountMe>("/billing/sync", { method: "POST" }),
 
   // Whether the caller's own IP is currently banned — used to redirect a
   // banned visitor to /notice (see App.tsx's BanRedirect). Never cached

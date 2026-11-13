@@ -8,6 +8,7 @@ import { AffiliateAdLayout } from "./components/AffiliateAds";
 import BoardPage from "./pages/BoardPage";
 import { api } from "./api";
 import { usePageViewTracking } from "./lib/usePageViewTracking";
+import { isSupporter, useAccount } from "./lib/account";
 
 // Lazy-loaded: BoardPage ("/") is the landing page almost every visitor
 // hits first, so it's the only one that stays in the main bundle.
@@ -31,6 +32,7 @@ const CopyrightPage = lazy(() => import("./pages/CopyrightPage"));
 const CopyrightClaimPage = lazy(() => import("./pages/CopyrightClaimPage"));
 const AdminCopyrightClaimsPage = lazy(() => import("./pages/AdminCopyrightClaimsPage"));
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
+const AccountPage = lazy(() => import("./pages/AccountPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const AdminBansPage = lazy(() => import("./pages/AdminBansPage"));
 const AdminPlaylistPage = lazy(() => import("./pages/AdminPlaylistPage"));
@@ -101,7 +103,16 @@ function AppRoutes() {
   const showReplies = pathname !== "/viewer" && !pathname.startsWith("/admin");
   // Affiliate banners: not on /play (video/queue fill the screen), the OBS
   // page, or the admin section.
-  const showAds = pathname !== "/play" && pathname !== "/viewer" && !pathname.startsWith("/admin");
+  // Never for サポーター プラン members; while the account is still loading,
+  // held back so a supporter doesn't see them flash in first.
+  const account = useAccount();
+  const showAds =
+    account.status !== "loading" &&
+    !isSupporter(account) &&
+    pathname !== "/play" &&
+    pathname !== "/viewer" &&
+    pathname !== "/account" &&
+    !pathname.startsWith("/admin");
 
   return (
     <Suspense fallback={<LazyPageFallback />}>
@@ -124,6 +135,7 @@ function AppRoutes() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/account" element={<AccountPage />} />
           <Route path="/viewer" element={<ViewerPage />} />
           <Route path="/admin" element={<AdminPage />}>
             <Route index element={<AdminBansPage />} />
