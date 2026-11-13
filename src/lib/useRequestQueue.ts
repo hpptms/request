@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import type { CancelVoteTier, VideoRequest } from "../types";
 import { trackEvent } from "./analytics";
 import { markMyRequest } from "./myRequestStorage";
+import { hasActiveMyRequest, useMyRequestAlerts } from "./myRequestAlerts";
 import { setVoteQuota } from "./voteQuota";
 import { useStableState } from "./useStableState";
 import { DEFAULT_LONG_VIDEO_FAST_FORWARD, longVideoFastForwardCap } from "./longVideoMode";
@@ -10,6 +11,10 @@ import type { LongVideoFastForward } from "./longVideoMode";
 import { visibleInterval } from "./visibleInterval";
 
 const POLL_INTERVAL_MS = 4000;
+// While the tab is hidden, polling normally stops (visibleInterval). If this
+// browser has a request waiting or playing, keep checking at this slower
+// pace instead, so useMyRequestAlerts can tell them their video is up.
+const HIDDEN_POLL_INTERVAL_MS = 10000;
 // How many just-finished requests the board keeps open for like/bad. The
 // public /api/requests only carries this many (publicRecentDone in
 // backend/internal/api/api.go) — raise both together.
@@ -128,6 +133,19 @@ export function useRequestQueue(source: string) {
     return visibleInterval(refresh, POLL_INTERVAL_MS);
   }, [refresh]);
 
+  const hasMyActiveRef = useRef(false);
+  useEffect(() => {
+    hasMyActiveRef.current = hasActiveMyRequest(requests);
+  }, [requests]);
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (document.hidden && hasMyActiveRef.current) refresh();
+    }, HIDDEN_POLL_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [refresh]);
+
+  useMyRequestAlerts(requests, requestsLoaded);
+
   // Looks up a request's title/platform (as of this render) so trackEvent
   // calls below can show *which video* an action happened on in GA reports
   // instead of just an opaque request_id.
@@ -143,17 +161,18 @@ export function useRequestQueue(source: string) {
       request_id: created.id,
       video_title: created.title,
       platform: created.platform,
-      source,
+      ui_source: source,
       two_minute_request: twoMinuteRequest,
     });
     await refresh();
+    return created;
   };
 
   const handleCancelMine = async (id: string) => {
     const trackingParams = videoTrackingParams(id);
     try {
       await api.cancelMyRequest(id);
-      trackEvent("video_request_cancel_mine", { request_id: id, source, ...trackingParams });
+      trackEvent("video_request_cancel_mine", { request_id: id, ui_source: source, ...trackingParams });
       await refresh();
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "キャンセルに失敗しました");
@@ -164,7 +183,7 @@ export function useRequestQueue(source: string) {
     const trackingParams = videoTrackingParams(id);
     try {
       await api.playRequest(id);
-      trackEvent("video_request_admin_play", { request_id: id, source, ...trackingParams });
+      trackEvent("video_request_admin_play", { request_id: id, ui_source: source, ...trackingParams });
       await refresh();
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "操作に失敗しました");
@@ -175,7 +194,7 @@ export function useRequestQueue(source: string) {
     const trackingParams = videoTrackingParams(id);
     try {
       await api.doneRequest(id);
-      trackEvent("video_request_admin_done", { request_id: id, source, ...trackingParams });
+      trackEvent("video_request_admin_done", { request_id: id, ui_source: source, ...trackingParams });
       await refresh();
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "操作に失敗しました");
@@ -186,7 +205,7 @@ export function useRequestQueue(source: string) {
     const trackingParams = videoTrackingParams(id);
     try {
       await api.deleteRequest(id);
-      trackEvent("video_request_admin_delete", { request_id: id, source, ...trackingParams });
+      trackEvent("video_request_admin_delete", { request_id: id, ui_source: source, ...trackingParams });
       await refresh();
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : "操作に失敗しました");
@@ -203,7 +222,7 @@ export function useRequestQueue(source: string) {
       if (result.quota) setVoteQuota(result.quota);
       trackEvent("video_request_bad_vote", {
         request_id: id,
-        source,
+        ui_source: source,
         ...trackingParams,
       });
       await refresh();
@@ -223,7 +242,7 @@ export function useRequestQueue(source: string) {
       trackEvent(isSuper ? "video_request_super_like" : "video_request_like", {
         request_id: id,
         like_count: result.likeCount,
-        source,
+        ui_source: source,
         ...trackingParams,
       });
       await refresh();
@@ -242,7 +261,7 @@ export function useRequestQueue(source: string) {
       trackEvent("video_request_suberu", {
         request_id: id,
         suberu_count: result.suberuCount,
-        source,
+        ui_source: source,
         ...trackingParams,
       });
       await refresh();

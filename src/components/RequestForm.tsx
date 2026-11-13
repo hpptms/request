@@ -8,6 +8,8 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import TimerIcon from "@mui/icons-material/Timer";
+import { RequestSubmittedPanel } from "./RequestSubmittedPanel";
+import type { VideoRequest } from "../types";
 
 // Mirrors backend api.maxRequesterNameLen.
 const MAX_NAME_LENGTH = 30;
@@ -33,7 +35,7 @@ function saveName(name: string) {
 
 interface Props {
   // requesterName is optional ("" when left blank) and shown on the player.
-  onSubmit: (url: string, requesterName: string, twoMinuteRequest: boolean) => Promise<void>;
+  onSubmit: (url: string, requesterName: string, twoMinuteRequest: boolean) => Promise<VideoRequest | void>;
   // Compact single-row layout (URL, リクエスト, 2分でリクエスト side by side,
   // no card or title) for the /play screen's bottom bar. On phone widths the
   // button labels/icons shrink so it still fits one row.
@@ -55,17 +57,20 @@ export function RequestForm({ onSubmit, inline = false }: Props) {
   const [name, setName] = useState(loadSavedName);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState<VideoRequest | null>(null);
 
   const submit = async (twoMinuteRequest: boolean) => {
     if (!url.trim()) return;
 
     setSubmitting(true);
     setError(null);
+    setSubmitted(null);
     try {
       const trimmedName = name.trim();
       saveName(trimmedName);
-      await onSubmit(url.trim(), trimmedName, twoMinuteRequest);
+      const created = await onSubmit(url.trim(), trimmedName, twoMinuteRequest);
       setUrl("");
+      if (created) setSubmitted(created);
     } catch (err) {
       setError(err instanceof Error ? err.message : "リクエストの追加に失敗しました");
     } finally {
@@ -131,6 +136,10 @@ export function RequestForm({ onSubmit, inline = false }: Props) {
     </Alert>
   );
 
+  const submittedPanel = submitted && (
+    <RequestSubmittedPanel request={submitted} onClose={() => setSubmitted(null)} compact={inline} />
+  );
+
   if (inline) {
     return (
       <Box component="form" onSubmit={handleSubmit}>
@@ -146,6 +155,7 @@ export function RequestForm({ onSubmit, inline = false }: Props) {
           </Stack>
         </Box>
         {errorAlert}
+        {submittedPanel}
       </Box>
     );
   }
@@ -166,6 +176,7 @@ export function RequestForm({ onSubmit, inline = false }: Props) {
         </Stack>
       </Box>
       {errorAlert}
+      {submittedPanel}
     </Paper>
   );
 }

@@ -101,6 +101,25 @@ export function QueueList({
               sx={{ pr: { xs: 10, sm: 13 } }}
               primary={
                 <Stack direction="row" spacing={0.75} sx={{ alignItems: "center", minWidth: 0 }}>
+                  {isMyRequest(r.id) && (
+                    // Your own request's place in line, so you know roughly
+                    // when to come back (see useMyRequestAlerts).
+                    <Typography
+                      component="span"
+                      variant="caption"
+                      sx={{
+                        flexShrink: 0,
+                        px: 0.75,
+                        borderRadius: 1,
+                        bgcolor: "primary.main",
+                        color: "primary.contrastText",
+                        fontWeight: 700,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {i === 0 ? "あなた・次に再生" : `あなた・${i + 1}番目`}
+                    </Typography>
+                  )}
                   <Typography component="span" noWrap translate="no">
                     {r.title}
                   </Typography>

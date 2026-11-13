@@ -86,7 +86,7 @@ export function RecentDoneList({ requests, onVoteCancel, onLike, onSuberu }: Pro
                       request_id: r.id,
                       video_title: r.title,
                       platform: r.platform,
-                      source: "recent_done",
+                      ui_source: "recent_done",
                     })
                   }
                   sx={{ whiteSpace: "nowrap", borderRadius: 999, px: 2 }}

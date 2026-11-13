@@ -1238,7 +1238,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     trackEvent("video_request_submit", {
       request_id: created.id,
       platform: created.platform,
-      source: "viewer",
+      ui_source: "viewer",
     });
     await refresh();
   };

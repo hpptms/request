@@ -2,6 +2,11 @@
 // tracking specific user actions (request/like/cancel-vote/...) beyond the
 // automatic page_view. No-ops silently if gtag hasn't loaded (blocked by an
 // ad blocker, script still loading, etc) so analytics can never break the app.
+//
+// Never name an event parameter `source` / `medium` / `campaign`: GA4 reads
+// those as the session's traffic source, which is how ~70% of sessions ended
+// up attributed to "board" / "recent_done". Use `ui_source` for the screen
+// an action came from.
 declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void;

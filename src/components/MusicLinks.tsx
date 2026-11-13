@@ -12,7 +12,7 @@ import { trackEvent } from "../lib/analytics";
 // buttons, so GA can show which store and which song/artist keyword it was
 // searched for (source distinguishes the two call sites below).
 function trackMusicLinkClick(l: MusicLink, keyword: string, source: string) {
-  trackEvent("music_link_click", { store: l.key, keyword, affiliate: l.affiliate, source });
+  trackEvent("music_link_click", { store: l.key, keyword, affiliate: l.affiliate, ui_source: source });
 }
 
 // Each store's brand colours and mark, so a button reads as that service.

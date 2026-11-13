@@ -19,6 +19,7 @@ import ShieldIcon from "@mui/icons-material/Shield";
 import { cloneElement, useCallback, useEffect, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { Footer } from "../components/Footer";
+import { FirstVisitGuide } from "../components/FirstVisitGuide";
 import { TEXT_CONTAINER_SX } from "../lib/layout";
 import { NowLive } from "../components/NowLive";
 import { NowPlaying } from "../components/NowPlaying";
@@ -133,6 +134,7 @@ function BoardPage() {
           {/* Live status first, so it is on screen as soon as the page opens;
               the rules and change log are folded into one box below it. */}
           <NowLive onLoaded={handleLiveLoaded} />
+          <FirstVisitGuide />
           <NowPlaying
             nowPlaying={nowPlaying}
             cancelVoteTiers={cancelVoteTiers}

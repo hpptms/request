@@ -182,7 +182,7 @@ export function NowPlaying({
                   request_id: nowPlaying.id,
                   video_title: nowPlaying.title,
                   platform: nowPlaying.platform,
-                  source: "now_playing",
+                  ui_source: "now_playing",
                 })
               }
               sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
