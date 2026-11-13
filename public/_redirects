@@ -8,6 +8,8 @@
 # Dated stats pages (/stats/2026-11-13, /stats/week/..., see
 # src/lib/statsPath.ts) get the prerendered stats page without its /stats
 # canonical (see prerenderSeo in vite.config.ts) instead of the home page's.
-/stats/*  /stats-dated.html  200
+# No ".html" on the target: Pages answers that with a 308 to /stats-dated,
+# which would replace the address the visitor asked for.
+/stats/*  /stats-dated  200
 
 /*  /index.html  200
