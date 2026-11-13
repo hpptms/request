@@ -83,9 +83,7 @@ function TokushohoPage() {
         <Row label="解約について">
           {"アカウントページの「プランの管理」からいつでも解約できます。解約後も、お支払い済みの期間の終了日まではご利用いただけます。"}
         </Row>
-        <Row label="返品・返金について">
-          {"サービスの性質上、お支払い後の返金はいたしかねます。ただし、当サイトの不具合によりサービスを提供できなかった場合はこの限りではありません。"}
-        </Row>
+        <Row label="返品・返金について">お支払い後の返金はいたしかねます。</Row>
         <Row label="動作環境">最新版のGoogle Chrome・Safari・Microsoft Edge・Firefoxなど、一般的なWebブラウザ</Row>
       </Box>
     </ContentPageLayout>
