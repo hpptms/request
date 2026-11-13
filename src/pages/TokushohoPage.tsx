@@ -83,7 +83,15 @@ function TokushohoPage() {
         <Row label="解約について">
           {"アカウントページの「プランの管理」からいつでも解約できます。解約後も、お支払い済みの期間の終了日まではご利用いただけます。"}
         </Row>
-        <Row label="返品・返金について">お支払い後の返金はいたしかねます。</Row>
+        {/* Managed Payments: Link (Stripe) is the merchant of record and its
+            support also takes refund requests, so don't rule them out flatly. */}
+        <Row label="返品・返金について">
+          {"お支払い後の返金は原則としていたしかねます。\nお支払いはLink（Stripe）を通じて行われるため、返金に関するご相談はLinkのサポート（"}
+          <Link href="https://link.com" target="_blank" rel="noopener noreferrer">
+            link.com
+          </Link>
+          {"）でも受け付けています。"}
+        </Row>
         <Row label="動作環境">最新版のGoogle Chrome・Safari・Microsoft Edge・Firefoxなど、一般的なWebブラウザ</Row>
       </Box>
     </ContentPageLayout>
