@@ -52,8 +52,12 @@ const AdminPollsPage = lazy(() => import("./pages/AdminPollsPage"));
 // /admin has its own login-gated pages (an admin needs to reach them to
 // manage bans in the first place), and /viewer is the OBS capture output —
 // never redirect either away no matter what the visitor's IP looks like.
+// /account (and the pages a purchase links to) stay reachable too: a banned
+// visitor may log in and subscribe, and a サポーター プラン member isn't
+// subject to bans (the backend then reports them as not banned).
+const BAN_REDIRECT_EXEMPT = new Set(["/notice", "/viewer", "/account", "/tokushoho", "/terms", "/privacy"]);
 function isExemptFromBanRedirect(pathname: string) {
-  return pathname === "/notice" || pathname === "/viewer" || pathname.startsWith("/admin");
+  return BAN_REDIRECT_EXEMPT.has(pathname) || pathname.startsWith("/admin");
 }
 
 // Banned visitors can still load the site (nothing here requires auth), but

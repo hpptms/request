@@ -8,6 +8,7 @@ import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import { AdminMessageForm } from "../components/AdminMessageForm";
+import { BannedSupporterNote } from "../components/BannedSupporterNote";
 import { Footer } from "../components/Footer";
 import { BackToTopButton } from "../components/PublicNavButtons";
 import { TEXT_CONTAINER_SX } from "../lib/layout";
@@ -34,6 +35,7 @@ function NoticePage() {
 
       <Container maxWidth="sm" sx={TEXT_CONTAINER_SX}>
         <Stack spacing={3}>
+          <BannedSupporterNote />
           <Box component="section">
             <Typography variant="h6" component="h2" sx={{ mb: 1.5 }}>
               お知らせ・ルール
