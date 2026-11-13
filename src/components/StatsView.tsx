@@ -56,8 +56,9 @@ function formatDateLabel(dateStr: string): string {
 // Per-URL <title>/description, so each day/week/slot page reads as its own
 // ranking in search results rather than a copy of /stats. The description
 // names the top artists once loaded, which is what actually differs from
-// page to page. Pages with nothing recorded are noindex: there's no
-// ranking to find there.
+// page to page. Time-of-day pages (mostly a repeat of their whole day) and
+// days/weeks the backend deems too thin (stats.indexable) are noindex; the
+// backend's stats sitemap lists exactly the pages left indexable.
 function useStatsSeo(selection: StatsSelection, stats: StatsSummary | null) {
   const path = buildStatsPath(selection);
   const slotLabel = selection.slot ? `${TIME_SLOT_LABELS[selection.slot]}の` : "";
@@ -90,12 +91,8 @@ function useStatsSeo(selection: StatsSelection, stats: StatsSummary | null) {
       (artists.length > 0 ? `リクエストの多かったアーティストは${artists.join("、")}など。` : "") +
       "リクエストの多いアーティスト・チャンネル、いいね・bad・スベってるの多い動画のランキングです。";
   }
-  const empty =
-    stats !== null &&
-    [stats.topArtistsByRequests, stats.topChannelsByRequests, stats.topVideosByLikes, stats.topVideosByCancelVotes].every(
-      (rows) => (rows ?? []).length === 0,
-    );
-  useSeo(title, description, path, { noindex: empty && subject !== null });
+  const noindex = subject !== null && (selection.slot !== "" || stats?.indexable === false);
+  useSeo(title, description, path, { noindex });
 }
 
 // Shared body for the stats screen: backend/internal/analytics に蓄積された

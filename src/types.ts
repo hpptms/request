@@ -394,6 +394,10 @@ export interface StatsSummary {
   // every ranking below were substituted from the most recent day that does
   // — see backend/internal/api.handleStats.
   previousDayFallback?: boolean;
+  // Whether search engines may index this page: false for time-of-day
+  // slots and for days/weeks with too few requests — see backend/internal/
+  // api.statsIndexable. Absent from older backends.
+  indexable?: boolean;
   topChannelsByRequests: ChannelStat[];
   // Best-effort guess from titles/channel names (backend analytics/artist.go).
   topArtistsByRequests?: ArtistStat[];
