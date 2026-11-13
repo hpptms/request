@@ -9,6 +9,7 @@ import BoardPage from "./pages/BoardPage";
 import { api } from "./api";
 import { usePageViewTracking } from "./lib/usePageViewTracking";
 import { isSupporter, useAccount } from "./lib/account";
+import { LoggedOutElsewhereNotice } from "./components/LoggedOutElsewhereNotice";
 
 // Lazy-loaded: BoardPage ("/") is the landing page almost every visitor
 // hits first, so it's the only one that stays in the main bundle.
@@ -119,6 +120,7 @@ function AppRoutes() {
     <Suspense fallback={<LazyPageFallback />}>
       {showLikeRank && <LikeRankDialog />}
       {showReplies && <AdminReplyDialog />}
+      {pathname !== "/viewer" && <LoggedOutElsewhereNotice />}
       <AdWrapper show={showAds} pathname={pathname}>
         <Routes>
           <Route path="/" element={<BoardPage />} />

@@ -30,8 +30,33 @@ function set(next: AccountState) {
   listeners.forEach((l) => l());
 }
 
+// Sticky until dismissed: the server reports loggedOutElsewhere only once.
+let loggedOutElsewhere = false;
+
 export function setAccountMe(me: AccountMe) {
+  if (me.loggedOutElsewhere) loggedOutElsewhere = true;
   set({ status: "ready", me });
+}
+
+export function useLoggedOutElsewhere(): boolean {
+  return useSyncExternalStore(subscribe, () => loggedOutElsewhere);
+}
+
+export function dismissLoggedOutElsewhere() {
+  loggedOutElsewhere = false;
+  listeners.forEach((l) => l());
+}
+
+// While logged in, re-check every few minutes and whenever the tab comes
+// back into view, so a browser pushed out by a newer login (one browser per
+// account) finds out — and loses the supporter's ad-free view — promptly.
+const RECHECK_MS = 2 * 60 * 1000;
+function startRechecking() {
+  const recheck = () => {
+    if (document.visibilityState === "visible" && state.status === "ready" && state.me.user) void refreshAccount();
+  };
+  window.setInterval(recheck, RECHECK_MS);
+  document.addEventListener("visibilitychange", recheck);
 }
 
 // Re-fetches the account (after login/logout, or a request that changed
@@ -62,6 +87,7 @@ export function useAccount(): AccountState {
     if (!started) {
       started = true;
       void refreshAccount();
+      startRechecking();
     }
   }, []);
   return current;

@@ -131,6 +131,9 @@ export interface AccountMe {
   // Hourly いいね/bad allowance per plan (free = 1/5 of the usual).
   freeVoteLimits: { like: number; bad: number };
   supporterVoteLimits: { like: number; bad: number };
+  // Set once when this browser was logged out because the same account
+  // logged in somewhere else (only one browser per account).
+  loggedOutElsewhere?: boolean;
 }
 
 // The admin panel's 意思表示 feature (see AdminBroadcastPage): a one-off
