@@ -27,6 +27,7 @@ import { NowPlaying } from "../components/NowPlaying";
 import { QueueList } from "../components/QueueList";
 import { RecentDoneList } from "../components/RecentDoneList";
 import { RequestForm } from "../components/RequestForm";
+import { PlanComparisonBox } from "../components/PlanComparison";
 import { TodayThemeBox } from "../components/TodayThemeBox";
 import { PollBox } from "../components/PollBox";
 import { useRequestQueue } from "../lib/useRequestQueue";
@@ -153,6 +154,8 @@ function BoardPage() {
           <TodayThemeBox onLoaded={handleThemeLoaded} />
           <PollBox onLoaded={handlePollLoaded} />
           <RequestForm onSubmit={handleCreate} />
+          {/* Only while memberships are on, and not for supporters. */}
+          <PlanComparisonBox />
 
           <Box>
             <Typography variant="h6" component="h2" sx={{ mb: 1.5 }}>

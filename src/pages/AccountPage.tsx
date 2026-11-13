@@ -15,7 +15,8 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import LogoutIcon from "@mui/icons-material/Logout";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { api } from "../api";
-import { ContentPageLayout, ContentList } from "../components/ContentPageLayout";
+import { ContentPageLayout } from "../components/ContentPageLayout";
+import { PLAN_NAME, PLAN_PRICE, PlanComparisonTable } from "../components/PlanComparison";
 import { refreshAccount, setAccountMe, useAccount } from "../lib/account";
 import { useSeo } from "../lib/useSeo";
 import { sellerInfoReady } from "../lib/sellerInfo";
@@ -28,8 +29,6 @@ const MIN_USERNAME = 3;
 const MAX_USERNAME = 20;
 const MIN_PASSWORD = 8;
 
-const PLAN_NAME = "サポーター プラン";
-const PLAN_PRICE = "月額200円";
 
 function errorMessage(err: unknown, fallback: string) {
   return err instanceof Error ? err.message : fallback;
@@ -50,37 +49,6 @@ async function goToStripe(open: () => Promise<{ url: string }>, setError: (e: st
     setError(errorMessage(err, "ページを開けませんでした"));
     setBusy(false);
   }
-}
-
-function PlanComparison({ me }: { me: AccountMe }) {
-  return (
-    <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-      <Paper variant="outlined" sx={{ p: 2, flex: 1 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-          無料プラン
-        </Typography>
-        <ContentList
-          items={[
-            `リクエストは${me.freeRequestIntervalMinutes / 60}時間に1回まで`,
-            `1時間あたり いいね${me.freeVoteLimits.like}票・bad${me.freeVoteLimits.bad}票まで`,
-            "広告が表示されます",
-          ]}
-        />
-      </Paper>
-      <Paper variant="outlined" sx={{ p: 2, flex: 1, borderColor: "primary.main" }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-          {PLAN_NAME}（{PLAN_PRICE}）
-        </Typography>
-        <ContentList
-          items={[
-            `キューに${me.supporterMaxPending}曲まで入れられます（待ち時間なし）`,
-            `1時間あたり いいね${me.supporterVoteLimits.like}票・bad${me.supporterVoteLimits.bad}票まで`,
-            "広告が表示されません",
-          ]}
-        />
-      </Paper>
-    </Stack>
-  );
 }
 
 function CredentialsForm({ mode }: { mode: "login" | "register" }) {
@@ -173,7 +141,7 @@ function LoggedOut({ me }: { me: AccountMe }) {
         <Typography variant="h6" component="h2" gutterBottom>
           プランについて
         </Typography>
-        <PlanComparison me={me} />
+        <PlanComparisonTable me={me} />
         {me.billingEnabled && (
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
             {PLAN_NAME}への加入にはアカウントの登録が必要です。
@@ -268,12 +236,12 @@ function LoggedIn({ me, user }: { me: AccountMe; user: AccountUser }) {
           )}
         </Stack>
       </Paper>
-      {!supporter && (
-        <Box>
-          <Typography variant="h6" component="h2" gutterBottom>
-            プランについて
-          </Typography>
-          <PlanComparison me={me} />
+      <Box>
+        <Typography variant="h6" component="h2" gutterBottom>
+          プランの違い
+        </Typography>
+        <PlanComparisonTable me={me} current={user.plan} />
+        {!supporter && (
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
             お支払いはStripeの決済ページで行います（クレジットカード情報は当サイトには保存されません）。毎月自動更新され、いつでも解約できます。
             {sellerInfoReady() && (
@@ -285,8 +253,8 @@ function LoggedIn({ me, user }: { me: AccountMe; user: AccountUser }) {
               </>
             )}
           </Typography>
-        </Box>
-      )}
+        )}
+      </Box>
     </>
   );
 }
