@@ -10,7 +10,7 @@ declare global {
 // sound.
 let sharedContext: AudioContext | null = null;
 
-function getContext(): AudioContext | null {
+export function getAudioContext(): AudioContext | null {
   const Ctor = window.AudioContext ?? window.webkitAudioContext;
   if (!Ctor) return null;
   if (!sharedContext) sharedContext = new Ctor();
@@ -22,9 +22,11 @@ function getContext(): AudioContext | null {
 // useBroadcastOverlay when a new 意思表示 (message/image) is triggered.
 // No-ops silently (missing/blocked AudioContext, autoplay policy, etc.) so
 // a failed chime can never break the overlay itself.
-export function playChime(): void {
+// `volume` (0–1) scales the default level; the request alerts pass the
+// visitor's own setting (see alertSound.ts).
+export function playChime(volume = 1): void {
   try {
-    const ctx = getContext();
+    const ctx = getAudioContext();
     if (!ctx) return;
     if (ctx.state === "suspended") {
       ctx.resume().catch(() => {});
@@ -45,7 +47,7 @@ export function playChime(): void {
       const startAt = now + note.start;
       const endAt = startAt + note.duration;
       gain.gain.setValueAtTime(0, startAt);
-      gain.gain.linearRampToValueAtTime(0.3, startAt + 0.01);
+      gain.gain.linearRampToValueAtTime(Math.max(0.0011, 0.3 * volume), startAt + 0.01);
       gain.gain.exponentialRampToValueAtTime(0.001, endAt);
 
       osc.connect(gain);

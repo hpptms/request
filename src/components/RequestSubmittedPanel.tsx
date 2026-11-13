@@ -5,7 +5,7 @@ import Stack from "@mui/material/Stack";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import ShareIcon from "@mui/icons-material/Share";
 import { trackEvent } from "../lib/analytics";
-import { notificationPermission, requestAlertPermission } from "../lib/myRequestAlerts";
+import { AlertSettingsDialog } from "./AlertSettingsDialog";
 import type { VideoRequest } from "../types";
 
 const SHARE_URL = "https://request.tokyo/play";
@@ -18,7 +18,7 @@ function shareText(title: string): string {
 // invested in the site. Offers the two things that bring people (back) to
 // it — sharing the request with their own followers (the site's own SNS
 // account has almost none, so visitors' shares are the only SNS reach it
-// gets), and opting in to a notification when the video comes up.
+// gets), and setting up a notification / sound for when the video comes up.
 export function RequestSubmittedPanel({
   request,
   onClose,
@@ -28,7 +28,7 @@ export function RequestSubmittedPanel({
   onClose: () => void;
   compact?: boolean;
 }) {
-  const [permission, setPermission] = useState(notificationPermission);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const share = async () => {
     const text = shareText(request.title);
@@ -47,12 +47,6 @@ export function RequestSubmittedPanel({
     window.open(intent, "_blank", "noopener");
   };
 
-  const enableAlerts = async () => {
-    const result = await requestAlertPermission();
-    setPermission(result);
-    trackEvent("request_alert_permission", { result });
-  };
-
   return (
     <Alert severity="success" onClose={onClose} sx={{ mt: compact ? 1 : 2, "& .MuiAlert-message": { width: "100%" } }}>
       {compact ? "リクエストしました。" : "リクエストしました。順番が来ると、見ている全員の画面で再生されます。"}
@@ -60,12 +54,17 @@ export function RequestSubmittedPanel({
         <Button size="small" variant="outlined" color="inherit" startIcon={<ShareIcon />} onClick={share}>
           シェアして一緒に見る
         </Button>
-        {permission === "default" && (
-          <Button size="small" variant="outlined" color="inherit" startIcon={<NotificationsActiveIcon />} onClick={enableAlerts}>
-            再生前に通知する
-          </Button>
-        )}
+        <Button
+          size="small"
+          variant="outlined"
+          color="inherit"
+          startIcon={<NotificationsActiveIcon />}
+          onClick={() => setSettingsOpen(true)}
+        >
+          再生前に知らせる
+        </Button>
       </Stack>
+      <AlertSettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </Alert>
   );
 }

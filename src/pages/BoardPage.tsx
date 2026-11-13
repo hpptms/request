@@ -20,6 +20,7 @@ import { cloneElement, useCallback, useEffect, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { Footer } from "../components/Footer";
 import { FirstVisitGuide } from "../components/FirstVisitGuide";
+import { AlertSettingsButton } from "../components/AlertSettingsDialog";
 import { TEXT_CONTAINER_SX } from "../lib/layout";
 import { NowLive } from "../components/NowLive";
 import { NowPlaying } from "../components/NowPlaying";
@@ -125,6 +126,7 @@ function BoardPage() {
             <NavButton to="/stats" label="集計" icon={<LeaderboardIcon />} mode={navMode} />
             <NavButton to="/heatmap" label="ヒートマップ" icon={<MapIcon />} mode={navMode} />
             <NavButton to="/admin" label="管理者" icon={<ShieldIcon />} mode={navMode} external />
+            <AlertSettingsButton />
           </Stack>
         </Toolbar>
       </AppBar>

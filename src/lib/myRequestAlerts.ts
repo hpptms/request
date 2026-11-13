@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { VideoRequest } from "../types";
 import { isMyRequest } from "./myRequestStorage";
+import { playAlertSound } from "./alertSound";
 
 // Tells a visitor when their own request is about to play / starts playing,
 // so they can request a video, leave the tab in the background and still get
@@ -8,11 +9,13 @@ import { isMyRequest } from "./myRequestStorage";
 // visitors coming back the next day; "your video is up" is the strongest
 // reason this site has to bring someone back to the tab.
 //
-// Two silent channels, each best-effort (no sound on purpose — an unasked-for
-// chime from a background tab would annoy more than it helps):
+// Channels, each best-effort:
 // - a 【…】 prefix on document.title while the tab is hidden (always works),
 // - a system notification, only if the visitor opted in via
-//   requestAlertPermission() (see RequestForm's post-submit panel).
+//   requestAlertPermission(),
+// - a sound, only if the visitor turned it on (off by default — an
+//   unasked-for sound from a background tab would annoy more than it helps).
+// The latter two are set in AlertSettingsDialog and kept in this browser.
 
 const TITLE_MARK_RE = /^【[^】]*】 /;
 
@@ -99,6 +102,7 @@ export function useMyRequestAlerts(requests: VideoRequest[], requestsLoaded: boo
     for (const [id, { state, request }] of current) {
       if (prev.get(id) === state) continue;
       if (!document.hidden) continue;
+      void playAlertSound();
       if (state === "playing") notify("あなたのリクエストが再生中です", request.title, `playing-${id}`);
       else notify("次はあなたのリクエストです", request.title, `next-${id}`);
     }
