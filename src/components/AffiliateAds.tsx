@@ -33,9 +33,7 @@ const IS_SMARTPHONE = typeof navigator !== "undefined" && SMARTPHONE_UA.test(nav
 
 // Smartphones: smartphone banner (320x50) in a fixed bottom bar.
 const MOBILE_BANNER: Banner = { src: `${AD_ORIGIN}/ad/sp-banner`, width: 320, height: 50 };
-// PCs too narrow for the sidebar: big banner (728x90) in the same bottom bar.
-const PC_BAR_BANNER: Banner = { src: `${AD_ORIGIN}/ad/pc-banner`, width: 728, height: 90 };
-const PC_BAR_MIN_WIDTH = PC_BAR_BANNER.width + 32;
+const MOBILE_AD_BAR_HEIGHT = MOBILE_BANNER.height + 8;
 
 function BannerFrame({ banner }: { banner: Banner }) {
   return (
@@ -64,21 +62,25 @@ function AdLabel() {
 const PC_BANNER: Banner = { src: `${AD_ORIGIN}/ad/pc-sidebar`, width: 300, height: 600 };
 
 // The pages lay themselves out (full-width header, centered content column),
-// so the ads are overlaid with position: fixed instead of squeezing the page
-// into a flex row. The sidebar only shows when the viewport leaves room for
-// it beside the content column; narrower screens get the bottom bar instead.
+// so the sidebar is overlaid with position: fixed. On a wide screen the
+// centered column already leaves room for it on both sides. On a narrower PC
+// window the page gets right padding instead, which shifts the column left
+// (and narrows it if needed) so the sidebar never covers it. Below
+// PC_SIDEBAR_MIN_WIDTH there's no room left, so no ad.
 const SIDEBAR_WIDTH = PC_BANNER.width;
 const SIDEBAR_MARGIN = 16;
+const SIDEBAR_RESERVE = SIDEBAR_WIDTH + SIDEBAR_MARGIN * 2;
+const PC_SIDEBAR_MIN_WIDTH = 1024;
 // Content column widths: TEXT_CONTAINER_SX caps most pages at 720px; the
 // stats/heatmap pages use MUI's "md" container (900px).
 const WIDE_PAGES = new Set(["/stats", "/heatmap"]);
 function mediaQueries(pathname: string) {
   // /stats/2026-11-13 etc. are the same stats page (see lib/statsPath).
   const content = WIDE_PAGES.has(pathname) || pathname.startsWith("/stats/") ? 900 : 720;
-  const minWidth = content + 2 * (SIDEBAR_WIDTH + SIDEBAR_MARGIN * 2);
+  const centeredMinWidth = content + 2 * SIDEBAR_RESERVE;
   return {
-    sidebar: `@media (min-width: ${minWidth}px)`,
-    pcBar: `@media (min-width: ${PC_BAR_MIN_WIDTH}px)`,
+    sidebar: `@media (min-width: ${PC_SIDEBAR_MIN_WIDTH}px)`,
+    needsReserve: `@media (max-width: ${centeredMinWidth - 0.02}px)`,
   };
 }
 
@@ -134,30 +136,28 @@ function AdBar({ banner }: { banner: Banner }) {
   );
 }
 
-// Adds the ad sidebar (wide PC screens) / fixed bottom bar (others) on top
-// of a page without touching the page's own layout. Only the matching banner
-// is rendered: an iframe hidden with display: none still loads and requests
-// an ad, which would count impressions that can never be viewed. A PC window
-// narrower than even the 728px banner gets no ad (the smartphone spot would
-// stay empty there anyway).
+// Adds the ad sidebar (PC) / fixed bottom bar (smartphones) on top of a page.
+// Only the matching banner is rendered: an iframe hidden with display: none
+// still loads and requests an ad, which would count impressions that can
+// never be viewed.
 export function AffiliateAdLayout({ pathname, children }: { pathname: string; children: ReactNode }) {
   const media = mediaQueries(pathname);
-  const wide = useMediaQuery(media.sidebar, { noSsr: true });
-  const pcBarFits = useMediaQuery(media.pcBar, { noSsr: true });
-  let bar: Banner | null = null;
-  if (IS_SMARTPHONE) bar = MOBILE_BANNER;
-  else if (!wide && pcBarFits) bar = PC_BAR_BANNER;
+  const sidebarFits = useMediaQuery(media.sidebar, { noSsr: true });
+  if (IS_SMARTPHONE) {
+    return (
+      <>
+        {children}
+        {/* Keeps the page's last content (footer) from ending up under the fixed bar. */}
+        <Box sx={{ height: `calc(${MOBILE_AD_BAR_HEIGHT}px + env(safe-area-inset-bottom))` }} />
+        <AdBar banner={MOBILE_BANNER} />
+      </>
+    );
+  }
+  if (!sidebarFits) return <>{children}</>;
   return (
     <>
-      {children}
-      {!IS_SMARTPHONE && wide && <AdSidebar />}
-      {bar && (
-        <>
-          {/* Keeps the page's last content (footer) from ending up under the fixed bar. */}
-          <Box sx={{ height: `calc(${bar.height + 8}px + env(safe-area-inset-bottom))` }} />
-          <AdBar banner={bar} />
-        </>
-      )}
+      <Box sx={{ [media.needsReserve]: { pr: `${SIDEBAR_RESERVE}px` } }}>{children}</Box>
+      <AdSidebar />
     </>
   );
 }
