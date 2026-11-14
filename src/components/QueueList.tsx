@@ -18,7 +18,7 @@ import ThumbUpAltIcon from "@mui/icons-material/ThumbUpAlt";
 import { hasVoted, markVoted } from "../lib/cancelVoteStorage";
 import { hasLiked, hasSuperLiked, markLiked, markSuperLiked } from "../lib/likeStorage";
 import { hasSuberu, markSuberu } from "../lib/suberuStorage";
-import { useUnlimitedLikes } from "../lib/voteQuota";
+import { useUnlimitedLikes, FREE_PLAN_UNAVAILABLE, useCanSuperLike, useFreePlanRestricted } from "../lib/voteQuota";
 import { isMyRequest } from "../lib/myRequestStorage";
 import { listThumbnail } from "../lib/listThumbnail";
 import { ChannelAndRequester } from "./ChannelAndRequester";
@@ -180,6 +180,7 @@ export function SuperLikeIconButton({ request, onLike }: LikeIconButtonProps) {
   const unlimited = useUnlimitedLikes();
   const superLiked = !unlimited && hasSuperLiked(request.id);
   const own = !unlimited && isMyRequest(request.id);
+  const unavailable = !useCanSuperLike();
 
   const handleClick = async () => {
     setLiking(true);
@@ -194,11 +195,11 @@ export function SuperLikeIconButton({ request, onLike }: LikeIconButtonProps) {
     <Tooltip
       describeChild
       title={
-        own ? "自分のリクエストにはいいねできません" : superLiked ? "超いいね済み" : "超いいね"
+        own ? "自分のリクエストにはいいねできません" : superLiked ? "超いいね済み" : unavailable ? FREE_PLAN_UNAVAILABLE : "超いいね"
       }
     >
       <span>
-        <IconButton edge="end" onClick={handleClick} disabled={liking || superLiked || own} sx={{ fontSize: "1.1rem" }}>
+        <IconButton edge="end" onClick={handleClick} disabled={liking || superLiked || own || unavailable} sx={{ fontSize: "1.1rem" }}>
           <span role="img" aria-label="超いいね">
             😍
           </span>
@@ -217,6 +218,7 @@ interface SuberuIconButtonProps {
 export function SuberuIconButton({ request, onSuberu }: SuberuIconButtonProps) {
   const [pressing, setPressing] = useState(false);
   const pressed = hasSuberu(request.id);
+  const unavailable = useFreePlanRestricted();
 
   const handleClick = async () => {
     setPressing(true);
@@ -228,9 +230,9 @@ export function SuberuIconButton({ request, onSuberu }: SuberuIconButtonProps) {
   };
 
   return (
-    <Tooltip describeChild title={pressed ? "スベってる済み" : "スベってる"}>
+    <Tooltip describeChild title={pressed ? "スベってる済み" : unavailable ? FREE_PLAN_UNAVAILABLE : "スベってる"}>
       <span>
-        <IconButton edge="end" onClick={handleClick} disabled={pressing || pressed} sx={{ fontSize: "1.1rem" }}>
+        <IconButton edge="end" onClick={handleClick} disabled={pressing || pressed || unavailable} sx={{ fontSize: "1.1rem" }}>
           <span role="img" aria-label="スベってる">
             😒
           </span>
@@ -249,6 +251,7 @@ export function CancelVoteIconButton({ request, onVoteCancel }: CancelVoteIconBu
   const [voting, setVoting] = useState(false);
   const unlimited = useUnlimitedLikes();
   const voted = !unlimited && hasVoted(request.id);
+  const unavailable = useFreePlanRestricted();
 
   const handleClick = async () => {
     setVoting(true);
@@ -260,9 +263,9 @@ export function CancelVoteIconButton({ request, onVoteCancel }: CancelVoteIconBu
   };
 
   return (
-    <Tooltip describeChild title={voted ? "投票済み" : "キャンセルに投票"}>
+    <Tooltip describeChild title={voted ? "投票済み" : unavailable ? FREE_PLAN_UNAVAILABLE : "キャンセルに投票"}>
       <span>
-        <IconButton edge="end" aria-label="キャンセルに投票" color={voted ? "default" : "error"} onClick={handleClick} disabled={voting || voted}>
+        <IconButton edge="end" aria-label="キャンセルに投票" color={voted ? "default" : "error"} onClick={handleClick} disabled={voting || voted || unavailable}>
           <ThumbDownAltIcon fontSize="small" />
         </IconButton>
       </span>

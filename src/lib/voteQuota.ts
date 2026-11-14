@@ -23,6 +23,22 @@ export function useVoteQuota(): VoteQuota | null {
   );
 }
 
+// Free plan (memberships on): bad votes, スベってる and super likes aren't
+// available, so their buttons are disabled instead of sending a request the
+// server would only refuse. Read off the server's own quota for the caller
+// (the free plan is the only one with a 0 bad allowance), so it agrees with
+// the server's plan/admin decision; unknown (not loaded yet) allows.
+export const FREE_PLAN_UNAVAILABLE = "無料プランでは使えません（サポーター プランなら使えます）";
+export function useFreePlanRestricted(): boolean {
+  const q = useVoteQuota();
+  return q !== null && !q.unlimitedLikes && q.badLimit === 0;
+}
+// A super like costs two like points.
+export function useCanSuperLike(): boolean {
+  const q = useVoteQuota();
+  return q === null || q.unlimitedLikes === true || q.likeLimit >= 2;
+}
+
 // True for an admin IP, whose likes and bad votes the server counts on
 // every press with no quota — so those buttons never grey out as "already
 // voted".

@@ -1,6 +1,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { api } from "../api";
 import type { AccountMe } from "../types";
+import { setVoteQuota } from "./voteQuota";
 
 // Shared visitor-account state (login + サポーター プラン), read by the
 // account page, the request form, and App's ad layout (supporters see no
@@ -35,7 +36,13 @@ let loggedOutElsewhere = false;
 
 export function setAccountMe(me: AccountMe) {
   if (me.loggedOutElsewhere) loggedOutElsewhere = true;
+  const prevPlan = state.status === "ready" ? (state.me.user?.plan ?? "anon") : null;
   set({ status: "ready", me });
+  // The vote buttons' free-plan state comes from the server's quota (see
+  // useFreePlanRestricted); re-read it when the plan changes.
+  if (prevPlan !== null && prevPlan !== (me.user?.plan ?? "anon")) {
+    api.getMyVoteQuota().then(setVoteQuota).catch(() => {});
+  }
 }
 
 export function useLoggedOutElsewhere(): boolean {

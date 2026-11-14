@@ -19,7 +19,7 @@ import { isMyRequest } from "../lib/myRequestStorage";
 import type { CancelVoteTier, VideoRequest } from "../types";
 import { MusicLinks } from "./MusicLinks";
 import { VoteQuotaLabel } from "./VoteQuotaChip";
-import { useUnlimitedLikes } from "../lib/voteQuota";
+import { useUnlimitedLikes, FREE_PLAN_UNAVAILABLE, useCanSuperLike, useFreePlanRestricted } from "../lib/voteQuota";
 
 // Watch-page URL for the request's original video, by platform. videoId is
 // the bare id the backend extracted from whatever URL the requester
@@ -74,6 +74,8 @@ export function NowPlaying({
   const [liking, setLiking] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const unlimitedLikes = useUnlimitedLikes();
+  const freeRestricted = useFreePlanRestricted();
+  const canSuperLike = useCanSuperLike();
 
   if (!nowPlaying) {
     return (
@@ -203,7 +205,8 @@ export function NowPlaying({
               variant="outlined"
               color={superLiked ? "primary" : "inherit"}
               onClick={handleSuperLike}
-              disabled={liking || superLiked || ownRequest}
+              disabled={liking || superLiked || ownRequest || !canSuperLike}
+              title={!canSuperLike ? FREE_PLAN_UNAVAILABLE : undefined}
               sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
             >
               {superLiked ? "😍 超いいね済み" : "😍 超いいね"}
@@ -213,7 +216,8 @@ export function NowPlaying({
               color="error"
               startIcon={<ThumbDownAltIcon />}
               onClick={handleVote}
-              disabled={voting || voted}
+              disabled={voting || voted || freeRestricted}
+              title={freeRestricted ? FREE_PLAN_UNAVAILABLE : undefined}
               sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
             >
               {voted ? "投票済み" : `${formatDuration(nextTier.capSeconds)}に短縮へ投票`}
@@ -222,7 +226,8 @@ export function NowPlaying({
               variant="outlined"
               color="inherit"
               onClick={handleSuberu}
-              disabled={suberuPressing || suberuPressed}
+              disabled={suberuPressing || suberuPressed || freeRestricted}
+              title={freeRestricted ? FREE_PLAN_UNAVAILABLE : undefined}
               sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "nowrap" }}
             >
               {suberuPressed ? "😒 スベってる済み" : "😒 スベってる"} ({nowPlaying.suberu ?? 0})

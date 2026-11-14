@@ -14,7 +14,7 @@ import { formatDuration } from "../lib/formatDuration";
 import { loadYouTubeIframeApi } from "../lib/loadYouTubeIframeApi";
 import { hasLiked, hasSuperLiked, markLiked, markSuperLiked } from "../lib/likeStorage";
 import { hasSuberu, markSuberu } from "../lib/suberuStorage";
-import { useUnlimitedLikes } from "../lib/voteQuota";
+import { useUnlimitedLikes, FREE_PLAN_UNAVAILABLE, useCanSuperLike, useFreePlanRestricted } from "../lib/voteQuota";
 import {
   DURATION_BADGE_DELAY_MS,
   DURATION_BADGE_VISIBLE_MS,
@@ -249,6 +249,8 @@ export function RequestSidePlayer({
   const unlimitedLikes = useUnlimitedLikes();
   const liked = !unlimitedLikes && nowPlaying !== null && hasLiked(nowPlaying.id);
   const superLiked = !unlimitedLikes && nowPlaying !== null && hasSuperLiked(nowPlaying.id);
+  const freeRestricted = useFreePlanRestricted();
+  const canSuperLike = useCanSuperLike();
   const voted = !unlimitedLikes && nowPlaying !== null && hasVoted(nowPlaying.id);
   const [suberuPressing, setSuberuPressing] = useState(false);
   const suberuPressed = nowPlaying !== null && hasSuberu(nowPlaying.id);
@@ -600,13 +602,13 @@ export function RequestSidePlayer({
               </Button>
             </span>
           </Tooltip>
-          <Tooltip describeChild title={superLiked ? "超いいね済み" : "超いいね"}>
+          <Tooltip describeChild title={superLiked ? "超いいね済み" : !canSuperLike ? FREE_PLAN_UNAVAILABLE : "超いいね"}>
             <span>
               <Button
                 variant="contained"
                 size="small"
                 onClick={handleSuperLikeClick}
-                disabled={liking || superLiked}
+                disabled={liking || superLiked || !canSuperLike}
                 sx={{
                   minWidth: 44,
                   minHeight: 44,
@@ -627,7 +629,9 @@ export function RequestSidePlayer({
             title={
               voted
                 ? "投票済み"
-                : `${nextTier ? formatDuration(nextTier.capSeconds) : ""}に短縮へ投票`
+                : freeRestricted
+                  ? FREE_PLAN_UNAVAILABLE
+                  : `${nextTier ? formatDuration(nextTier.capSeconds) : ""}に短縮へ投票`
             }
           >
             <span>
@@ -636,7 +640,7 @@ export function RequestSidePlayer({
                 size="small"
                 color="error"
                 onClick={handleVoteClick}
-                disabled={voting || voted}
+                disabled={voting || voted || freeRestricted}
                 aria-label="短縮に投票"
                 sx={{
                   minWidth: 44,
@@ -651,13 +655,13 @@ export function RequestSidePlayer({
               </Button>
             </span>
           </Tooltip>
-          <Tooltip describeChild title={suberuPressed ? "スベってる済み" : "スベってる"}>
+          <Tooltip describeChild title={suberuPressed ? "スベってる済み" : freeRestricted ? FREE_PLAN_UNAVAILABLE : "スベってる"}>
             <span>
               <Button
                 variant="contained"
                 size="small"
                 onClick={handleSuberuClick}
-                disabled={suberuPressing || suberuPressed}
+                disabled={suberuPressing || suberuPressed || freeRestricted}
                 sx={{
                   minWidth: 44,
                   minHeight: 44,
