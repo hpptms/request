@@ -43,7 +43,7 @@ export function PlanComparisonTable({ me, current }: { me: AccountMe; current?: 
             <TableCell sx={{ ...cell, fontWeight: "bold", ...highlight("free") }}>
               無料プラン{current === "free" && "（現在）"}
             </TableCell>
-            <TableCell sx={{ ...cell, fontWeight: "bold", color: "primary.main", ...highlight("supporter") }}>
+            <TableCell sx={{ ...cell, fontWeight: "bold", color: "primary.light", ...highlight("supporter") }}>
               {PLAN_NAME}
               {current === "supporter" && "（現在）"}
             </TableCell>

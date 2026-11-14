@@ -34,6 +34,14 @@
   Content-Security-Policy: default-src 'self'; script-src 'self' https://www.youtube.com https://static.cloudflareinsights.com https://www.googletagmanager.com https://*.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ytimg.com https://*.ytimg.com https://*.nimg.jp https://*.vimeocdn.com https://api.request.tokyo https://*.doubleclick.net https://*.google.com https://*.google-analytics.com https://*.googletagmanager.com https://*.g.doubleclick.net https://*.google.co.jp; frame-src https://ads.request.tokyo https://www.youtube.com https://embed.nicovideo.jp https://player.vimeo.com https://www.google.com; connect-src 'self' https://cloudflareinsights.com https://api.request.tokyo https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://*.google.com https://www.googletagmanager.com https://*.doubleclick.net https://*.googletagmanager.com https://*.g.doubleclick.net https://*.google.co.jp; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
 
 
+# Vite's build output under /assets/ has a content hash in every file name
+# (index-Cih9M7vU.js), so a changed file always gets a new URL and these
+# can be cached forever. Cloudflare Pages' default (max-age=14400,
+# must-revalidate) made repeat visitors revalidate the bundle every 4 hours
+# (PageSpeed Insights: "Serve static assets with an efficient cache policy").
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
 # The i-mobile banners (public/ad/*.html) load spot.js, which in turn pulls
 # creatives/scripts from many ad-network hosts, so they can't run under the
 # strict CSP above. They live in their own documents, served from the

@@ -124,6 +124,23 @@ function prerenderSeo(): Plugin {
   }
 }
 
+// In production the API is a separate origin (VITE_API_BASE_URL =
+// https://api.request.tokyo/api), and the board's first render waits on
+// its responses — PageSpeed Insights flagged the connection setup
+// (DNS+TCP+TLS) to it as delaying LCP. A preconnect lets the browser open
+// that connection while the JS bundle is still downloading. No crossorigin
+// attribute: api.ts fetches with credentials: "include", which uses the
+// credentialed connection pool. Skipped when the API is same-origin.
+function apiPreconnect(apiBase: string | undefined): Plugin {
+  return {
+    name: 'api-preconnect',
+    transformIndexHtml() {
+      if (!apiBase || !/^https?:\/\//.test(apiBase)) return []
+      return [{ tag: 'link', attrs: { rel: 'preconnect', href: new URL(apiBase).origin }, injectTo: 'head-prepend' }]
+    },
+  }
+}
+
 // Proxy /api to the Go backend during `npm run dev` so the frontend can
 // always call the relative path "/api/...", matching how the Docker/nginx
 // setup serves both from the same origin in production.
@@ -132,7 +149,7 @@ export default defineConfig(({ mode }) => {
   const backendPort = env.BACKEND_PORT || '8090'
 
   return {
-    plugins: [react(), seoStatic(), prerenderSeo()],
+    plugins: [react(), seoStatic(), apiPreconnect(env.VITE_API_BASE_URL), prerenderSeo()],
     server: {
       proxy: {
         // changeOrigin off keeps the browser's Host (localhost:5173), which
