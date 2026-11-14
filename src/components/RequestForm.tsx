@@ -65,7 +65,7 @@ function PlanNote({ account }: { account: AccountState }) {
       ? `サポーター プラン: キューに${me.supporterMaxPending}曲まで`
       : me.freeRequestWaitSeconds > 0
         ? `無料プラン: 次のリクエストまであと${Math.ceil(me.freeRequestWaitSeconds / 60)}分`
-        : `無料プラン: リクエストは${me.freeRequestIntervalMinutes / 60}時間に1回まで`;
+        : `無料プラン: リクエストは${me.freeRequestIntervalMinutes / 60}時間に1回・キューに${me.freeMaxPending ?? 1}曲まで`;
   return (
     <Typography variant="caption" color="text.secondary" component="p" sx={{ mt: 1 }}>
       {text}

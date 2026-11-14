@@ -20,7 +20,11 @@ export const PLAN_PRICE = "月額200円";
 export function PlanComparisonTable({ me, current }: { me: AccountMe; current?: "free" | "supporter" }) {
   const rows: [string, string, string][] = [
     ["料金", "無料", PLAN_PRICE],
-    ["リクエスト", `${me.freeRequestIntervalMinutes / 60}時間に1回まで`, `待ち時間なし（キューに${me.supporterMaxPending}曲まで）`],
+    [
+      "リクエスト",
+      `${me.freeRequestIntervalMinutes / 60}時間に1回まで（キューに${me.freeMaxPending ?? 1}曲まで）`,
+      `待ち時間なし（キューに${me.supporterMaxPending}曲まで）`,
+    ],
     ["再生の順番", `いいね${getLikePriorityThreshold()}票で優先`, `最初から優先（いいね${getLikePriorityThreshold()}票と同じ）`],
     ["いいね（1時間あたり）", `${me.freeVoteLimits.like}票`, `${me.supporterVoteLimits.like}票`],
     ["bad（1時間あたり）", `${me.freeVoteLimits.bad}票`, `${me.supporterVoteLimits.bad}票`],

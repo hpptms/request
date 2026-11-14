@@ -128,6 +128,9 @@ export interface AccountMe {
   supporterMaxPending: number;
   freeRequestIntervalMinutes: number;
   freeRequestWaitSeconds: number;
+  // Free plan: how many of their songs may be in the queue at once (1 —
+  // no new request while theirs is still queued or playing).
+  freeMaxPending?: number;
   // Hourly いいね/bad allowance per plan (free = 1/5 of the usual).
   freeVoteLimits: { like: number; bad: number };
   supporterVoteLimits: { like: number; bad: number };
