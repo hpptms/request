@@ -13,11 +13,9 @@ import { BackToTopButton } from "../components/PublicNavButtons";
 import { TEXT_CONTAINER_SX } from "../lib/layout";
 import { SiteLogo } from "../components/SiteLogo";
 
-// プライバシーポリシー (/privacy)。Google公式ヘルプが必須としている3点
-// (第三者配信事業者によるCookie利用/パーソナライズド広告の表示/広告設定
-// による無効化手段)を明記した、AdSense審査で唯一必須のページ。実際に本
-// サイトが行っているGoogle Analyticsでのアクセス解析、荒らし対策目的の
-// IPアドレス利用についても合わせて記載する。
+// プライバシーポリシー (/privacy)。第三者配信広告(i-mobile・忍者AdMax)の
+// Cookie利用とオプトアウト手段、Google Analyticsでのアクセス解析、荒らし
+// 対策目的のIPアドレス利用、アカウント・Stripe決済で扱う情報を記載する。
 function PrivacyPolicyPage() {
   usePageSeo("/privacy");
 
@@ -50,6 +48,22 @@ function PrivacyPolicyPage() {
 
           <Box>
             <Typography variant="h6" gutterBottom>
+              アカウントとサポーター プランについて
+            </Typography>
+            <Typography variant="body1">
+              アカウントを登録する場合は、ユーザー名とパスワードを取得します。パスワードは復元できない形式(ハッシュ値)に変換して保存し、元のパスワードを保存することはありません。ログイン状態の維持のため、ブラウザにログイン用のCookieを保存します(最後の利用から90日間有効)。
+            </Typography>
+            <Typography variant="body1" sx={{ mt: 1.5 }}>
+              サポーター プランのお支払いは、Stripe, Inc.が提供する決済サービス「Stripe」の決済ページで行います。クレジットカード番号などの支払情報はStripeが取得・管理し、本サービスが受け取ったり保存したりすることはありません。本サービスは、プランの状態を管理するため、Stripeの顧客ID・契約ID・契約状態・契約期間の終了日のみを保存します。Stripeにおける個人情報の取り扱いは
+              <Link href="https://stripe.com/jp/privacy" target="_blank" rel="noopener noreferrer">
+                Stripeのプライバシーポリシー
+              </Link>
+              をご覧ください。
+            </Typography>
+          </Box>
+
+          <Box>
+            <Typography variant="h6" gutterBottom>
               アクセス解析ツール（Google アナリティクス）について
             </Typography>
             <Typography variant="body1">
@@ -70,18 +84,14 @@ function PrivacyPolicyPage() {
               第三者配信の広告サービスについて
             </Typography>
             <Typography variant="body1">
-              当サイトは、Googleをはじめとする第三者配信事業者による広告サービスを利用する場合があります。これら広告配信事業者は、利用者の興味に応じた広告を表示するため、当サイトや他サイトへのアクセスに関する情報（Cookie等）を用いることがあります。
+              当サイトは、第三者配信事業者による広告サービスを利用しています。これら広告配信事業者は、利用者の興味に応じた広告を表示するため、当サイトや他サイトへのアクセスに関する情報（Cookie等）を用いることがあります。
             </Typography>
             <Typography variant="body1" sx={{ mt: 1 }}>
-              Googleが広告配信にCookieを使用することにより、当サイトや他のサイトへの過去のアクセス情報に基づいて、ユーザーの興味に応じた広告（パーソナライズド広告）を表示しています。パーソナライズド広告の表示を無効にする場合は、
-              <Link href="https://adssettings.google.com/authenticated" target="_blank" rel="noopener noreferrer">
-                広告設定
-              </Link>
-              にアクセスして行うことができます。またパーソナライズド広告に使われるCookieを無効にする場合は
+              利用者の興味に応じた広告(行動ターゲティング広告)に使われるCookieは、お使いのブラウザの設定で無効にできるほか、
               <Link href="https://www.aboutads.info/choices/" target="_blank" rel="noopener noreferrer">
                 aboutads.info
               </Link>
-              にアクセスし、オプトアウトの設定を行うことができます。
+              にアクセスしてオプトアウトの設定を行うこともできます。
             </Typography>
           </Box>
 
@@ -93,7 +103,10 @@ function PrivacyPolicyPage() {
               当サイトは、楽天アフィリエイトの参加者です。再生中の曲の横や集計ページに表示する「楽天」のリンクは広告(アフィリエイトリンク)で、リンク先で商品を購入すると、当サイトが紹介料を受け取ることがあります。これらのリンクをクリックすると、楽天のサイトでCookie等が利用されることがあります。
             </Typography>
             <Typography variant="body1" sx={{ mt: 1.5 }}>
-              また、当サイトは株式会社アイモバイルの広告配信サービス「i-mobile」を利用しています。画面の右側(スマートフォンでは画面下部)に「広告」と表示しているバナーは、i-mobileを通じて配信される第三者の広告です。広告の配信や表示・クリックの計測のため、アイモバイルおよび提携する広告配信事業者によりCookie等が利用されることがあります。
+              また、当サイトは株式会社アイモバイルの広告配信サービス「i-mobile」と、株式会社忍者の広告配信サービス「忍者AdMax」を利用しています。画面の右側・左側(スマートフォンでは画面下部)に「広告」と表示しているバナーは、これらのサービスを通じて配信される第三者の広告です。広告の配信や表示・クリックの計測のため、各社および提携する広告配信事業者によりCookie等が利用されることがあります。
+            </Typography>
+            <Typography variant="body1" sx={{ mt: 1.5 }}>
+              サポーター プランに加入中の方には、これらの広告バナーは表示されません。
             </Typography>
           </Box>
 
@@ -121,6 +134,8 @@ function PrivacyPolicyPage() {
 
           <Typography variant="body2" color="text.secondary">
             制定日: 2026年9月16日
+            <br />
+            最終改定日: 2026年11月14日
           </Typography>
         </Stack>
 
