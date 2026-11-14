@@ -6,8 +6,9 @@ import { useAccount } from "../lib/account";
 import { sellerInfoReady } from "../lib/sellerInfo";
 
 // Shared bottom-of-page links to the site's other public pages (再生/集計/
-// ヒートマップ/お知らせ, plus 使い方ガイド/よくある質問/サイトについて/
-// プライバシーポリシー/利用規約/著作権ガイドライン/お問い合わせ)
+// ヒートマップ/お知らせ, plus テーマ投票/アンケート/使い方ガイド/よくある質問/
+// サイトについて/プライバシーポリシー/利用規約/著作権ガイドライン/お問い合わせ,
+// and アカウント/特定商取引法に基づく表記 once memberships are on)
 // — the first four are also in BoardPage's header, but not in every other
 // page's, so listing them here gives each public page a crawlable path to
 // all the others. Added to the pages a crawler or
@@ -26,6 +27,8 @@ const LINKS: [to: string, label: string][] = [
   ["/stats", "集計"],
   ["/heatmap", "ヒートマップ"],
   ["/notice", "お知らせ"],
+  ["/themes", "テーマ投票"],
+  ["/polls", "アンケート"],
   ["/guide", "使い方ガイド"],
   ["/faq", "よくある質問"],
   ["/about", "サイトについて"],
