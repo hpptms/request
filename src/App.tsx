@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, type ReactNode } from "react";
+import { Suspense, useEffect, type ReactNode } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -7,6 +7,7 @@ import LikeRankDialog from "./components/LikeRankDialog";
 import { AffiliateAdLayout } from "./components/AffiliateAds";
 import BoardPage from "./pages/BoardPage";
 import { api } from "./api";
+import { lazyPage } from "./lib/lazyPage";
 import { usePageViewTracking } from "./lib/usePageViewTracking";
 import { isSupporter, useAccount } from "./lib/account";
 import { LoggedOutElsewhereNotice } from "./components/LoggedOutElsewhereNotice";
@@ -16,38 +17,38 @@ import { LoggedOutElsewhereNotice } from "./components/LoggedOutElsewhereNotice"
 // Everything else — including the entire admin section and
 // ViewerPage (OBS-capture only) — is fetched on demand instead of paid for
 // by every visitor up front.
-const PlayPage = lazy(() => import("./pages/PlayPage"));
-const StatsPage = lazy(() => import("./pages/StatsPage"));
-const HeatmapPage = lazy(() => import("./pages/HeatmapPage"));
-const AboutPage = lazy(() => import("./pages/AboutPage"));
-const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
-const ContactPage = lazy(() => import("./pages/ContactPage"));
-const ViewerPage = lazy(() => import("./pages/ViewerPage"));
-const NoticePage = lazy(() => import("./pages/NoticePage"));
-const GuidePage = lazy(() => import("./pages/GuidePage"));
-const FaqPage = lazy(() => import("./pages/FaqPage"));
-const ThemesPage = lazy(() => import("./pages/ThemesPage"));
-const PollsPage = lazy(() => import("./pages/PollsPage"));
-const TermsPage = lazy(() => import("./pages/TermsPage"));
-const CopyrightPage = lazy(() => import("./pages/CopyrightPage"));
-const CopyrightClaimPage = lazy(() => import("./pages/CopyrightClaimPage"));
-const AdminCopyrightClaimsPage = lazy(() => import("./pages/AdminCopyrightClaimsPage"));
-const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
-const AccountPage = lazy(() => import("./pages/AccountPage"));
-const TokushohoPage = lazy(() => import("./pages/TokushohoPage"));
-const AdminPage = lazy(() => import("./pages/AdminPage"));
-const AdminBansPage = lazy(() => import("./pages/AdminBansPage"));
-const AdminPlaylistPage = lazy(() => import("./pages/AdminPlaylistPage"));
-const AdminBlockedWordsPage = lazy(() => import("./pages/AdminBlockedWordsPage"));
-const AdminSafeListsPage = lazy(() => import("./pages/AdminSafeListsPage"));
-const AdminFastForwardPage = lazy(() => import("./pages/AdminFastForwardPage"));
-const AdminFeaturesPage = lazy(() => import("./pages/AdminFeaturesPage"));
-const AdminBroadcastPage = lazy(() => import("./pages/AdminBroadcastPage"));
-const AdminInterruptPage = lazy(() => import("./pages/AdminInterruptPage"));
-const AdminMessagesPage = lazy(() => import("./pages/AdminMessagesPage"));
-const AdminNowLivePage = lazy(() => import("./pages/AdminNowLivePage"));
-const AdminThemesPage = lazy(() => import("./pages/AdminThemesPage"));
-const AdminPollsPage = lazy(() => import("./pages/AdminPollsPage"));
+const PlayPage = lazyPage(() => import("./pages/PlayPage"));
+const StatsPage = lazyPage(() => import("./pages/StatsPage"));
+const HeatmapPage = lazyPage(() => import("./pages/HeatmapPage"));
+const AboutPage = lazyPage(() => import("./pages/AboutPage"));
+const PrivacyPolicyPage = lazyPage(() => import("./pages/PrivacyPolicyPage"));
+const ContactPage = lazyPage(() => import("./pages/ContactPage"));
+const ViewerPage = lazyPage(() => import("./pages/ViewerPage"));
+const NoticePage = lazyPage(() => import("./pages/NoticePage"));
+const GuidePage = lazyPage(() => import("./pages/GuidePage"));
+const FaqPage = lazyPage(() => import("./pages/FaqPage"));
+const ThemesPage = lazyPage(() => import("./pages/ThemesPage"));
+const PollsPage = lazyPage(() => import("./pages/PollsPage"));
+const TermsPage = lazyPage(() => import("./pages/TermsPage"));
+const CopyrightPage = lazyPage(() => import("./pages/CopyrightPage"));
+const CopyrightClaimPage = lazyPage(() => import("./pages/CopyrightClaimPage"));
+const AdminCopyrightClaimsPage = lazyPage(() => import("./pages/AdminCopyrightClaimsPage"));
+const NotFoundPage = lazyPage(() => import("./pages/NotFoundPage"));
+const AccountPage = lazyPage(() => import("./pages/AccountPage"));
+const TokushohoPage = lazyPage(() => import("./pages/TokushohoPage"));
+const AdminPage = lazyPage(() => import("./pages/AdminPage"));
+const AdminBansPage = lazyPage(() => import("./pages/AdminBansPage"));
+const AdminPlaylistPage = lazyPage(() => import("./pages/AdminPlaylistPage"));
+const AdminBlockedWordsPage = lazyPage(() => import("./pages/AdminBlockedWordsPage"));
+const AdminSafeListsPage = lazyPage(() => import("./pages/AdminSafeListsPage"));
+const AdminFastForwardPage = lazyPage(() => import("./pages/AdminFastForwardPage"));
+const AdminFeaturesPage = lazyPage(() => import("./pages/AdminFeaturesPage"));
+const AdminBroadcastPage = lazyPage(() => import("./pages/AdminBroadcastPage"));
+const AdminInterruptPage = lazyPage(() => import("./pages/AdminInterruptPage"));
+const AdminMessagesPage = lazyPage(() => import("./pages/AdminMessagesPage"));
+const AdminNowLivePage = lazyPage(() => import("./pages/AdminNowLivePage"));
+const AdminThemesPage = lazyPage(() => import("./pages/AdminThemesPage"));
+const AdminPollsPage = lazyPage(() => import("./pages/AdminPollsPage"));
 
 // /admin has its own login-gated pages (an admin needs to reach them to
 // manage bans in the first place), and /viewer is the OBS capture output —
