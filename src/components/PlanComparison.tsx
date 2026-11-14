@@ -26,8 +26,9 @@ export function PlanComparisonTable({ me, current }: { me: AccountMe; current?: 
       `待ち時間なし（キューに${me.supporterMaxPending}曲まで）`,
     ],
     ["再生の順番", `いいね${getLikePriorityThreshold()}票で優先`, `最初から優先（いいね${getLikePriorityThreshold()}票と同じ）`],
-    ["いいね（1時間あたり）", `${me.freeVoteLimits.like}票`, `${me.supporterVoteLimits.like}票`],
-    ["bad（1時間あたり）", `${me.freeVoteLimits.bad}票`, `${me.supporterVoteLimits.bad}票`],
+    // A super like costs 2, so a 1-vote allowance can't use it.
+    ["いいね（1時間あたり）", `${me.freeVoteLimits.like}票${me.freeVoteLimits.like < 2 ? "（超いいねなし）" : ""}`, `${me.supporterVoteLimits.like}票`],
+    ["bad（1時間あたり）", me.freeVoteLimits.bad === 0 ? "使えません" : `${me.freeVoteLimits.bad}票`, `${me.supporterVoteLimits.bad}票`],
     ["広告", "表示あり", "表示なし"],
   ];
   const highlight = (plan: "free" | "supporter") => (current === plan ? { bgcolor: "action.selected", fontWeight: "bold" } : {});

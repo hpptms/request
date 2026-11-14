@@ -7,7 +7,8 @@ export function VoteQuotaLabel({ light = false, compact = false }: { light?: boo
   const quota = useVoteQuota();
   if (!quota) return null;
   const likeText = quota.unlimitedLikes ? "いいね 無制限" : `いいね ${quota.likeRemaining}/${quota.likeLimit}`;
-  const badText = quota.unlimitedLikes ? "bad 無制限" : `bad ${quota.badRemaining}/${quota.badLimit}`;
+  // Free plan (membership on): bad isn't available at all.
+  const badText = quota.unlimitedLikes ? "bad 無制限" : quota.badLimit === 0 ? "bad なし" : `bad ${quota.badRemaining}/${quota.badLimit}`;
   const resetMinutes = (seconds: number) => Math.max(1, Math.ceil(seconds / 60));
   // Everyone is restored at the top of each hour, so both counters share one
   // reset time (0 while nothing is spent).

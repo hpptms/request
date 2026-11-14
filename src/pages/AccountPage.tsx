@@ -202,7 +202,7 @@ function LoggedIn({ me, user }: { me: AccountMe; user: AccountUser }) {
           <Typography variant="body1">
             {supporter
               ? `ご支援ありがとうございます。キューに${me.supporterMaxPending}曲まで入れられ、広告は表示されません。`
-              : `リクエストは${me.freeRequestIntervalMinutes / 60}時間に1回（キューに${me.freeMaxPending ?? 1}曲まで）、いいねは1時間${me.freeVoteLimits.like}票・badは${me.freeVoteLimits.bad}票までです。`}
+              : `リクエストは${me.freeRequestIntervalMinutes / 60}時間に1回（キューに${me.freeMaxPending ?? 1}曲まで）、いいねは1時間${me.freeVoteLimits.like}票まで${me.freeVoteLimits.bad === 0 ? "（badは使えません）" : `・badは${me.freeVoteLimits.bad}票まで`}です。`}
           </Typography>
           {!supporter && me.freeRequestWaitSeconds > 0 && (
             <Typography variant="body2" color="text.secondary">
