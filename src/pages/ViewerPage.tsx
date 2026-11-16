@@ -73,7 +73,6 @@ const SHORTENED_PLAYBACK_SECONDS = 60; // 1:00
 // seeing a replay; only once these are exhausted does advanceQueue fall
 // back to actually looping the video to fill a floor that's genuinely much
 // longer than it (see advanceQueue's own comment).
-const PLAYLIST_REMOVAL_GUARD_MS = 15000;
 const ENDED_RETRY_DELAY_MS = 400;
 const ENDED_MAX_QUICK_RETRIES = 5;
 // Non-YouTube platforms (niconico/vimeo) have no ended/error event this
@@ -282,11 +281,6 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // True while the currently loaded filler video is a playlistTracks entry
   // (sequential, resumable) rather than a random fallback pick.
   const isPlaylistActiveRef = useRef(false);
-  // When this screen last removed a played-through track from the playlist
-  // (see advanceQueue). /api/playlist is CDN-cached for a few seconds, so a
-  // poll right after that could bring the removed track back; polls started
-  // within PLAYLIST_REMOVAL_GUARD_MS of it are ignored.
-  const playlistRemovedAtRef = useRef(0);
   // Last known-good playback position (seconds) and when it was last
   // checked, for the seek-guard effect below to tell normal playback apart
   // from someone dragging the seek bar (or skipping ahead any other way —
@@ -404,11 +398,9 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // playlistIndexRef is clamped where it's used below.
   useEffect(() => {
     const fetchPlaylist = () => {
-      const startedAt = Date.now();
       api
         .getPlaylist()
         .then((tracks) => {
-          if (startedAt - playlistRemovedAtRef.current < PLAYLIST_REMOVAL_GUARD_MS) return;
           setPlaylistTracks(tracks);
           playlistPoolRef.current = tracks;
         })
@@ -750,10 +742,9 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // documented behavior of replaying a too-short video until its floor is
   // met, just without the visible stop/reload gap in between.
   //
-  // playedToEnd is set only for a natural end: a playlist track that played
-  // all the way through is removed from the playlist (so each entry plays
-  // once), while a skipped or unplayable one is just stepped past.
-  const advanceQueue = (finishRequest: (id: string) => Promise<unknown>, playedToEnd = false) => {
+  // Playlist tracks are never removed once played: the list loops
+  // indefinitely until the admin edits it.
+  const advanceQueue = (finishRequest: (id: string) => Promise<unknown>) => {
     if (endedHandledRef.current) return;
     endedHandledRef.current = true;
     clearNonYouTubeTimer();
@@ -790,31 +781,9 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     }
 
     if (isPlaylistActiveRef.current) {
-      let pool = playlistPoolRef.current;
-      if (playedToEnd && pool.length > 0) {
-        const playedIndex = Math.min(playlistIndexRef.current, pool.length - 1);
-        const played = pool[playedIndex];
-        pool = pool.filter((_, i) => i !== playedIndex);
-        playlistPoolRef.current = pool;
-        setPlaylistTracks(pool);
-        // The next track slid into playedIndex; step back one so the
-        // increment below lands on it.
-        playlistIndexRef.current = playedIndex - 1;
-        playlistRemovedAtRef.current = Date.now();
-        api
-          .adminPlaylistPlayed(playedIndex, played.videoId)
-          .then((tracks) => {
-            playlistRemovedAtRef.current = Date.now();
-            playlistPoolRef.current = tracks;
-            setPlaylistTracks(tracks);
-          })
-          .catch(() => {
-            // Leave the local removal in place; the next poll after the
-            // guard window resyncs with whatever the server has.
-          });
-      }
+      const pool = playlistPoolRef.current;
       if (pool.length > 0) {
-        playlistIndexRef.current = (playlistIndexRef.current + 1 + pool.length) % pool.length;
+        playlistIndexRef.current = (playlistIndexRef.current + 1) % pool.length;
         playlistPositionRef.current = 0;
         const track = pool[playlistIndexRef.current];
         loadedVideoIdRef.current = track.videoId;
@@ -843,7 +812,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     );
   };
 
-  const handleEnded = () => advanceQueue(api.finishRequest, true);
+  const handleEnded = () => advanceQueue(api.finishRequest);
 
   // Manual admin skip button (hidden in solo/OBS-capture mode): unlike the
   // natural-end path, this bypasses the server's MinPlaybackBeforeFinish
