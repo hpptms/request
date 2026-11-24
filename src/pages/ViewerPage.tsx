@@ -279,8 +279,16 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // than replaying the track from the start.
   const playlistPositionRef = useRef(0);
   // True while the currently loaded filler video is a playlistTracks entry
-  // (sequential, resumable) rather than a random fallback pick.
+  // (shuffled, resumable) rather than a random fallback pick.
   const isPlaylistActiveRef = useRef(false);
+  // Shuffle bag of playlist videoIds still to play this round: every track
+  // plays once (in random order) before any repeats, then the bag refills
+  // with a fresh shuffle. Entries the admin has since removed are dropped
+  // when drawing (see nextShuffledPlaylistIndex).
+  const playlistBagRef = useRef<string[]>([]);
+  // False until the playlist has played at least once this session, so the
+  // very first filler track is a random pick rather than always the first.
+  const playlistStartedRef = useRef(false);
   // Last known-good playback position (seconds) and when it was last
   // checked, for the seek-guard effect below to tell normal playback apart
   // from someone dragging the seek bar (or skipping ahead any other way —
@@ -685,9 +693,36 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // admin-curated playlist takes priority when non-empty, resuming at
   // playlistPositionRef; otherwise a random World/Japan Top 100 (or static)
   // fallback video plays instead.
+  // Draws the next playlist index from the shuffle bag (refilling it with a
+  // fresh shuffle once empty, avoiding an immediate repeat of
+  // currentVideoId across the refill boundary).
+  const nextShuffledPlaylistIndex = (pool: PlaylistTrack[], currentVideoId: string | null): number => {
+    const ids = new Set(pool.map((t) => t.videoId));
+    let bag = playlistBagRef.current.filter((id) => ids.has(id));
+    if (bag.length === 0) {
+      bag = Array.from(ids);
+      for (let i = bag.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [bag[i], bag[j]] = [bag[j], bag[i]];
+      }
+      if (bag.length > 1 && bag[0] === currentVideoId) {
+        [bag[0], bag[bag.length - 1]] = [bag[bag.length - 1], bag[0]];
+      }
+    }
+    const nextId = bag.shift();
+    playlistBagRef.current = bag;
+    const idx = pool.findIndex((t) => t.videoId === nextId);
+    return idx >= 0 ? idx : 0;
+  };
+
   const playFiller = () => {
     const pool = playlistPoolRef.current;
     if (pool.length > 0) {
+      if (!playlistStartedRef.current) {
+        playlistStartedRef.current = true;
+        playlistIndexRef.current = nextShuffledPlaylistIndex(pool, null);
+        playlistPositionRef.current = 0;
+      }
       const idx = Math.min(playlistIndexRef.current, pool.length - 1);
       playlistIndexRef.current = idx;
       const track = pool[idx];
@@ -724,8 +759,8 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
   // Shared by handleEnded (the player naturally reaching the end) and
   // handleSkip (the admin cutting the current video short): a real request
   // finishing plays the next queued one (handled by the effects below). A
-  // playlist track finishing advances to the next one in order (looping
-  // back to the start); a random fallback video finishing just picks
+  // playlist track finishing advances to the next one in shuffled order
+  // (see nextShuffledPlaylistIndex); a random fallback video finishing just picks
   // another random one — either way the screen never goes idle while
   // nothing is requested. finishRequest differs between the two callers:
   // the natural-end path enforces MinPlaybackBeforeFinish server-side, the
@@ -783,7 +818,7 @@ function AuthenticatedViewerPage({ onSessionExpired }: { onSessionExpired: () =>
     if (isPlaylistActiveRef.current) {
       const pool = playlistPoolRef.current;
       if (pool.length > 0) {
-        playlistIndexRef.current = (playlistIndexRef.current + 1) % pool.length;
+        playlistIndexRef.current = nextShuffledPlaylistIndex(pool, loadedVideoIdRef.current);
         playlistPositionRef.current = 0;
         const track = pool[playlistIndexRef.current];
         loadedVideoIdRef.current = track.videoId;
