@@ -16,7 +16,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { api } from "../api";
 import { ContentPageLayout } from "../components/ContentPageLayout";
-import { PLAN_NAME, PLAN_PRICE, PlanComparisonTable } from "../components/PlanComparison";
+import { PLAN_NAME, PLAN_PRICE, PlanComparisonTable, SupportAppeal } from "../components/PlanComparison";
 import { refreshAccount, setAccountMe, useAccount } from "../lib/account";
 import { useSeo } from "../lib/useSeo";
 import { sellerInfoReady } from "../lib/sellerInfo";
@@ -143,6 +143,7 @@ function LoggedOut({ me }: { me: AccountMe }) {
         <Typography variant="h6" component="h2" gutterBottom>
           プランについて
         </Typography>
+        <SupportAppeal />
         <PlanComparisonTable me={me} />
         {me.billingEnabled && (
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
@@ -242,6 +243,7 @@ function LoggedIn({ me, user }: { me: AccountMe; user: AccountUser }) {
         <Typography variant="h6" component="h2" gutterBottom>
           プランの違い
         </Typography>
+        {!supporter && <SupportAppeal />}
         <PlanComparisonTable me={me} current={user.plan} />
         {!supporter && (
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>

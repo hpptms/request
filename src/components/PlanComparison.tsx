@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import Paper from "@mui/material/Paper";
 import Table from "@mui/material/Table";
@@ -65,6 +66,16 @@ export function PlanComparisonTable({ me, current }: { me: AccountMe; current?: 
   );
 }
 
+// サポーター プランは「有料版」ではなく運営の支援が目的であることを伝える。
+export function SupportAppeal() {
+  return (
+    <Alert severity="info" icon={<FavoriteIcon fontSize="inherit" />} sx={{ mb: 1.5 }}>
+      {PLAN_NAME}は、このサイトを応援していただくためのプランです。現在サーバー代が赤字のため、サポートしていただけると大変助かります。
+      無料プランのままでもリクエストや投票はご利用いただけます。
+    </Alert>
+  );
+}
+
 // トップページ用: 会員機能がONで、サポーターでない人にだけ出す。
 export function PlanComparisonBox() {
   const account = useAccount();
@@ -75,6 +86,7 @@ export function PlanComparisonBox() {
       <Typography variant="h6" component="h2" sx={{ mb: 1.5 }}>
         プランの違い
       </Typography>
+      <SupportAppeal />
       <PlanComparisonTable me={me} current={me.user ? "free" : undefined} />
       <Box sx={{ mt: 1.5, display: "flex", justifyContent: "flex-end" }}>
         <Button component={RouterLink} to="/account" variant="outlined" size="small" startIcon={<FavoriteIcon />}>
